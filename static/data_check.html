@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Data Check</title>
+<style>
+body{margin:0;font-family:Arial,sans-serif;background:#eef2f7;color:#111827}
+.page{height:100vh;display:grid;grid-template-rows:64px 1fr}
+.topbar{background:#0f172a;color:white;padding:10px 18px;display:flex;gap:12px;align-items:center}
+.topbar h2{margin:0 18px 0 0;font-size:20px}
+.navbtn{background:#1e293b;color:white;border:1px solid #475569;border-radius:12px;padding:10px 14px;cursor:pointer}
+.status{margin-left:auto;color:#cbd5e1;font-size:14px}
+.workspace{display:grid;grid-template-columns:380px 1fr;gap:18px;padding:18px;overflow:hidden}
+.pane{overflow:auto;padding-right:8px}
+.card{background:white;border:1px solid #d7dde8;border-radius:18px;padding:18px;margin-bottom:16px}
+h1{margin:0 0 8px;font-size:28px}
+h2{margin:0 0 12px;font-size:21px}
+.small{color:#64748b;font-size:14px}
+.record-btn{width:100%;text-align:left;border:1px solid #cbd5e1;border-radius:14px;padding:13px;margin:9px 0;background:white;cursor:pointer}
+.record-btn:hover,.record-btn.active{background:#e0ecff;border-color:#1d4ed8}
+.record-btn.disabled{opacity:.55;background:#f8fafc;cursor:not-allowed}
+.kv{display:grid;grid-template-columns:190px 1fr;gap:10px;padding:8px 0;border-bottom:1px solid #eef2f7}
+.badge{display:inline-block;padding:4px 9px;border-radius:999px;background:#dcfce7;color:#166534;font-size:13px}
+.badge.warn{background:#fef3c7;color:#92400e}
+.badge.bad{background:#fee2e2;color:#991b1b}
+.primary{background:#111827;color:white;border:0;border-radius:12px;padding:11px 15px;cursor:pointer}
+.secondary{background:white;color:#111827;border:1px solid #cbd5e1;border-radius:12px;padding:10px 14px;cursor:pointer}
+pre{white-space:pre-wrap;background:#0f172a;color:#e5e7eb;padding:12px;border-radius:12px;max-height:260px;overflow:auto;font-size:13px}
+.hidden{display:none}
+.check{border:1px solid #cbd5e1;border-radius:14px;padding:12px;margin:10px 0;background:#f8fafc}
+</style>
+</head>
+
+<body>
+<div class="page">
+<header class="topbar">
+  <h2>Data Check</h2>
+  <button class="navbtn" onclick="location.href='/data-preparation'">← Data Preparation</button>
+  <button class="navbtn" onclick="location.href='/analysis-builder?study_id=' + encodeURIComponent(selectedStudyId || '')">Analysis Builder</button>
+  <button class="navbtn" onclick="location.href='/research-workspace'">Workspace</button>
+  <span id="statusText" class="status">Loading...</span>
+</header>
+
+<main class="workspace">
+<section class="pane">
+  <div class="card">
+    <h1>Dataset records</h1>
+    <p class="small">Select completed participant data. This page checks data readiness only.</p>
+  </div>
+
+  <div class="card">
+    <h2>Records</h2>
+    <div id="recordsBox" class="small">Loading records...</div>
+  </div>
+</section>
+
+<section class="pane">
+  <div class="card">
+    <h1>Standard data checks</h1>
+    <p class="small">No dependency research and no statistical methods here.</p>
+    <div id="checksBox">Select a record.</div>
+  </div>
+
+  <div class="card hidden" id="summaryBox">
+    <h2>Checked dataset</h2>
+    <div id="summaryContent"></div>
+    <button class="primary" onclick="goToAnalysisBuilder()">Continue to Analysis Builder</button>
+  </div>
+
+  <div class="card hidden" id="technicalBox">
+    <h2>Technical JSON</h2>
+    <button class="secondary" onclick="toggleJson()">Show / hide JSON</button>
+    <pre id="jsonBox" class="hidden"></pre>
+  </div>
+</section>
+</main>
+</div>
+
+<script>
+let allRecords = [];
+let selectedRecord = null;
+let selectedStudyId = null;
+let analysisCatalog = null;
+let checkedDataset = null;
+
+document.addEventListener("DOMContentLoaded", loadRecords);
+
+function setStatus(text){document.getElementById("statusText").innerText = text;}
+
+async function loadRecords(){
+  setStatus("Loading records...");
+  const response = await fetch("/research/participant-data/records");
+  const data = await response.json();
+
+  if(!response.ok || !data.ok){
+    document.getElementById("recordsBox").innerText = "Failed to load records.";
+    setStatus("Error");
+    return;
+  }
+
+  allRecords = data.records || [];
+  renderRecords();
+  setStatus("Ready");
+}
+
+function renderRecords(){
+  const box = document.getElementById("recordsBox");
+
+  if(!allRecords.length){
+    box.innerHTML = "No records found.";
+    return;
+  }
+
+  box.innerHTML = allRecords.map(record => {
+    const usable = record.status === "RUN_COMPLETED" && (record.answers_count || 0) > 0;
+
+    return `
+      <button class="record-btn ${usable ? "" : "disabled"}"
+        ${usable ? `onclick="selectRecord('${record.record_id}')"` : ""}>
+        <b>${escapeHtml(record.study_id || "unknown")}</b>
+        ${usable ? "<span class='badge'>ready</span>" : "<span class='badge bad'>not ready</span>"}
+        <br>
+        <span class="small">
+          ${escapeHtml(shortId(record.record_id))}<br>
+          answers: ${record.answers_count || 0} · status: ${escapeHtml(record.status || "—")}
+        </span>
+      </button>
+    `;
+  }).join("");
+}
+
+async function selectRecord(recordId){
+  setStatus("Loading record...");
+
+  const response = await fetch("/research/participant-data/records/" + encodeURIComponent(recordId));
+  const data = await response.json();
+
+  if(!response.ok || !data.ok){
+    setStatus("Record load error");
+    return;
+  }
+
+  selectedRecord = data.record;
+  selectedStudyId = selectedRecord.study_id;
+
+  await loadCatalog(selectedStudyId);
+  runDataChecks();
+
+  setStatus("Checked");
+}
+
+async function loadCatalog(studyId){
+  analysisCatalog = null;
+  if(!studyId) return;
+
+  const response = await fetch("/research/analysis/catalog?study_id=" + encodeURIComponent(studyId));
+  const data = await response.json();
+
+  if(response.ok && data.ok){
+    analysisCatalog = data;
+  }
+}
+
+function runDataChecks(){
+  const answers = selectedRecord.answers || {};
+  const answerCount = Object.keys(answers).length;
+  const prepared = selectedRecord.prepared_domain_output || null;
+  const variables = getVariablesFromCatalog();
+
+  const missingScale = variables.filter(v => !v.scale_type).length;
+
+  const checks = [
+    {
+      id: "record_completed",
+      label: "Record completed",
+      status: selectedRecord.status === "RUN_COMPLETED" ? "passed" : "failed",
+      details: selectedRecord.status || "unknown"
+    },
+    {
+      id: "answers_available",
+      label: "Answers available",
+      status: answerCount > 0 ? "passed" : "failed",
+      details: answerCount + " answers"
+    },
+    {
+      id: "prepared_output_available",
+      label: "Prepared Domain Output available",
+      status: prepared ? "passed" : "failed",
+      details: prepared ? prepared.schema_version || "available" : "missing"
+    },
+    {
+      id: "metadata_available",
+      label: "Question metadata available",
+      status: variables.length > 0 ? "passed" : "warning",
+      details: variables.length + " variables found"
+    },
+    {
+      id: "scale_types_available",
+      label: "Scale types available",
+      status: missingScale === 0 ? "passed" : "warning",
+      details: missingScale + " questions without scale_type"
+    },
+    {
+      id: "participant_count",
+      label: "Participant count",
+      status: "warning",
+      details: "Basic count only; cohort-level checks will be added next"
+    },
+    {
+      id: "missing_values",
+      label: "Missing values",
+      status: "pending",
+      details: "Not implemented yet"
+    },
+    {
+      id: "distributions",
+      label: "Distributions",
+      status: "pending",
+      details: "Not implemented yet"
+    },
+    {
+      id: "outliers",
+      label: "Outliers",
+      status: "pending",
+      details: "Not implemented yet"
+    },
+    {
+      id: "group_structure",
+      label: "Groups / categories",
+      status: "pending",
+      details: "Not implemented yet"
+    }
+  ];
+
+  const failed = checks.some(c => c.status === "failed");
+
+  checkedDataset = {
+    checked_dataset_version: 1,
+    study_id: selectedStudyId,
+    record_id: selectedRecord.record_id,
+    status: failed ? "not_ready" : "ready_with_warnings",
+    checks
+  };
+
+  renderChecks();
+}
+
+function getVariablesFromCatalog(){
+  if(!analysisCatalog) return [];
+
+  if(analysisCatalog.single_variable_analyses){
+    return analysisCatalog.single_variable_analyses.map(item => item.variable);
+  }
+
+  const map = {};
+  (analysisCatalog.analyses || []).forEach(item => {
+    if(item.left_variable?.question_code) map[item.left_variable.question_code] = item.left_variable;
+    if(item.right_variable?.question_code) map[item.right_variable.question_code] = item.right_variable;
+  });
+
+  return Object.values(map);
+}
+
+function renderChecks(){
+  document.getElementById("checksBox").innerHTML = checkedDataset.checks.map(check => `
+    <div class="check">
+      <b>${escapeHtml(check.label)}</b>
+      ${statusBadge(check.status)}
+      <div class="small">${escapeHtml(check.details)}</div>
+    </div>
+  `).join("");
+
+  document.getElementById("summaryBox").classList.remove("hidden");
+  document.getElementById("technicalBox").classList.remove("hidden");
+
+  document.getElementById("summaryContent").innerHTML = `
+    <div class="kv"><b>Study ID</b><span>${escapeHtml(checkedDataset.study_id)}</span></div>
+    <div class="kv"><b>Record ID</b><span>${escapeHtml(checkedDataset.record_id)}</span></div>
+    <div class="kv"><b>Status</b><span>${statusBadge(checkedDataset.status)}</span></div>
+  `;
+
+  document.getElementById("jsonBox").innerText =
+    JSON.stringify({
+      checked_dataset: checkedDataset,
+      record: selectedRecord,
+      analysis_catalog: analysisCatalog
+    }, null, 2);
+}
+
+function statusBadge(status){
+  if(status === "passed") return "<span class='badge'>passed</span>";
+  if(status === "failed") return "<span class='badge bad'>failed</span>";
+  if(status === "warning") return "<span class='badge warn'>warning</span>";
+  if(status === "pending") return "<span class='badge warn'>pending</span>";
+  if(status === "ready_with_warnings") return "<span class='badge warn'>ready with warnings</span>";
+  if(status === "not_ready") return "<span class='badge bad'>not ready</span>";
+  return "<span class='badge warn'>" + escapeHtml(status) + "</span>";
+}
+
+function goToAnalysisBuilder(){
+  if(!selectedStudyId){
+    alert("Select and check dataset first.");
+    return;
+  }
+
+  sessionStorage.setItem(
+    "checked_dataset",
+    JSON.stringify(checkedDataset)
+  );
+
+  location.href = "/analysis-builder?study_id=" + encodeURIComponent(selectedStudyId);
+}
+
+function toggleJson(){
+  document.getElementById("jsonBox").classList.toggle("hidden");
+}
+
+function shortId(value){
+  return value ? String(value).slice(0,8) + "..." : "unknown";
+}
+
+function escapeHtml(value){
+  return String(value ?? "")
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;");
+}
+</script>
+</body>
+</html>

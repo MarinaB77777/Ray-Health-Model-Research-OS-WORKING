@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Decision Under Uncertainty</title>
+<style>
+body { font-family: Arial, sans-serif; max-width: 900px; margin: 40px auto; padding: 20px; }
+.card { border: 1px solid #ddd; border-radius: 12px; padding: 18px; margin-bottom: 16px; }
+button { padding: 10px 16px; margin: 6px 6px 6px 0; cursor: pointer; display:block; }
+input { padding: 10px; width: 100%; max-width: 420px; box-sizing: border-box; }
+.small { color: #666; font-size: 14px; }
+.option { margin: 10px 0; }
+</style>
+</head>
+<body>
+
+<h1>Принятие решений в условиях неопределенности</h1>
+<p id="status" class="small">Loading...</p>
+
+<div id="questionCard" class="card">
+  <h2 id="questionPrompt"></h2>
+  <div id="questionOptions"></div>
+</div>
+
+<script>
+const params = new URLSearchParams(window.location.search);
+const sessionId = params.get("session_id") || "";
+const lang = params.get("lang") || "ru";
+const accountId = params.get("account_id") || "";
+let currentQuestion = null;
+let isSubmitting = false;
+let answers = {};
+let questionnaireStartedAt = new Date().toISOString();
+
+function setStatus(text) {
+  document.getElementById("status").innerText = text;
+}
+
+function clearQuestion() {
+  document.getElementById("questionPrompt").innerText = "";
+  document.getElementById("questionOptions").innerHTML = "";
+}
+
+function renderQuestion(question) {
+  currentQuestion = question;
+  isSubmitting = false;
+
+  document.getElementById("questionPrompt").innerText = question.prompt;
+
+  const optionsEl = document.getElementById("questionOptions");
+  optionsEl.innerHTML = "";
+
+  if (question.type === "single_select") {
+    renderSingleSelect(question, optionsEl);
+    return;
+  }
+
+  if (question.type === "multi_select") {
+    renderMultiSelect(question, optionsEl);
+    return;
+  }
+
+  if (question.type === "number" || question.type === "text") {
+    renderInputQuestion(question, optionsEl);
+    return;
+  }
+
+  optionsEl.innerHTML = "<p>Unsupported question type: " + question.type + "</p>";
+}
+
+function renderSingleSelect(question, container) {
+  (question.options || []).forEach(opt => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.innerText = opt.text;
+    btn.onclick = () => submitAnswer(opt.value);
+    container.appendChild(btn);
+  });
+}
+
+function renderMultiSelect(question, container) {
+  (question.options || []).forEach(opt => {
+    const label = document.createElement("label");
+    label.className = "option";
+
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.value = opt.value;
+
+    label.appendChild(checkbox);
+    label.appendChild(document.createTextNode(" " + opt.text));
+    container.appendChild(label);
+    container.appendChild(document.createElement("br"));
+  });
+
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.innerText = "Ответить";
+  btn.onclick = () => {
+    const values = Array.from(container.querySelectorAll("input[type='checkbox']:checked"))
+      .map(x => x.value);
+    submitAnswer(values);
+  };
+  container.appendChild(btn);
+}
+
+function renderInputQuestion(question, container) {
+  const input = document.createElement("input");
+  input.type = question.type === "number" ? "number" : "text";
+  input.id = "answerInput";
+
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.innerText = "Ответить";
+  btn.onclick = () => {
+    const value = question.type === "number" ? Number(input.value) : input.value;
+    submitAnswer(value);
+  };
+
+  container.appendChild(input);
+  container.appendChild(btn);
+}
+
+async function loadFirstQuestion() {
+  setStatus("Loading first question...");
+
+  const response = await fetch("/du/first-question?language=" + encodeURIComponent(lang));
+  const data = await response.json();
+
+  if (!response.ok || !data.ok || !data.question) {
+    setStatus("Failed to load first question");
+    alert(JSON.stringify(data));
+    return;
+  }
+
+  setStatus("session_id=" + sessionId + " | lang=" + lang);
+  renderQuestion(data.question);
+}
+
+async function submitAnswer(value) {
+  if (isSubmitting) return;
+  isSubmitting = true;
+  answers[currentQuestion.code] = value;
+ 
+   
+  const buttons = document.querySelectorAll("button");
+  buttons.forEach(btn => btn.disabled = true);
+
+  const response = await fetch("/du/answer", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({
+      session_id: sessionId,
+      question_code: currentQuestion.code,
+      value: value,
+      language: lang
+    })
+  });
+
+  const data = await response.json();
+
+  buttons.forEach(btn => btn.disabled = false);
+
+  if (!response.ok || !data.ok) {
+    isSubmitting = false;
+    alert(JSON.stringify(data));
+    return;
+  }
+
+  if (data.done) {
+    clearQuestion();
+
+    document.getElementById("questionPrompt").innerText = "Обработка результата...";
+    document.getElementById("questionOptions").innerHTML = "";
+    
+    const collectionFinishedAt = new Date().toISOString();
+
+    const sourceInstanceId =
+      window.crypto && window.crypto.randomUUID
+        ? window.crypto.randomUUID()
+        : "du-questionnaire-" + Date.now();
+
+    const domainDataIdentity = {
+      source_instance_id: sourceInstanceId,
+
+      session_id: sessionId,
+      participant_id: accountId,
+
+      domain_id: "questionnaire",
+      source_type: "self_report",
+      data_structure_type: "question_bank",
+
+      data_source_path: "decision_under_uncertainty",
+
+      collection_started_at: questionnaireStartedAt,
+      collection_finished_at: collectionFinishedAt,
+
+      global_time_reference: sessionId
+    };
+    
+    const completeResponse = await fetch("/du/complete", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({
+        session_id: sessionId,
+        answers: answers,
+        language: lang,
+        account_id: accountId,
+        domain_data_identity: domainDataIdentity
+      })
+    });
+
+    const completeData = await completeResponse.json();
+
+    if (!completeResponse.ok || !completeData.ok) {
+      document.getElementById("questionPrompt").innerText = "Ошибка обработки результата";
+      alert(JSON.stringify(completeData));
+      return;
+    }
+
+    const summary = completeData.summary || {};
+
+    document.getElementById("questionPrompt").innerText =
+      summary.title || "Блок завершён";
+
+    document.getElementById("questionOptions").innerHTML =
+      "<p>" + (summary.message || "Результат обработан.") + "</p>";
+
+    return;
+  }
+
+  renderQuestion(data.question);
+}
+
+loadFirstQuestion();
+</script>
+
+</body>
+</html>

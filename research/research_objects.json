@@ -1,0 +1,44 @@
+[
+  {
+    "id": "04cdbd96-8bc1-499e-a597-59a4f7b1641d",
+    "object_type": "hypothesis",
+    "owner": "researcher",
+    "status": "draft",
+    "title": "3",
+    "description": "3",
+    "research_question": "3",
+    "hypothesis_basis": "literature_review",
+    "basis_notes": "3",
+    "variables": [
+      {
+        "entity_id": "Pressure",
+        "entity_type": "MODEL_PARAMETER",
+        "label": "Pressure",
+        "source": "model_registry",
+        "study_id": null
+      },
+      {
+        "entity_id": "TrajectoryRisk",
+        "entity_type": "MODEL_PARAMETER",
+        "label": "TrajectoryRisk",
+        "source": "model_registry",
+        "study_id": null
+      }
+    ],
+    "analysis_methods": [
+      {
+        "method_id": "correlation",
+        "label": "correlation"
+      },
+      {
+        "method_id": "group_comparison",
+        "label": "group_comparison"
+      }
+    ],
+    "evidence": [],
+    "validation": {},
+    "created_at": "2026-06-27T05:57:22.578567+00:00",
+    "updated_at": "2026-06-27T05:57:22.578579+00:00",
+    "approved_by_researcher": true
+  }
+]

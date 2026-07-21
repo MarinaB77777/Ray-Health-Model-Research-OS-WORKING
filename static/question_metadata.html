@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Question Metadata</title>
+<style>
+body{margin:0;font-family:Arial,sans-serif;background:#eef2f7;color:#111827}
+.topbar{background:#0f172a;color:white;padding:14px 18px;display:flex;gap:12px;align-items:center}
+.topbar h2{margin:0 18px 0 0}
+button{cursor:pointer}
+.navbtn{background:#1e293b;color:white;border:1px solid #475569;border-radius:12px;padding:10px 14px}
+.page{display:grid;grid-template-columns:320px 1fr;gap:18px;padding:18px}
+.card{background:white;border:1px solid #d7dde8;border-radius:18px;padding:18px;margin-bottom:16px}
+.small{color:#64748b;font-size:14px}
+.item{display:block;width:100%;text-align:left;border:1px solid #cbd5e1;border-radius:14px;background:white;padding:14px;margin:10px 0}
+.item:hover,.item.active{background:#e0ecff;border-color:#1d4ed8}
+select{padding:8px;border-radius:10px;border:1px solid #cbd5e1}
+.primary{background:#111827;color:white;border:0;border-radius:12px;padding:11px 15px}
+.badge{display:inline-block;padding:4px 9px;border-radius:999px;background:#dcfce7;color:#166534;font-size:13px}
+.warn{background:#fef3c7;color:#92400e}
+.kv{display:grid;grid-template-columns:150px 1fr;gap:10px;padding:8px 0;border-bottom:1px solid #eef2f7}
+footer{margin:0 18px 18px;padding:14px;border:1px solid #cbd5e1;border-radius:14px;background:white;text-align:center;color:#334155;font-size:13px}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <h2 data-i18n="appTitle">Метаданные вопросов</h2>
+  <button class="navbtn" onclick="location.href='/research-workspace'" data-i18n="workspace">Рабочая среда</button>
+  <button class="navbtn" onclick="location.href='/analysis-builder?study_id=' + encodeURIComponent(selectedBank || '')" data-i18n="analysisBuilder">Конструктор анализа</button>
+  <span id="statusText" class="small" style="margin-left:auto;color:#cbd5e1;">Готово</span>
+  <select id="languageSelect" onchange="changeLanguage(this.value)" aria-label="Language"><option value="ru">Русский</option><option value="en">English</option><option value="es">Español</option></select>
+</div>
+
+<div class="page">
+  <aside>
+    <div class="card">
+      <h2 data-i18n="questionBank">Банк вопросов</h2>
+      <div id="bankList" class="small" data-i18n="loading">Загрузка…</div>
+    </div>
+  </aside>
+
+  <main>
+    <div class="card">
+      <h1 id="title" data-i18n="selectBank">Выберите банк вопросов</h1>
+      <p class="small" data-i18n="pageHint">
+        Дополните метаданные анализа до применения статистических методов.
+      </p>
+    </div>
+
+    <div id="questionsBox"></div>
+  </main>
+</div>
+
+<footer>
+  Designed and developed collaboratively by Marina Boronenko and Ray,
+  AI research and engineering colleagues.
+</footer>
+
+<script>
+let lang = ["ru","en","es"].includes(localStorage.getItem("healthModelLanguage"))
+  ? localStorage.getItem("healthModelLanguage")
+  : "ru";
+let selectedBank = null;
+let currentBankData = null;
+let questions = [];
+let scaleDefinitions = [];
+let scaleRegistryContract = null;
+
+const UI = {
+  ru:{appTitle:"Метаданные вопросов",workspace:"Рабочая среда",analysisBuilder:"Конструктор анализа",questionBank:"Банк вопросов",loading:"Загрузка…",ready:"Готово",selectBank:"Выберите банк вопросов",pageHint:"Дополните метаданные анализа до применения статистических методов.",loadingRegistries:"Загрузка научных реестров…",registryFailed:"Ошибка загрузки реестров",loadingBanks:"Загрузка банков…",banksFailed:"Не удалось загрузить банки вопросов.",scaleRegistryUnavailable:"Реестр научных шкал недоступен.",loadingBank:"Загрузка",bankFailed:"Не удалось загрузить банк вопросов.",error:"Ошибка",bankTitle:"Банк вопросов",metadataStatus:"Состояние метаданных",questions:"Вопросы",missingScale:"Без шкалы",saveMetadata:"Сохранить метаданные",questionType:"Тип вопроса",scaleType:"Тип шкалы",notSet:"не задано",set:"задано",missing:"не задано",scientificContract:"Научный контракт",level:"уровень",structure:"структура",numericNature:"числовая природа",quantity:"величина",contextRequired:"требуется контекстная проверка",description:"Описание",options:"Варианты ответа",noBank:"Банк не выбран.",saving:"Сохранение…",saveFailed:"Ошибка сохранения",saved:"Сохранено",savedCount:"Сохранено вопросов"},
+  en:{appTitle:"Question Metadata",workspace:"Workspace",analysisBuilder:"Analysis Builder",questionBank:"Question bank",loading:"Loading…",ready:"Ready",selectBank:"Select question bank",pageHint:"Complete missing analysis metadata before applying statistical methods.",loadingRegistries:"Loading scientific registries…",registryFailed:"Registry loading failed",loadingBanks:"Loading banks…",banksFailed:"Failed to load question banks.",scaleRegistryUnavailable:"Scientific scale registry is unavailable.",loadingBank:"Loading",bankFailed:"Failed to load question bank.",error:"Error",bankTitle:"Question bank",metadataStatus:"Metadata status",questions:"Questions",missingScale:"Missing scale",saveMetadata:"Save metadata",questionType:"Question type",scaleType:"Scale type",notSet:"not set",set:"set",missing:"missing",scientificContract:"Scientific contract",level:"level",structure:"structure",numericNature:"numeric nature",quantity:"quantity",contextRequired:"context validation required",description:"Description",options:"Options",noBank:"No bank selected.",saving:"Saving…",saveFailed:"Save failed",saved:"Saved",savedCount:"Saved questions"},
+  es:{appTitle:"Metadatos de preguntas",workspace:"Espacio de trabajo",analysisBuilder:"Constructor de análisis",questionBank:"Banco de preguntas",loading:"Cargando…",ready:"Listo",selectBank:"Elige un banco de preguntas",pageHint:"Completa los metadatos de análisis antes de aplicar métodos estadísticos.",loadingRegistries:"Cargando registros científicos…",registryFailed:"Error al cargar los registros",loadingBanks:"Cargando bancos…",banksFailed:"No se pudieron cargar los bancos de preguntas.",scaleRegistryUnavailable:"El registro de escalas científicas no está disponible.",loadingBank:"Cargando",bankFailed:"No se pudo cargar el banco de preguntas.",error:"Error",bankTitle:"Banco de preguntas",metadataStatus:"Estado de metadatos",questions:"Preguntas",missingScale:"Sin escala",saveMetadata:"Guardar metadatos",questionType:"Tipo de pregunta",scaleType:"Tipo de escala",notSet:"no definido",set:"definido",missing:"ausente",scientificContract:"Contrato científico",level:"nivel",structure:"estructura",numericNature:"naturaleza numérica",quantity:"magnitud",contextRequired:"se requiere validación contextual",description:"Descripción",options:"Opciones",noBank:"No se ha elegido un banco.",saving:"Guardando…",saveFailed:"Error al guardar",saved:"Guardado",savedCount:"Preguntas guardadas"}
+};
+
+function t(key){return UI[lang]?.[key] ?? UI.en[key] ?? key}
+
+function applyLanguage(){
+  document.documentElement.lang=lang;
+  document.getElementById("languageSelect").value=lang;
+  document.querySelectorAll("[data-i18n]").forEach(node=>{
+    const value=UI[lang]?.[node.dataset.i18n];
+    if(value) node.textContent=value;
+  });
+}
+
+async function changeLanguage(value){
+  lang=["ru","en","es"].includes(value)?value:"ru";
+  localStorage.setItem("healthModelLanguage",lang);
+  applyLanguage();
+  if(selectedBank) await loadBank(selectedBank);
+  else renderQuestions();
+  setStatus(t("ready"));
+}
+
+document.addEventListener("DOMContentLoaded", initializePage);
+
+function setStatus(text){
+  document.getElementById("statusText").innerText = text;
+}
+
+async function initializePage(){
+  applyLanguage();
+  setStatus(t("loadingRegistries"));
+
+  try{
+    await Promise.all([loadBanks(), loadScaleRegistry()]);
+    setStatus(t("ready"));
+  }catch(error){
+    setStatus(t("registryFailed"));
+    document.getElementById("questionsBox").innerText =
+      error.message;
+  }
+}
+
+async function loadScaleRegistry(){
+  const response = await fetch(
+    "/research/measurement-scales?question_constructor=true"
+  );
+  const data = await response.json();
+
+  if(!response.ok || !data.ok){
+    throw new Error(t("scaleRegistryUnavailable"));
+  }
+
+  scaleDefinitions = data.definitions || [];
+  scaleRegistryContract = data.registry || null;
+}
+
+async function loadBanks(){
+  setStatus(t("loadingBanks"));
+  const response = await fetch("/question-banks");
+  const data = await response.json();
+
+  if(!response.ok || !data.ok){
+    document.getElementById("bankList").innerText = t("banksFailed");
+    throw new Error(t("banksFailed"));
+  }
+
+  document.getElementById("bankList").innerHTML = (data.banks || []).map(bank => `
+    <button class="item" onclick="loadBank('${escapeHtml(bank.id)}')">
+      <b>${escapeHtml(bank.title || bank.id)}</b><br>
+      <span class="small">${escapeHtml(bank.id)}</span>
+    </button>
+  `).join("");
+
+}
+
+async function loadBank(bankId){
+  selectedBank = bankId;
+  setStatus(t("loadingBank") + " " + bankId + "…");
+
+  const response = await fetch(
+    "/question-banks/" + encodeURIComponent(bankId) + "?lang=" + encodeURIComponent(lang)
+  );
+  const data = await response.json();
+
+  if(!response.ok || !data.ok){
+    document.getElementById("questionsBox").innerText = t("bankFailed");
+    setStatus(t("error"));
+    return;
+  }
+
+  currentBankData = data;
+  questions = data.questions || [];
+
+  document.getElementById("title").innerText =
+    t("bankTitle") + ": " + bankId;
+
+  renderQuestions();
+  setStatus(t("ready"));
+}
+
+function renderQuestions(){
+  const missing = questions.filter(q => !q.scale_type).length;
+
+  document.getElementById("questionsBox").innerHTML = `
+    <div class="card">
+      <h2>${escapeHtml(t("metadataStatus"))}</h2>
+      <div class="kv"><b>${escapeHtml(t("questions"))}</b><span>${questions.length}</span></div>
+      <div class="kv"><b>${escapeHtml(t("missingScale"))}</b><span>${missing}</span></div>
+      <button class="primary" onclick="saveQuestions()">${escapeHtml(t("saveMetadata"))}</button>
+    </div>
+
+    ${questions.map((q, index) => renderQuestionCard(q, index)).join("")}
+  `;
+}
+
+function renderQuestionCard(q, index){
+  const scale = q.scale_type || "";
+  const definition = scaleDefinitions.find(
+    item => item.scale_code === scale
+  );
+
+  return `
+    <div class="card">
+      <h3>${escapeHtml(q.code || "NO_CODE")}</h3>
+      <p>${escapeHtml(q.prompt || q.title || q.text || "")}</p>
+
+      <div class="kv">
+        <b>${escapeHtml(t("questionType"))}</b>
+        <span>${escapeHtml(q.question_type || q.type || t("notSet"))}</span>
+      </div>
+
+      <div class="kv">
+        <b>${escapeHtml(t("scaleType"))}</b>
+        <span>
+          <select onchange="setScale(${index}, this.value)">
+            <option value="" ${scale==="" ? "selected" : ""}>${escapeHtml(t("notSet"))}</option>
+            ${scaleDefinitions.map(item => `
+              <option
+                value="${escapeHtml(item.scale_code)}"
+                ${scale === item.scale_code ? "selected" : ""}
+              >
+                ${escapeHtml(
+                  item.title?.ru || item.title?.en || item.scale_code
+                )} — ${escapeHtml(item.scale_code)}
+              </option>
+            `).join("")}
+          </select>
+          ${scale ? `<span class='badge'>${escapeHtml(t("set"))}</span>` : `<span class='badge warn'>${escapeHtml(t("missing"))}</span>`}
+        </span>
+      </div>
+
+      ${definition ? `
+        <div class="kv">
+          <b>${escapeHtml(t("scientificContract"))}</b>
+          <span>
+            ${escapeHtml(t("level"))}: ${escapeHtml(definition.measurement_level)};<br>
+            ${escapeHtml(t("structure"))}: ${escapeHtml(definition.value_structure)};<br>
+            ${escapeHtml(t("numericNature"))}: ${escapeHtml(definition.numeric_nature)};<br>
+            ${escapeHtml(t("quantity"))}: ${escapeHtml(definition.quantity_kind)}
+            ${definition.requires_context_validation ? `
+              <br><span class="badge warn">${escapeHtml(t("contextRequired"))}</span>
+            ` : ""}
+          </span>
+        </div>
+
+        <div class="kv">
+          <b>${escapeHtml(t("description"))}</b>
+          <span>${escapeHtml(
+            definition.description?.[lang] || definition.description?.en || definition.description?.ru || ""
+          )}</span>
+        </div>
+      ` : ""}
+
+      <div class="kv">
+        <b>${escapeHtml(t("options"))}</b>
+        <span>${renderOptions(q.options || [])}</span>
+      </div>
+    </div>
+  `;
+}
+
+function renderOptions(options){
+  if(!options.length) return "—";
+
+  return options.map(opt =>
+    escapeHtml(String(opt.value)) + " — " + escapeHtml(opt.text || "")
+  ).join("<br>");
+}
+
+function setScale(index, value){
+  questions[index].scale_type = value || null;
+  const definition = scaleDefinitions.find(
+    item => item.scale_code === value
+  );
+
+  questions[index].scale_reference = definition ? {
+    schema_version: scaleRegistryContract?.reference_schema_version,
+    registry_schema_version: definition.registry_schema_version,
+    scale_id: definition.scale_id,
+    scale_code: definition.scale_code,
+    scale_definition_version: definition.definition_version,
+    definition_kind: definition.definition_kind,
+    measurement_level: definition.measurement_level,
+    value_structure: definition.value_structure,
+    numeric_nature: definition.numeric_nature,
+    quantity_kind: definition.quantity_kind
+  } : null;
+  renderQuestions();
+}
+
+async function saveQuestions(){
+  if(!currentBankData || !selectedBank){
+    alert(t("noBank"));
+    return;
+  }
+
+  setStatus(t("saving"));
+
+  const response = await fetch(
+    "/question-banks/" + encodeURIComponent(selectedBank) + "/questions",
+    {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({
+        language: currentBankData.language || "ru",
+        source_file: currentBankData.source_file,
+        variable_name: currentBankData.variable_name,
+        questions: questions
+      })
+    }
+  );
+
+  const data = await response.json();
+
+  if(!response.ok || !data.ok){
+    alert(JSON.stringify(data, null, 2));
+    setStatus(t("saveFailed"));
+    return;
+  }
+
+  setStatus(t("saved"));
+  alert(t("savedCount") + ": " + data.saved_questions);
+}
+
+function escapeHtml(value){
+  return String(value ?? "")
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;");
+}
+</script>
+</body>
+</html>

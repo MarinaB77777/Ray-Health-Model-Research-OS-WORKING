@@ -1,0 +1,2049 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Question Editor</title>
+    <style>
+      :root {
+        --ink: #14233b;
+        --blue: #2563eb;
+        --line: #d9e2ee;
+        --soft: #f3f7fb;
+        --muted: #607086;
+        --ok: #087a55;
+        --warn: #a65b00;
+        --bad: #b42318;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family:
+          Inter,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          sans-serif;
+        background: #eef3f8;
+        color: var(--ink);
+      }
+      header {
+        background: #132641;
+        color: #fff;
+        padding: 14px 20px;
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+      }
+      header h1 {
+        font-size: 19px;
+        margin: 0;
+      }
+      header small {
+        color: #b9c8dc;
+      }
+      .grow {
+        flex: 1;
+      }
+      button,
+      select,
+      input,
+      textarea {
+        font: inherit;
+      }
+      button,
+      select {
+        border: 1px solid #b9c6d6;
+        border-radius: 9px;
+        padding: 9px 12px;
+        background: #fff;
+      }
+      button {
+        cursor: pointer;
+        font-weight: 700;
+      }
+      .primary {
+        background: var(--blue);
+        border-color: var(--blue);
+        color: #fff;
+      }
+      .danger {
+        color: var(--bad);
+        border-color: #f1b8b4;
+      }
+      .quiet {
+        background: var(--soft);
+      }
+      .shell {
+        display: grid;
+        grid-template-columns: 360px minmax(660px, 1fr);
+        min-height: calc(100vh - 66px);
+      }
+      aside {
+        background: #fff;
+        border-right: 1px solid var(--line);
+        padding: 15px;
+        overflow: auto;
+      }
+      .main {
+        padding: 20px;
+        overflow: auto;
+      }
+      .card {
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 15px;
+        padding: 16px;
+        margin-bottom: 14px;
+        box-shadow: 0 7px 20px #1e293b0b;
+      }
+      .filters,
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+      .filters input,
+      .filters select,
+      .field input,
+      .field select,
+      .field textarea {
+        width: 100%;
+        border: 1px solid #c6d1df;
+        border-radius: 9px;
+        padding: 10px;
+        background: #fff;
+      }
+      .list {
+        margin-top: 12px;
+      }
+      .item {
+        border: 1px solid var(--line);
+        border-radius: 11px;
+        padding: 11px;
+        margin: 7px 0;
+        cursor: pointer;
+      }
+      .item:hover,
+      .item.active {
+        border-color: #6c95df;
+        background: #eff6ff;
+      }
+      .item b {
+        display: block;
+      }
+      .small {
+        font-size: 12px;
+        color: var(--muted);
+        line-height: 1.45;
+      }
+      .status {
+        padding: 10px 12px;
+        border-radius: 10px;
+        background: #eaf0f7;
+        margin-bottom: 12px;
+        white-space: pre-wrap;
+      }
+      .status.ok,
+      .notice.ok {
+        background: #e9f8f1;
+        color: #075b41;
+      }
+      .status.error,
+      .notice.error {
+        background: #fff0ef;
+        color: #8d2118;
+      }
+      .notice {
+        padding: 10px;
+        border-radius: 10px;
+        background: #fff8e5;
+        color: #805000;
+        margin: 8px 0;
+      }
+      .field {
+        margin: 10px 0;
+      }
+      .field label {
+        display: block;
+        font-weight: 750;
+        font-size: 12px;
+        margin-bottom: 5px;
+      }
+      .field textarea {
+        min-height: 88px;
+      }
+      .badge {
+        display: inline-block;
+        border-radius: 999px;
+        padding: 4px 8px;
+        background: #e5eaf1;
+        font-size: 11px;
+        font-weight: 800;
+      }
+      .badge.active {
+        background: #d7f5e7;
+        color: #086342;
+      }
+      .badge.trial {
+        background: #dce9ff;
+        color: #244e9d;
+      }
+      .badge.draft {
+        background: #fff0c9;
+        color: #865300;
+      }
+      .actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+      .version {
+        border-top: 1px solid #e8edf4;
+        padding: 10px 0;
+      }
+      .credit {
+        text-align: center;
+        color: #64748b;
+        font-size: 11px;
+        padding: 14px;
+      }
+      .choice-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(220px, 1fr));
+        gap: 10px;
+      }
+      .choice-card {
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 12px;
+        background: #fbfdff;
+      }
+      .choice-card strong {
+        display: block;
+        margin-bottom: 4px;
+      }
+      .preview {
+        border: 1px dashed #9fb4ce;
+        border-radius: 12px;
+        padding: 14px;
+        background: #f8fbff;
+        min-height: 92px;
+      }
+      .preview-option {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        margin: 7px 0;
+      }
+      .preview-line {
+        height: 5px;
+        border-radius: 9px;
+        background: linear-gradient(90deg, #2563eb 46%, #d7e0ec 46%);
+        margin: 24px 4px 8px;
+      }
+      .scale-card {
+        border-left: 4px solid #4f7fcf;
+        background: #f6f9fd;
+        padding: 12px;
+        border-radius: 8px;
+      }
+      .scale-card h4 {
+        margin: 0 0 5px;
+      }
+      .facts {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 8px;
+      }
+      .option-row,
+      .route-row {
+        display: grid;
+        grid-template-columns:
+          minmax(160px, 2fr) minmax(100px, 1fr) minmax(90px, 1fr)
+          auto;
+        gap: 8px;
+        align-items: end;
+        padding: 9px 0;
+        border-top: 1px solid #e8edf4;
+      }
+      .route-row {
+        grid-template-columns: 1.2fr 1fr 1fr 1.2fr 1.4fr auto;
+      }
+      .option-row input,
+      .route-row input,
+      .route-row select {
+        width: 100%;
+        border: 1px solid #c6d1df;
+        border-radius: 8px;
+        padding: 8px;
+      }
+      .mini-label {
+        display: block;
+        font-size: 10px;
+        color: var(--muted);
+        font-weight: 700;
+        margin-bottom: 3px;
+      }
+      .marker-list {
+        max-height: 210px;
+        overflow: auto;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 8px;
+      }
+      .marker {
+        display: flex;
+        gap: 8px;
+        padding: 6px;
+        align-items: flex-start;
+      }
+      .marker input {
+        width: auto;
+      }
+      .technical {
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 10px;
+        background: #fafcff;
+      }
+      .technical pre {
+        white-space: pre-wrap;
+        word-break: break-word;
+        font:
+          11px ui-monospace,
+          SFMono-Regular,
+          Menlo,
+          monospace;
+        max-height: 320px;
+        overflow: auto;
+      }
+      .language-ready {
+        display: flex;
+        gap: 6px;
+        margin: 7px 0;
+      }
+      .destination {
+        border: 1px solid #b9cce8;
+        background: #f5f9ff;
+        border-radius: 12px;
+        padding: 12px;
+      }
+      .new-bank {
+        display: none;
+        border-top: 1px solid var(--line);
+        margin-top: 10px;
+        padding-top: 10px;
+      }
+      @media (max-width: 980px) {
+        .shell {
+          display: block;
+        }
+        .grid,
+        .filters,
+        .choice-grid {
+          grid-template-columns: 1fr;
+        }
+        .option-row,
+        .route-row {
+          grid-template-columns: 1fr;
+        }
+        .main {
+          padding: 12px;
+        }
+        aside {
+          border-right: 0;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div>
+        <h1 data-i18n="title">Редактор вопросов</h1>
+        <small data-i18n="subtitle"
+          >Содержание · измерение · логика · версии</small
+        >
+      </div>
+      <div class="grow"></div>
+      <button onclick="location.href='/research-workspace'" data-i18n="back">
+        ← Рабочая среда</button
+      ><select id="lang" onchange="setLang(this.value)">
+        <option value="ru">RU</option>
+        <option value="en">EN</option>
+        <option value="es">ES</option>
+      </select>
+    </header>
+    <div class="shell">
+      <aside>
+        <div class="filters">
+          <input
+            id="search"
+            oninput="renderList()"
+            data-ph="search"
+            placeholder="Поиск вопроса"
+          /><select id="bank" onchange="renderList()">
+            <option value="">Все банки</option>
+          </select>
+        </div>
+        <div id="list" class="list"></div>
+      </aside>
+      <main class="main">
+        <div id="status" class="status" data-i18n="loading">
+          Загрузка стандартов…
+        </div>
+        <section id="empty" class="card">
+          <h2 data-i18n="choose">Выберите существующий вопрос</h2>
+          <p class="small" data-i18n="chooseHint">
+            Изменение создаёт Draft новой версии; зарегистрированный источник не
+            переписывается.
+          </p>
+        </section>
+        <section id="editor" style="display: none">
+          <div class="card">
+            <div class="actions">
+              <span id="identity" class="badge"></span
+              ><span id="versionStatus" class="badge"></span
+              ><span id="scaleBadge" class="badge"></span>
+            </div>
+            <h2 id="heading"></h2>
+            <div id="languageReady" class="language-ready"></div>
+            <p class="small" data-i18n="versionRule">
+              Draft редактируется. Trial и Active неизменяемы и служат
+              основанием следующей версии.
+            </p>
+          </div>
+
+          <div class="card">
+            <h3 data-i18n="content">Вопрос на выбранном языке</h3>
+            <div class="field">
+              <label data-i18n="prompt">Формулировка</label
+              ><textarea
+                id="prompt"
+                oninput="captureText();updateTechnical()"
+              ></textarea>
+            </div>
+            <div class="field">
+              <label data-i18n="options">Варианты ответа</label>
+              <div id="options"></div>
+              <button class="quiet" onclick="addOption()" data-i18n="addOption">
+                ＋ Добавить вариант
+              </button>
+            </div>
+            <p class="small" data-i18n="translationHint">
+              Переключатель языка показывает и редактирует перевод той же версии
+              вопроса.
+            </p>
+          </div>
+
+          <div class="card">
+            <h3 data-i18n="measurement">
+              Как выглядит ответ и что он означает
+            </h3>
+            <div class="grid">
+              <div class="field">
+                <label data-i18n="questionType">Как задаётся вопрос</label
+                ><select
+                  id="questionType"
+                  onchange="questionTypeChanged()"
+                ></select>
+              </div>
+              <div class="field">
+                <label data-i18n="responseType">Что сохраняется в ответе</label
+                ><select
+                  id="responseType"
+                  onchange="responseTypeChanged()"
+                ></select>
+              </div>
+              <div class="field">
+                <label data-i18n="presentationType">Как участник отвечает</label
+                ><select
+                  id="presentationType"
+                  onchange="refreshContract()"
+                ></select>
+              </div>
+              <div class="field">
+                <label data-i18n="scaleType"
+                  >Как интерпретируется значение</label
+                ><select id="scaleType" onchange="scaleChanged()"></select>
+              </div>
+            </div>
+            <div id="typeExplanation" class="notice"></div>
+            <div class="choice-grid">
+              <div>
+                <h4 data-i18n="previewTitle">Так это увидит участник</h4>
+                <div id="preview" class="preview"></div>
+              </div>
+              <div>
+                <h4 data-i18n="meaningTitle">Научный смысл шкалы</h4>
+                <div id="scaleInfo" class="scale-card"></div>
+              </div>
+            </div>
+            <div id="compatibility" class="notice"></div>
+            <div class="grid">
+              <div class="field">
+                <label data-i18n="scoreDirection">Направление счёта</label
+                ><select id="scoreDirection" onchange="updateWorking()">
+                  <option value="">—</option>
+                  <option value="direct">direct</option>
+                  <option value="reverse">reverse</option>
+                  <option value="bidirectional">bidirectional</option>
+                </select>
+              </div>
+              <div class="field">
+                <label data-i18n="unit">Единица измерения</label
+                ><input id="unit" oninput="updateWorking()" />
+              </div>
+              <div class="field">
+                <label data-i18n="category">Смысловая категория</label
+                ><input id="category" oninput="updateWorking()" />
+              </div>
+              <div class="field">
+                <label data-i18n="calculationRole">Роль ответа в расчёте</label
+                ><select id="calculationRole" onchange="updateWorking()">
+                  <option value="descriptive">descriptive</option>
+                  <option value="parameter_input">parameter input</option>
+                  <option value="predictor">predictor</option>
+                  <option value="outcome">outcome</option>
+                  <option value="covariate">covariate</option>
+                  <option value="moderator">moderator</option>
+                  <option value="mediator">mediator</option>
+                  <option value="grouping">grouping</option>
+                  <option value="filter">filter</option>
+                  <option value="not_calculated">not calculated</option>
+                </select>
+              </div>
+            </div>
+            <div id="rangeFields" class="grid">
+              <div class="field">
+                <label data-i18n="minimum">Минимум</label
+                ><input id="rangeMin" type="number" oninput="updateWorking()" />
+              </div>
+              <div class="field">
+                <label data-i18n="maximum">Максимум</label
+                ><input id="rangeMax" type="number" oninput="updateWorking()" />
+              </div>
+              <div class="field">
+                <label data-i18n="step">Шаг</label
+                ><input
+                  id="rangeStep"
+                  type="number"
+                  oninput="updateWorking()"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3 data-i18n="routing">Куда перейти после ответа</h3>
+            <div class="grid">
+              <div class="field">
+                <label data-i18n="defaultAction">Обычное действие</label
+                ><select id="defaultAction" onchange="defaultActionChanged()">
+                  <option value="sequential">sequential</option>
+                  <option value="specific">specific question</option>
+                  <option value="terminal">finish</option>
+                </select>
+              </div>
+              <div class="field" id="defaultTargetWrap">
+                <label data-i18n="defaultTarget">Вопрос по умолчанию</label
+                ><select id="defaultTarget" onchange="updateRouting()"></select>
+              </div>
+            </div>
+            <div id="routes"></div>
+            <button class="quiet" onclick="addRoute()" data-i18n="addRoute">
+              ＋ Добавить условный переход
+            </button>
+            <p class="small" data-i18n="routingHint">
+              Целевой вопрос можно выбрать из любого зарегистрированного банка.
+              При публикации фиксируется его версия.
+            </p>
+          </div>
+
+          <div class="card">
+            <h3 data-i18n="quality">Пропуски и наблюдаемые маркеры</h3>
+            <div class="grid">
+              <div class="field">
+                <label data-i18n="required">Обязательность ответа</label
+                ><select id="required" onchange="updateWorking()">
+                  <option value="required">required</option>
+                  <option value="optional">optional</option>
+                  <option value="not_applicable_allowed">
+                    not applicable allowed
+                  </option>
+                </select>
+              </div>
+              <div class="field">
+                <label data-i18n="missingAnalysis"
+                  >Как передавать пропуск в анализ</label
+                ><select id="missingAnalysis" onchange="updateWorking()">
+                  <option value="keep_missing">keep missing</option>
+                  <option value="explicit_category">explicit category</option>
+                  <option value="analysis_plan_required">
+                    analysis plan required
+                  </option>
+                </select>
+              </div>
+            </div>
+            <label class="mini-label" data-i18n="markers"
+              >Какие наблюдаемые маркеры связаны с вопросом</label
+            >
+            <div id="markers" class="marker-list"></div>
+          </div>
+
+          <div class="card">
+            <h3 data-i18n="destination">Где сохранить</h3>
+            <div class="destination">
+              <div class="field">
+                <label data-i18n="saveBank">Банк назначения</label
+                ><select id="saveBank" onchange="destinationChanged()"></select>
+              </div>
+              <div id="destinationExplanation" class="notice"></div>
+              <button onclick="toggleNewBank()" data-i18n="createBank">
+                ＋ Создать новый банк
+              </button>
+              <div id="newBank" class="new-bank">
+                <div class="field">
+                  <label data-i18n="newBankTitle"
+                    >Название нового банка на выбранном языке</label
+                  ><input id="newBankTitle" />
+                </div>
+                <button
+                  class="primary"
+                  onclick="createBank()"
+                  data-i18n="createAndSelect"
+                >
+                  Создать и выбрать
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3 data-i18n="responsibility">Ответственность и сохранение</h3>
+            <div class="grid">
+              <div class="field">
+                <label data-i18n="author">Основной автор версии</label
+                ><input
+                  id="author"
+                  data-ph="authorPh"
+                  placeholder="Имя или идентификатор автора"
+                />
+              </div>
+              <div class="field">
+                <label data-i18n="actor">Кто вносит изменение</label
+                ><input
+                  id="actor"
+                  data-ph="actorPh"
+                  placeholder="researcher_id"
+                />
+              </div>
+            </div>
+            <div class="field">
+              <label data-i18n="reason">Что и почему изменяется</label
+              ><textarea id="reason"></textarea>
+            </div>
+            <div class="actions">
+              <button class="primary" onclick="saveDraft()" data-i18n="save">
+                Сохранить Draft
+              </button>
+            </div>
+          </div>
+
+          <div class="card">
+            <details class="technical" ontoggle="updateTechnical()">
+              <summary data-i18n="technical">
+                Служебный контракт — заполняется автоматически
+              </summary>
+              <pre id="technicalJson"></pre>
+            </details>
+          </div>
+          <div class="card">
+            <h3 data-i18n="versions">История версий</h3>
+            <div id="versions"></div>
+          </div>
+        </section>
+        <div class="credit">
+          Designed and developed collaboratively by Marina Boronenko and Ray, AI
+          research and engineering colleagues.
+        </div>
+      </main>
+    </div>
+    <script>
+      let language = ["ru", "en", "es"].includes(
+        localStorage.getItem("healthModelLanguage"),
+      )
+        ? localStorage.getItem("healthModelLanguage")
+        : "ru";
+      let catalog = { questions: [], banks: [] },
+        components = {},
+        scales = [],
+        markers = [],
+        selected = null,
+        detail = null,
+        working = null;
+      const I = {
+        ru: {
+          title: "Редактор вопросов",
+          subtitle: "Содержание · измерение · логика · версии",
+          back: "← Рабочая среда",
+          loading: "Загрузка стандартов…",
+          ready: "Стандарты и банки загружены",
+          search: "Поиск вопроса",
+          allBanks: "Все банки",
+          choose: "Выберите существующий вопрос",
+          chooseHint:
+            "Изменение создаёт Draft новой версии; зарегистрированный источник не переписывается.",
+          versionRule:
+            "Draft редактируется. Trial и Active неизменяемы и служат основанием следующей версии.",
+          content: "Вопрос на выбранном языке",
+          prompt: "Формулировка",
+          options: "Варианты ответа",
+          addOption: "＋ Добавить вариант",
+          translationHint:
+            "Переключатель языка показывает и редактирует перевод той же версии вопроса.",
+          measurement: "Как выглядит ответ и что он означает",
+          questionType: "Как задаётся вопрос",
+          responseType: "Что сохраняется в ответе",
+          presentationType: "Как участник отвечает",
+          scaleType: "Как интерпретируется значение",
+          previewTitle: "Так это увидит участник",
+          meaningTitle: "Научный смысл шкалы",
+          scoreDirection: "Направление счёта",
+          unit: "Единица измерения",
+          category: "Смысловая категория",
+          calculationRole: "Роль ответа в расчёте",
+          minimum: "Минимум",
+          maximum: "Максимум",
+          step: "Шаг",
+          routing: "Куда перейти после ответа",
+          defaultAction: "Обычное действие",
+          defaultTarget: "Вопрос по умолчанию",
+          addRoute: "＋ Добавить условный переход",
+          routingHint:
+            "Целевой вопрос можно выбрать из любого зарегистрированного банка. При публикации фиксируется его версия.",
+          quality: "Пропуски и наблюдаемые маркеры",
+          required: "Обязательность ответа",
+          missingAnalysis: "Как передавать пропуск в анализ",
+          markers: "Какие наблюдаемые маркеры связаны с вопросом",
+          destination: "Где сохранить",
+          saveBank: "Банк назначения",
+          createBank: "＋ Создать новый банк",
+          newBankTitle: "Название нового банка на выбранном языке",
+          createAndSelect: "Создать и выбрать",
+          responsibility: "Ответственность и сохранение",
+          author: "Основной автор версии",
+          actor: "Кто вносит изменение",
+          reason: "Что и почему изменяется",
+          save: "Сохранить Draft",
+          technical: "Служебный контракт — заполняется автоматически",
+          versions: "История версий",
+          toTrial: "Передать в Trial",
+          toActive: "Сделать Active",
+          delete: "Удалить Draft",
+          saved: "Draft сохранён",
+          forked: "Создано ответвление в выбранном банке",
+          done: "Действие выполнено",
+          error: "Ошибка",
+          authorPh: "Имя или идентификатор автора",
+          actorPh: "researcher_id",
+          confirmDelete: "Удалить только эту Draft-версию?",
+          currentBank:
+            "Текущий банк: будет создана новая версия того же вопроса.",
+          forkBank:
+            "Другой банк: будет создан новый вопрос v1 с новым UUID и ссылкой на источник.",
+          compatible: "Комбинация совместима",
+          notBound:
+            "Шкала не выбрана: стандартные статистические операции не предполагаются.",
+          optionLabel: "Текст варианта",
+          optionValue: "Сохраняемое значение",
+          optionScore: "Балл, если нужен",
+          condition: "Условие",
+          conditionValue: "Значение",
+          targetBank: "Банк",
+          targetQuestion: "Целевой вопрос",
+          remove: "Удалить",
+          bankCreated: "Новый банк создан и выбран",
+          needActor: "Укажите автора изменения и причину",
+          noMarkers: "Зарегистрированных маркеров пока нет",
+        },
+        en: {
+          title: "Question Editor",
+          subtitle: "Content · measurement · logic · versions",
+          back: "← Workspace",
+          loading: "Loading standards…",
+          ready: "Standards and banks loaded",
+          search: "Search questions",
+          allBanks: "All banks",
+          choose: "Select an existing question",
+          chooseHint:
+            "An edit creates a new Draft version; the registered source is not overwritten.",
+          versionRule:
+            "Draft is editable. Trial and Active are immutable bases for a subsequent version.",
+          content: "Question in the selected language",
+          prompt: "Prompt",
+          options: "Response options",
+          addOption: "＋ Add option",
+          translationHint:
+            "The language selector edits another translation of the same question version.",
+          measurement: "How the answer looks and what it means",
+          questionType: "How the question is asked",
+          responseType: "What is stored",
+          presentationType: "How the participant responds",
+          scaleType: "How the value is interpreted",
+          previewTitle: "Participant preview",
+          meaningTitle: "Scientific meaning of the scale",
+          scoreDirection: "Score direction",
+          unit: "Measurement unit",
+          category: "Semantic category",
+          calculationRole: "Calculation role",
+          minimum: "Minimum",
+          maximum: "Maximum",
+          step: "Step",
+          routing: "Where to go after the answer",
+          defaultAction: "Default action",
+          defaultTarget: "Default target question",
+          addRoute: "＋ Add conditional route",
+          routingHint:
+            "A target may come from any registered bank. Its version is pinned at publication.",
+          quality: "Missingness and observable markers",
+          required: "Response requirement",
+          missingAnalysis: "Missing-data handoff",
+          markers: "Observable markers linked to the question",
+          destination: "Save destination",
+          saveBank: "Destination bank",
+          createBank: "＋ Create a new bank",
+          newBankTitle: "New bank title in the selected language",
+          createAndSelect: "Create and select",
+          responsibility: "Responsibility and save",
+          author: "Primary version author",
+          actor: "Change actor",
+          reason: "What changes and why",
+          save: "Save Draft",
+          technical: "Technical contract — completed automatically",
+          versions: "Version history",
+          toTrial: "Move to Trial",
+          toActive: "Make Active",
+          delete: "Delete Draft",
+          saved: "Draft saved",
+          forked: "A fork was created in the selected bank",
+          done: "Action completed",
+          error: "Error",
+          authorPh: "Author name or identifier",
+          actorPh: "researcher_id",
+          confirmDelete: "Delete this Draft version only?",
+          currentBank:
+            "Current bank: a new version of the same question will be created.",
+          forkBank:
+            "Different bank: a new v1 question receives a new UUID and source provenance.",
+          compatible: "The combination is compatible",
+          notBound:
+            "No scale is bound; no standard statistical operation is inferred.",
+          optionLabel: "Option label",
+          optionValue: "Stored value",
+          optionScore: "Score, if applicable",
+          condition: "Condition",
+          conditionValue: "Value",
+          targetBank: "Bank",
+          targetQuestion: "Target question",
+          remove: "Remove",
+          bankCreated: "New bank created and selected",
+          needActor: "Provide the change actor and reason",
+          noMarkers: "No registered markers yet",
+        },
+        es: {
+          title: "Editor de preguntas",
+          subtitle: "Contenido · medición · lógica · versiones",
+          back: "← Espacio de trabajo",
+          loading: "Cargando estándares…",
+          ready: "Estándares y bancos cargados",
+          search: "Buscar preguntas",
+          allBanks: "Todos los bancos",
+          choose: "Elige una pregunta",
+          chooseHint:
+            "Un cambio crea una nueva versión Draft; la fuente registrada no se sobrescribe.",
+          versionRule:
+            "Draft es editable. Trial y Active son bases inmutables para otra versión.",
+          content: "Pregunta en el idioma seleccionado",
+          prompt: "Formulación",
+          options: "Opciones de respuesta",
+          addOption: "＋ Añadir opción",
+          translationHint:
+            "El selector de idioma edita otra traducción de la misma versión.",
+          measurement: "Cómo se ve la respuesta y qué significa",
+          questionType: "Cómo se formula",
+          responseType: "Qué se guarda",
+          presentationType: "Cómo responde la persona",
+          scaleType: "Cómo se interpreta el valor",
+          previewTitle: "Vista del participante",
+          meaningTitle: "Significado científico de la escala",
+          scoreDirection: "Dirección de puntuación",
+          unit: "Unidad de medida",
+          category: "Categoría semántica",
+          calculationRole: "Función en el cálculo",
+          minimum: "Mínimo",
+          maximum: "Máximo",
+          step: "Paso",
+          routing: "Adónde ir después de responder",
+          defaultAction: "Acción habitual",
+          defaultTarget: "Pregunta predeterminada",
+          addRoute: "＋ Añadir ruta condicional",
+          routingHint:
+            "El destino puede ser de cualquier banco registrado. La versión se fija al publicar.",
+          quality: "Ausencias y marcadores observables",
+          required: "Obligatoriedad",
+          missingAnalysis: "Tratamiento de ausencia",
+          markers: "Marcadores observables relacionados",
+          destination: "Dónde guardar",
+          saveBank: "Banco de destino",
+          createBank: "＋ Crear banco",
+          newBankTitle: "Nombre del banco en el idioma seleccionado",
+          createAndSelect: "Crear y seleccionar",
+          responsibility: "Responsabilidad y guardado",
+          author: "Autor principal",
+          actor: "Responsable del cambio",
+          reason: "Qué cambia y por qué",
+          save: "Guardar Draft",
+          technical: "Contrato técnico — se completa automáticamente",
+          versions: "Historial",
+          toTrial: "Pasar a Trial",
+          toActive: "Activar",
+          delete: "Eliminar Draft",
+          saved: "Draft guardado",
+          forked: "Se creó una derivación en el banco elegido",
+          done: "Acción completada",
+          error: "Error",
+          authorPh: "Nombre o identificador",
+          actorPh: "researcher_id",
+          confirmDelete: "¿Eliminar solo esta versión Draft?",
+          currentBank:
+            "Banco actual: se creará una nueva versión de la misma pregunta.",
+          forkBank:
+            "Otro banco: una nueva pregunta v1 tendrá UUID nuevo y procedencia registrada.",
+          compatible: "La combinación es compatible",
+          notBound:
+            "Sin escala no se presupone una operación estadística estándar.",
+          optionLabel: "Texto de opción",
+          optionValue: "Valor guardado",
+          optionScore: "Puntuación, si corresponde",
+          condition: "Condición",
+          conditionValue: "Valor",
+          targetBank: "Banco",
+          targetQuestion: "Pregunta de destino",
+          remove: "Eliminar",
+          bankCreated: "Banco creado y seleccionado",
+          needActor: "Indica responsable y motivo",
+          noMarkers: "Todavía no hay marcadores registrados",
+        },
+      };
+      const t = (k) => I[language][k] || I.en[k] || k,
+        esc = (v) =>
+          String(v ?? "")
+            .replaceAll("&", "&amp;")
+            .replaceAll("<", "&lt;")
+            .replaceAll(">", "&gt;")
+            .replaceAll('"', "&quot;");
+      const OPTION_LABELS = {
+        ru: {
+          direct: "Больше ответ — больше значение",
+          reverse: "Больше ответ — меньше значение",
+          bidirectional: "Отклонение важно в обе стороны",
+          descriptive: "Описание без автоматического расчёта",
+          parameter_input: "Вход для расчёта параметра",
+          predictor: "Предиктор",
+          outcome: "Результат",
+          covariate: "Ковариата",
+          moderator: "Модератор",
+          mediator: "Медиатор",
+          grouping: "Разделение на группы",
+          filter: "Условие отбора",
+          not_calculated: "Не использовать в расчёте",
+          required: "Ответ обязателен",
+          optional: "Ответ можно пропустить",
+          not_applicable_allowed: "Разрешено «не применимо»",
+          keep_missing: "Сохранить как пропуск",
+          explicit_category: "Отдельная категория",
+          analysis_plan_required: "Решение задаётся планом анализа",
+          sequential: "Следующий вопрос по порядку",
+          specific: "Выбранный вопрос",
+          terminal: "Завершить раздел или анкету",
+          equals: "Ответ равен",
+          not_equals: "Ответ не равен",
+          greater_than: "Ответ больше",
+          less_than: "Ответ меньше",
+          answered: "Ответ получен",
+          not_answered: "Ответ отсутствует",
+        },
+        en: {
+          direct: "Higher response means higher value",
+          reverse: "Higher response means lower value",
+          bidirectional: "Deviation matters in both directions",
+          descriptive: "Description without automatic calculation",
+          parameter_input: "Parameter calculation input",
+          predictor: "Predictor",
+          outcome: "Outcome",
+          covariate: "Covariate",
+          moderator: "Moderator",
+          mediator: "Mediator",
+          grouping: "Grouping variable",
+          filter: "Selection filter",
+          not_calculated: "Do not calculate",
+          required: "Response required",
+          optional: "Response optional",
+          not_applicable_allowed: "Not applicable is allowed",
+          keep_missing: "Keep as missing",
+          explicit_category: "Explicit category",
+          analysis_plan_required: "Defined in the analysis plan",
+          sequential: "Next question in order",
+          specific: "Selected question",
+          terminal: "Finish section or questionnaire",
+          equals: "Answer equals",
+          not_equals: "Answer does not equal",
+          greater_than: "Answer is greater than",
+          less_than: "Answer is less than",
+          answered: "Answered",
+          not_answered: "Not answered",
+        },
+        es: {
+          direct: "Mayor respuesta, mayor valor",
+          reverse: "Mayor respuesta, menor valor",
+          bidirectional: "La desviación importa en ambas direcciones",
+          descriptive: "Descripción sin cálculo automático",
+          parameter_input: "Entrada para calcular parámetro",
+          predictor: "Predictor",
+          outcome: "Resultado",
+          covariate: "Covariable",
+          moderator: "Moderador",
+          mediator: "Mediador",
+          grouping: "Variable de agrupación",
+          filter: "Filtro de selección",
+          not_calculated: "No calcular",
+          required: "Respuesta obligatoria",
+          optional: "Respuesta opcional",
+          not_applicable_allowed: "Se permite «no aplicable»",
+          keep_missing: "Conservar como ausente",
+          explicit_category: "Categoría explícita",
+          analysis_plan_required: "Definido en el plan de análisis",
+          sequential: "Siguiente pregunta",
+          specific: "Pregunta seleccionada",
+          terminal: "Finalizar sección o cuestionario",
+          equals: "Respuesta igual a",
+          not_equals: "Respuesta distinta de",
+          greater_than: "Respuesta mayor que",
+          less_than: "Respuesta menor que",
+          answered: "Respondida",
+          not_answered: "Sin respuesta",
+        },
+      };
+      const labelValue = (value) =>
+        OPTION_LABELS[language]?.[value] || value.replaceAll("_", " ");
+      const CAPABILITY_LABELS = {
+        ru: {
+          frequency_table: "частоты и доли",
+          categorical_association: "связь категорий",
+          grouping: "сравнение групп",
+          ordered_summary: "описание порядка",
+          rank_based: "ранговые методы",
+          numeric_summary: "числовое описание",
+          numeric_plot: "графики числовых данных",
+          parametric_numeric:
+            "параметрические методы — после проверки предпосылок",
+          binary_outcome: "модели бинарного результата",
+          count_model: "модели счётных данных",
+          bounded_outcome: "модели ограниченного результата",
+          time_to_event: "анализ времени до события",
+          qualitative_coding: "качественное кодирование",
+          text_analysis: "анализ текста",
+          temporal_ordering: "временной порядок",
+          time_difference: "разность времени",
+          circular_time: "циклическое время",
+          rank_agreement: "согласованность рангов",
+        },
+        en: {
+          frequency_table: "frequencies and proportions",
+          categorical_association: "categorical association",
+          grouping: "group comparison",
+          ordered_summary: "ordered summary",
+          rank_based: "rank-based methods",
+          numeric_summary: "numeric summary",
+          numeric_plot: "numeric plots",
+          parametric_numeric: "parametric methods after assumption checks",
+          binary_outcome: "binary-outcome models",
+          count_model: "count models",
+          bounded_outcome: "bounded-outcome models",
+          time_to_event: "time-to-event analysis",
+          qualitative_coding: "qualitative coding",
+          text_analysis: "text analysis",
+          temporal_ordering: "temporal ordering",
+          time_difference: "time differences",
+          circular_time: "circular time",
+          rank_agreement: "rank agreement",
+        },
+        es: {
+          frequency_table: "frecuencias y proporciones",
+          categorical_association: "asociación categórica",
+          grouping: "comparación de grupos",
+          ordered_summary: "resumen ordenado",
+          rank_based: "métodos de rangos",
+          numeric_summary: "resumen numérico",
+          numeric_plot: "gráficos numéricos",
+          parametric_numeric: "métodos paramétricos tras comprobar supuestos",
+          binary_outcome: "modelos binarios",
+          count_model: "modelos de conteo",
+          bounded_outcome: "modelos de resultado acotado",
+          time_to_event: "tiempo hasta evento",
+          qualitative_coding: "codificación cualitativa",
+          text_analysis: "análisis de texto",
+          temporal_ordering: "orden temporal",
+          time_difference: "diferencias temporales",
+          circular_time: "tiempo circular",
+          rank_agreement: "concordancia de rangos",
+        },
+      };
+      const capabilityLabel = (value) =>
+        CAPABILITY_LABELS[language]?.[value] || value.replaceAll("_", " ");
+      const VALIDATION_TEXT = {
+        ru: {
+          UNKNOWN_QUESTION_TYPE: "Неизвестный тип вопроса",
+          UNKNOWN_RESPONSE_TYPE: "Неизвестный тип ответа",
+          UNKNOWN_SCALE: "Шкала отсутствует в реестре",
+          QUESTION_RESPONSE_INCOMPATIBLE:
+            "Тип вопроса не создаёт выбранный вид ответа",
+          QUESTION_SCALE_INCOMPATIBLE: "Тип вопроса несовместим со шкалой",
+          RESPONSE_SCALE_INCOMPATIBLE: "Формат ответа несовместим со шкалой",
+          RESPONSE_PRESENTATION_INCOMPATIBLE:
+            "Способ ввода не создаёт выбранный формат ответа",
+          SCALE_UNBOUND: "Шкала пока не выбрана",
+          CONTEXT_VALIDATION_REQUIRED:
+            "Свойства шкалы нужно подтвердить для конкретного инструмента и контекста",
+        },
+        en: {
+          UNKNOWN_QUESTION_TYPE: "Unknown question type",
+          UNKNOWN_RESPONSE_TYPE: "Unknown response type",
+          UNKNOWN_SCALE: "Scale is not registered",
+          QUESTION_RESPONSE_INCOMPATIBLE:
+            "Question type does not produce the selected response",
+          QUESTION_SCALE_INCOMPATIBLE:
+            "Question type is incompatible with the scale",
+          RESPONSE_SCALE_INCOMPATIBLE:
+            "Response format is incompatible with the scale",
+          RESPONSE_PRESENTATION_INCOMPATIBLE:
+            "Input control does not produce the selected response",
+          SCALE_UNBOUND: "Scale is not bound yet",
+          CONTEXT_VALIDATION_REQUIRED:
+            "Scale properties require instrument- and context-specific evidence",
+        },
+        es: {
+          UNKNOWN_QUESTION_TYPE: "Tipo de pregunta desconocido",
+          UNKNOWN_RESPONSE_TYPE: "Tipo de respuesta desconocido",
+          UNKNOWN_SCALE: "La escala no está registrada",
+          QUESTION_RESPONSE_INCOMPATIBLE:
+            "La pregunta no produce la respuesta elegida",
+          QUESTION_SCALE_INCOMPATIBLE:
+            "La pregunta es incompatible con la escala",
+          RESPONSE_SCALE_INCOMPATIBLE:
+            "La respuesta es incompatible con la escala",
+          RESPONSE_PRESENTATION_INCOMPATIBLE:
+            "El control no produce la respuesta elegida",
+          SCALE_UNBOUND: "La escala aún no está vinculada",
+          CONTEXT_VALIDATION_REQUIRED:
+            "Las propiedades requieren evidencia del instrumento y contexto",
+        },
+      };
+      const validationLabel = (issue) =>
+        VALIDATION_TEXT[language]?.[issue.code] ||
+        issue.code.replaceAll("_", " ").toLowerCase();
+      async function api(url, opt = {}) {
+        const r = await fetch(url, opt);
+        let d;
+        try {
+          d = await r.json();
+        } catch {
+          throw Error(`HTTP ${r.status}`);
+        }
+        if (!r.ok || d.ok === false)
+          throw Error(
+            typeof d.detail === "string"
+              ? d.detail
+              : JSON.stringify(d.detail || d),
+          );
+        return d;
+      }
+      function status(msg, type = "") {
+        const n = document.getElementById("status");
+        n.textContent = msg;
+        n.className = `status ${type}`;
+      }
+      function applyLang() {
+        document.documentElement.lang = language;
+        document.getElementById("lang").value = language;
+        document.querySelectorAll("[data-i18n]").forEach((n) => {
+          if (I[language][n.dataset.i18n])
+            n.textContent = I[language][n.dataset.i18n];
+        });
+        document
+          .querySelectorAll("[data-ph]")
+          .forEach((n) => (n.placeholder = t(n.dataset.ph)));
+        const first = document.querySelector("#bank option");
+        if (first) first.textContent = t("allBanks");
+        document.querySelectorAll("select option").forEach((option) => {
+          const label = OPTION_LABELS[language]?.[option.value];
+          if (label) option.textContent = label;
+        });
+      }
+      async function setLang(value) {
+        captureLanguage();
+        language = value;
+        localStorage.setItem("healthModelLanguage", value);
+        applyLang();
+        await reloadCatalogLanguage();
+        if (working) {
+          renderLanguage();
+          renderComponentOptions();
+          refreshContract();
+          renderRouting();
+          renderMarkers();
+          renderDestination();
+          renderVersions();
+        }
+      }
+      async function load() {
+        status(t("loading"));
+        try {
+          const [c, s, parts, m] = await Promise.all([
+            api(`/research/editors/questions?lang=${language}`),
+            api(
+              "/research/measurement-scales?question_constructor=true&include_non_active=true",
+            ),
+            api("/questionnaire-components"),
+            api("/research/observable-markers?include_inactive=true"),
+          ]);
+          catalog = c;
+          scales = s.definitions || [];
+          components = parts.components || {};
+          markers = m.definitions || m.markers || [];
+          renderBankFilters();
+          renderList();
+          status(t("ready"), "ok");
+        } catch (e) {
+          status(`${t("error")}: ${e.message}`, "error");
+        }
+      }
+      async function reloadCatalogLanguage() {
+        const c = await api(`/research/editors/questions?lang=${language}`);
+        catalog = c;
+        renderBankFilters();
+        renderList();
+      }
+      function renderBankFilters() {
+        const filter = document.getElementById("bank"),
+          old = filter.value;
+        filter.innerHTML =
+          `<option value="">${t("allBanks")}</option>` +
+          (catalog.banks || [])
+            .map(
+              (b) =>
+                `<option value="${esc(b.id)}">${esc(bankTitle(b))}</option>`,
+            )
+            .join("");
+        filter.value = old;
+        const save = document.getElementById("saveBank");
+        if (save) {
+          const desired =
+            save.value ||
+            localStorage.getItem("questionEditorDefaultBank") ||
+            selected?.bank_id;
+          save.innerHTML = (catalog.banks || [])
+            .map(
+              (b) =>
+                `<option value="${esc(b.id)}">${esc(bankTitle(b))}</option>`,
+            )
+            .join("");
+          if ((catalog.banks || []).some((b) => b.id === desired))
+            save.value = desired;
+        }
+      }
+      function bankTitle(b) {
+        return b.title_translations?.[language] || b.title || b.id;
+      }
+      function renderList() {
+        const q = document.getElementById("search").value.toLowerCase(),
+          b = document.getElementById("bank").value;
+        const items = (catalog.questions || []).filter(
+          (x) =>
+            (!b || x.bank_id === b) &&
+            (!q || `${x.question_code} ${x.prompt}`.toLowerCase().includes(q)),
+        );
+        document.getElementById("list").innerHTML =
+          items
+            .map(
+              (x) =>
+                `<div class="item ${selected?.bank_id === x.bank_id && selected?.question_code === x.question_code ? "active" : ""}" data-bank="${esc(x.bank_id)}" data-code="${esc(x.question_code)}"><b>${esc(x.prompt || x.question_code)}</b><span class="small">${esc(x.bank_id)} · ${esc(x.question_code)} · v${esc(x.question_version)} · ${esc(x.status || "")}</span></div>`,
+            )
+            .join("") || `<p class="small">—</p>`;
+        document
+          .querySelectorAll(".item[data-code]")
+          .forEach(
+            (n) =>
+              (n.onclick = () =>
+                selectQuestion(n.dataset.bank, n.dataset.code)),
+          );
+      }
+      function baseOrDraft() {
+        const versions = detail?.versions || [],
+          draft = versions
+            .filter((x) => x.development_status === "draft")
+            .sort((a, b) => b.question_version - a.question_version)[0];
+        return draft || detail.base;
+      }
+      async function selectQuestion(bank, code) {
+        try {
+          selected = (catalog.questions || []).find(
+            (x) => x.bank_id === bank && x.question_code === code,
+          ) || { bank_id: bank, question_code: code };
+          detail = await api(
+            `/research/editors/questions/${encodeURIComponent(bank)}/${encodeURIComponent(code)}`,
+          );
+          working = structuredClone(baseOrDraft());
+          ensureWorking();
+          document.getElementById("empty").style.display = "none";
+          document.getElementById("editor").style.display = "block";
+          fill();
+          renderList();
+        } catch (e) {
+          status(`${t("error")}: ${e.message}`, "error");
+        }
+      }
+      function ensureWorking() {
+        working.translations = working.translations || {};
+        for (const l of ["ru", "en", "es"]) {
+          working.translations[l] = working.translations[l] || {
+            prompt: "",
+            answer_options: [],
+          };
+          working.translations[l].answer_options = (
+            working.translations[l].answer_options || []
+          ).map((o, i) =>
+            typeof o === "object"
+              ? {
+                  ...o,
+                  value: o.value ?? `option_${i + 1}`,
+                  label: o.label ?? o.text ?? String(o.value ?? ""),
+                }
+              : { value: o, label: String(o) },
+          );
+        }
+        working.routing = working.routing || {
+          default_action: "sequential",
+          rules: [],
+        };
+        working.routing.rules = working.routing.rules || [];
+        working.calculation_role = working.calculation_role || {
+          role: "descriptive",
+        };
+        working.missing_value_policy = working.missing_value_policy || {
+          collection: "optional",
+          analysis: "keep_missing",
+        };
+        working.marker_references = working.marker_references || [];
+        working.allowed_range = working.allowed_range || {};
+      }
+      function fill() {
+        renderComponentOptions();
+        document.getElementById("questionType").value =
+          working.question_type || "single_choice";
+        document.getElementById("responseType").value =
+          working.response_type || "single_choice";
+        document.getElementById("presentationType").value =
+          working.presentation_type ||
+          suggestPresentation(working.response_type);
+        document.getElementById("scoreDirection").value =
+          working.score_direction || "";
+        document.getElementById("unit").value = working.unit || "";
+        document.getElementById("category").value = working.category || "";
+        document.getElementById("calculationRole").value =
+          working.calculation_role?.role || "descriptive";
+        document.getElementById("rangeMin").value =
+          working.allowed_range?.minimum ?? "";
+        document.getElementById("rangeMax").value =
+          working.allowed_range?.maximum ?? "";
+        document.getElementById("rangeStep").value =
+          working.allowed_range?.step ?? "";
+        document.getElementById("required").value =
+          working.missing_value_policy?.collection || "optional";
+        document.getElementById("missingAnalysis").value =
+          working.missing_value_policy?.analysis || "keep_missing";
+        document.getElementById("author").value =
+          working.authorship?.primary_author || "";
+        document.getElementById("reason").value = working.change_reason || "";
+        renderScaleOptions();
+        document.getElementById("scaleType").value = working.scale_type || "";
+        renderLanguage();
+        renderRouting();
+        renderMarkers();
+        renderDestination();
+        renderVersions();
+        refreshContract();
+      }
+      function titleOf(component) {
+        return (
+          component.localized_title?.[language] ||
+          component.title ||
+          component.id
+        );
+      }
+      function descriptionOf(component) {
+        return (
+          component.localized_description?.[language] ||
+          component.description?.[language] ||
+          component.description ||
+          ""
+        );
+      }
+      function renderComponentOptions() {
+        for (const [id, key] of [
+          ["questionType", "question_types"],
+          ["responseType", "response_types"],
+          ["presentationType", "presentation_types"],
+        ]) {
+          const node = document.getElementById(id),
+            value = node.value;
+          node.innerHTML = (components[key] || [])
+            .map(
+              (c) => `<option value="${esc(c.id)}">${esc(titleOf(c))}</option>`,
+            )
+            .join("");
+          if (value) node.value = value;
+        }
+      }
+      function renderScaleOptions() {
+        const response =
+          document.getElementById("responseType").value ||
+          working.response_type;
+        const node = document.getElementById("scaleType"),
+          value = node.value || working.scale_type || "";
+        node.innerHTML =
+          `<option value="">—</option>` +
+          scales
+            .map((s) => {
+              const ok =
+                !response ||
+                (s.compatible_response_types || []).includes(response);
+              return `<option value="${esc(s.scale_code)}" ${ok ? "" : "disabled"}>${esc(s.title?.[language] || s.scale_code)}${ok ? "" : " ⛔"}</option>`;
+            })
+            .join("");
+        node.value = value;
+        if (node.value !== value) node.value = "";
+      }
+      function renderLanguage() {
+        const tr = working.translations[language];
+        document.getElementById("prompt").value = tr.prompt || "";
+        renderOptions();
+        document.getElementById("heading").textContent =
+          tr.prompt || working.question_code;
+        document.getElementById("identity").textContent =
+          `${working.bank_id}:${working.question_code} · v${working.question_version || working.base_version}`;
+        document.getElementById("versionStatus").textContent =
+          working.development_status || "source";
+        document.getElementById("versionStatus").className =
+          `badge ${working.development_status || ""}`;
+        document.getElementById("scaleBadge").textContent =
+          working.scale_type || "unbound";
+        document.getElementById("languageReady").innerHTML = ["ru", "en", "es"]
+          .map(
+            (l) =>
+              `<span class="badge ${(working.translations[l]?.prompt || "").trim() ? "active" : "draft"}">${l.toUpperCase()} ${(working.translations[l]?.prompt || "").trim() ? "✓" : "…"}</span>`,
+          )
+          .join("");
+      }
+      function captureLanguage() {
+        if (!working) return;
+        working.translations[language].prompt = document
+          .getElementById("prompt")
+          .value.trim();
+        document.querySelectorAll(".option-row").forEach((row, i) => {
+          const option = working.translations[language].answer_options[i];
+          if (!option) return;
+          option.label = row.querySelector("[data-field=label]").value;
+          option.value = parseValue(
+            row.querySelector("[data-field=value]").value,
+          );
+          const score = row.querySelector("[data-field=score]").value;
+          score === "" ? delete option.score : (option.score = Number(score));
+        });
+        syncOptionIdentity();
+      }
+      function captureText() {
+        if (!working) return;
+        working.translations[language].prompt =
+          document.getElementById("prompt").value;
+        document.getElementById("heading").textContent =
+          working.translations[language].prompt || working.question_code;
+        updateTechnical();
+      }
+      function parseValue(value) {
+        if (value === "") return "";
+        if (
+          !Number.isNaN(Number(value)) &&
+          String(Number(value)) === value.trim()
+        )
+          return Number(value);
+        return value;
+      }
+      function syncOptionIdentity() {
+        const source = working.translations[language].answer_options;
+        for (const l of ["ru", "en", "es"]) {
+          if (l === language) continue;
+          while (working.translations[l].answer_options.length < source.length)
+            working.translations[l].answer_options.push({
+              value: "",
+              label: "",
+            });
+          working.translations[l].answer_options = working.translations[
+            l
+          ].answer_options.slice(0, source.length);
+          source.forEach((o, i) => {
+            working.translations[l].answer_options[i].value = o.value;
+            if ("score" in o)
+              working.translations[l].answer_options[i].score = o.score;
+            else delete working.translations[l].answer_options[i].score;
+          });
+        }
+      }
+      function renderOptions() {
+        const options = working.translations[language].answer_options || [];
+        document.getElementById("options").innerHTML =
+          options
+            .map(
+              (o, i) =>
+                `<div class="option-row"><div><span class="mini-label">${t("optionLabel")}</span><input data-field="label" value="${esc(o.label ?? o.text ?? "")}" oninput="captureLanguage();refreshContract()"/></div><div><span class="mini-label">${t("optionValue")}</span><input data-field="value" value="${esc(o.value ?? "")}" oninput="captureLanguage();refreshContract()"/></div><div><span class="mini-label">${t("optionScore")}</span><input data-field="score" type="number" value="${esc(o.score ?? "")}" oninput="captureLanguage();updateTechnical()"/></div><button class="danger" onclick="removeOption(${i})">${t("remove")}</button></div>`,
+            )
+            .join("") || `<p class="small">—</p>`;
+      }
+      function addOption() {
+        captureLanguage();
+        const i = working.translations[language].answer_options.length,
+          value = `option_${i + 1}`;
+        for (const l of ["ru", "en", "es"])
+          working.translations[l].answer_options.push({ value, label: "" });
+        renderOptions();
+        refreshContract();
+      }
+      function removeOption(index) {
+        captureLanguage();
+        for (const l of ["ru", "en", "es"])
+          working.translations[l].answer_options.splice(index, 1);
+        renderOptions();
+        refreshContract();
+      }
+      function expectedResponse(questionType) {
+        return {
+          single_choice: "single_choice",
+          multiple_choice: "multiple_choice",
+          numeric: "numeric",
+          slider: "numeric",
+          visual_analog_scale: "numeric",
+          text: "text",
+          date: "date",
+          time: "time",
+          duration: "duration",
+          file: "file",
+          ranking: "ranking",
+        }[questionType];
+      }
+      function suggestPresentation(response) {
+        return (
+          {
+            single_choice: "radio",
+            multiple_choice: "checkbox",
+            numeric: "number_input",
+            text: "text_input",
+            date: "date_input",
+            time: "time_input",
+            duration: "duration_input",
+            file: "file_input",
+            ranking: "ranking",
+          }[response] || "radio"
+        );
+      }
+      function questionTypeChanged() {
+        const questionType = document.getElementById("questionType").value;
+        const response = expectedResponse(questionType);
+        if (response) document.getElementById("responseType").value = response;
+        document.getElementById("presentationType").value =
+          questionType === "slider"
+            ? "slider"
+            : questionType === "visual_analog_scale"
+              ? "visual_analog_line"
+              : suggestPresentation(response);
+        responseTypeChanged();
+      }
+      function responseTypeChanged() {
+        renderScaleOptions();
+        const current = document.getElementById("scaleType").value;
+        if (current && !selectedScale())
+          document.getElementById("scaleType").value = "";
+        const questionType = document.getElementById("questionType").value;
+        document.getElementById("presentationType").value =
+          questionType === "slider"
+            ? "slider"
+            : questionType === "visual_analog_scale"
+              ? "visual_analog_line"
+              : suggestPresentation(
+                  document.getElementById("responseType").value,
+                );
+        refreshContract();
+      }
+      function selectedScale() {
+        return scales.find(
+          (s) => s.scale_code === document.getElementById("scaleType").value,
+        );
+      }
+      function scaleChanged() {
+        const s = selectedScale();
+        if (s?.bounds) {
+          if (s.bounds.minimum !== undefined)
+            document.getElementById("rangeMin").value = s.bounds.minimum;
+          if (s.bounds.maximum !== undefined)
+            document.getElementById("rangeMax").value = s.bounds.maximum;
+        }
+        const forbidden = s?.unit_policy === "forbidden";
+        document.getElementById("unit").disabled = forbidden;
+        if (forbidden) document.getElementById("unit").value = "";
+        refreshContract();
+      }
+      function updateWorking() {
+        if (!working) return;
+        captureLanguage();
+        working.question_type = document.getElementById("questionType").value;
+        working.response_type = document.getElementById("responseType").value;
+        working.presentation_type =
+          document.getElementById("presentationType").value;
+        working.scale_type = document.getElementById("scaleType").value || null;
+        working.score_direction =
+          document.getElementById("scoreDirection").value || null;
+        working.unit = document.getElementById("unit").value.trim() || null;
+        working.category =
+          document.getElementById("category").value.trim() || null;
+        working.calculation_role = {
+          role: document.getElementById("calculationRole").value,
+        };
+        working.allowed_range = {
+          minimum: numberOrNull("rangeMin"),
+          maximum: numberOrNull("rangeMax"),
+          step: numberOrNull("rangeStep"),
+        };
+        working.allowed_range = Object.fromEntries(
+          Object.entries(working.allowed_range).filter(([, v]) => v !== null),
+        );
+        working.allowed_values = working.translations[
+          language
+        ].answer_options.map((o) => o.value);
+        working.missing_value_policy = {
+          collection: document.getElementById("required").value,
+          analysis: document.getElementById("missingAnalysis").value,
+          unknown_is_zero: false,
+        };
+        updateTechnical();
+      }
+      function numberOrNull(id) {
+        const v = document.getElementById(id).value;
+        return v === "" ? null : Number(v);
+      }
+      async function refreshContract() {
+        if (!working) return;
+        updateWorking();
+        const questionComponent =
+          (components.question_types || []).find(
+            (x) => x.id === working.question_type,
+          ) || {};
+        const responseComponent =
+          (components.response_types || []).find(
+            (x) => x.id === working.response_type,
+          ) || {};
+        document.getElementById("typeExplanation").innerHTML =
+          `<b>${esc(titleOf(questionComponent))}</b> — ${esc(descriptionOf(questionComponent))}<br><span class="small">${esc(titleOf(responseComponent))}: ${esc(responseComponent.value_shape || "")}</span>`;
+        renderPreview();
+        renderScaleInfo();
+        try {
+          const d = await api("/questionnaire-components/validate", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              question_type: working.question_type,
+              response_type: working.response_type,
+              scale_type: working.scale_type,
+              presentation_type: working.presentation_type,
+            }),
+          });
+          const v = d.validation,
+            n = document.getElementById("compatibility");
+          n.className = `notice ${v.valid ? "ok" : "error"}`;
+          n.textContent = v.valid
+            ? v.warnings?.length
+              ? v.warnings.map(validationLabel).join(" · ")
+              : t("compatible")
+            : v.errors.map(validationLabel).join(" · ");
+        } catch (e) {
+          document.getElementById("compatibility").textContent = e.message;
+        }
+      }
+      function renderPreview() {
+        const q = working.translations[language].prompt || t("prompt"),
+          opts = working.translations[language].answer_options,
+          p = working.presentation_type;
+        let body = "";
+        if (["radio", "cards", "dropdown"].includes(p))
+          body = opts
+            .slice(0, 4)
+            .map(
+              (o) =>
+                `<div class="preview-option">○ <span>${esc(o.label || o.value)}</span></div>`,
+            )
+            .join("");
+        else if (p === "checkbox")
+          body = opts
+            .slice(0, 4)
+            .map(
+              (o) =>
+                `<div class="preview-option">□ <span>${esc(o.label || o.value)}</span></div>`,
+            )
+            .join("");
+        else if (["slider", "visual_analog_line"].includes(p))
+          body = `<div class="preview-line"></div><div class="small">${esc(working.allowed_range?.minimum ?? 0)} — ${esc(working.allowed_range?.maximum ?? 100)}</div>`;
+        else if (p === "ranking")
+          body = opts
+            .slice(0, 4)
+            .map(
+              (o, i) =>
+                `<div class="preview-option">↕ ${i + 1}. ${esc(o.label || o.value)}</div>`,
+            )
+            .join("");
+        else
+          body = `<input disabled style="width:100%;padding:9px;border:1px solid #ccd6e3;border-radius:8px" placeholder="${esc(titleOf((components.response_types || []).find((x) => x.id === working.response_type) || {}))}"/>`;
+        document.getElementById("preview").innerHTML =
+          `<b>${esc(q)}</b>${body}`;
+      }
+      function renderScaleInfo() {
+        const s = selectedScale(),
+          n = document.getElementById("scaleInfo");
+        if (!s) {
+          n.innerHTML = `<h4>—</h4><p class="small">${t("notBound")}</p>`;
+          return;
+        }
+        n.innerHTML = `<h4>${esc(s.title?.[language] || s.scale_code)}</h4><p class="small">${esc(s.description?.[language] || "")}</p><div class="facts"><span class="badge">${esc(s.measurement_level)}</span><span class="badge">${esc(s.value_structure)}</span><span class="badge">${esc(s.numeric_nature)}</span><span class="badge">unit: ${esc(s.unit_policy)}</span></div><p class="small">${esc((s.statistical_capabilities || []).map(capabilityLabel).join(" · "))}</p>${(s.limitations || []).length ? `<div class="notice">${esc(s.limitations.join(" "))}</div>` : ""}`;
+      }
+      function allQuestionOptions(bankId) {
+        return (catalog.questions || []).filter(
+          (q) => !bankId || q.bank_id === bankId,
+        );
+      }
+      function targetValue(q) {
+        return `${q.bank_id}::${q.question_code}`;
+      }
+      function targetSelect(value = "") {
+        return (
+          `<option value="">—</option>` +
+          (catalog.questions || [])
+            .map(
+              (q) =>
+                `<option value="${esc(targetValue(q))}" ${targetValue(q) === value ? "selected" : ""}>${esc((catalog.banks || []).find((b) => b.id === q.bank_id)?.title || q.bank_id)} · ${esc(q.prompt || q.question_code)}</option>`,
+            )
+            .join("")
+        );
+      }
+      function renderRouting() {
+        if (!working) return;
+        document.getElementById("defaultAction").value =
+          working.routing.default_action || "sequential";
+        document.getElementById("defaultTargetWrap").style.display =
+          document.getElementById("defaultAction").value === "specific"
+            ? "block"
+            : "none";
+        document.getElementById("defaultTarget").innerHTML = targetSelect(
+          working.routing.default_target
+            ? `${working.routing.default_target.bank_id}::${working.routing.default_target.question_code}`
+            : "",
+        );
+        document.getElementById("routes").innerHTML = (
+          working.routing.rules || []
+        )
+          .map(
+            (r, i) =>
+              `<div class="route-row"><div><span class="mini-label">${t("condition")}</span><select data-field="operator" onchange="updateRouting()">${["equals", "not_equals", "greater_than", "less_than", "answered", "not_answered"].map((operator) => `<option value="${operator}" ${r.operator === operator ? "selected" : ""}>${esc(labelValue(operator))}</option>`).join("")}</select></div><div><span class="mini-label">${t("conditionValue")}</span><input data-field="value" value="${esc(r.value ?? "")}" oninput="updateRouting()"/></div><div><span class="mini-label">${t("targetBank")}</span><select data-field="bank" onchange="routeBankChanged(${i})">${(catalog.banks || []).map((b) => `<option value="${esc(b.id)}" ${r.target?.bank_id === b.id ? "selected" : ""}>${esc(bankTitle(b))}</option>`).join("")}</select></div><div><span class="mini-label">${t("targetQuestion")}</span><select data-field="question" onchange="updateRouting()">${allQuestionOptions(
+                r.target?.bank_id,
+              )
+                .map(
+                  (q) =>
+                    `<option value="${esc(q.question_code)}" ${r.target?.question_code === q.question_code ? "selected" : ""}>${esc(q.prompt || q.question_code)}</option>`,
+                )
+                .join(
+                  "",
+                )}</select></div><div class="small">active at publication · version pinned</div><button class="danger" onclick="removeRoute(${i})">${t("remove")}</button></div>`,
+          )
+          .join("");
+        updateRouting(false);
+      }
+      function addRoute() {
+        working.routing.rules.push({
+          operator: "equals",
+          value: "",
+          target: {
+            bank_id: selected.bank_id,
+            question_code: "",
+            version_policy: "active_at_publication",
+          },
+        });
+        renderRouting();
+      }
+      function defaultActionChanged() {
+        working.routing.default_action =
+          document.getElementById("defaultAction").value;
+        renderRouting();
+      }
+      function removeRoute(i) {
+        working.routing.rules.splice(i, 1);
+        renderRouting();
+      }
+      function routeBankChanged(i) {
+        const row = document.querySelectorAll(".route-row")[i],
+          bank = row.querySelector("[data-field=bank]").value;
+        working.routing.rules[i].target.bank_id = bank;
+        working.routing.rules[i].target.question_code =
+          allQuestionOptions(bank)[0]?.question_code || "";
+        renderRouting();
+      }
+      function updateRouting(refreshTechnical = true) {
+        if (!working) return;
+        working.routing.default_action =
+          document.getElementById("defaultAction").value;
+        const dv = document.getElementById("defaultTarget").value;
+        if (dv) {
+          const [bank_id, question_code] = dv.split("::");
+          working.routing.default_target = {
+            bank_id,
+            question_code,
+            version_policy: "active_at_publication",
+          };
+        } else delete working.routing.default_target;
+        document.querySelectorAll(".route-row").forEach((row, i) => {
+          const r = working.routing.rules[i];
+          r.operator = row.querySelector("[data-field=operator]").value;
+          r.value = parseValue(row.querySelector("[data-field=value]").value);
+          r.target = {
+            bank_id: row.querySelector("[data-field=bank]").value,
+            question_code: row.querySelector("[data-field=question]").value,
+            version_policy: "active_at_publication",
+          };
+        });
+        document.getElementById("defaultTargetWrap").style.display =
+          working.routing.default_action === "specific" ? "block" : "none";
+        if (refreshTechnical) updateTechnical();
+      }
+      function renderMarkers() {
+        document.getElementById("markers").innerHTML = markers.length
+          ? markers
+              .map((m) => {
+                const code = m.marker_code || m.code,
+                  id = m.marker_id || code,
+                  checked = (working.marker_references || []).some(
+                    (x) =>
+                      (x.marker_id || x.marker_code || x) === id ||
+                      (x.marker_code || x) === code,
+                  );
+                const title =
+                  m.names?.[language] || m.title?.[language] || m.name || code;
+                return `<label class="marker"><input type="checkbox" value="${esc(id)}" data-code="${esc(code)}" ${checked ? "checked" : ""} onchange="updateMarkers()"/><span><b>${esc(title)}</b><span class="small">${esc(m.observable_source_type || m.source_type || "")}</span></span></label>`;
+              })
+              .join("")
+          : `<p class="small">${t("noMarkers")}</p>`;
+      }
+      function updateMarkers() {
+        working.marker_references = [
+          ...document.querySelectorAll("#markers input:checked"),
+        ].map((n) => ({
+          marker_id: n.value,
+          marker_code: n.dataset.code,
+          version_policy: "active_at_publication",
+        }));
+        updateTechnical();
+      }
+      function renderDestination() {
+        renderBankFilters();
+        const save = document.getElementById("saveBank");
+        if (!save.value && selected) save.value = selected.bank_id;
+        destinationChanged();
+      }
+      function destinationChanged() {
+        const bank = document.getElementById("saveBank").value;
+        document.getElementById("destinationExplanation").textContent =
+          bank === selected?.bank_id ? t("currentBank") : t("forkBank");
+        localStorage.setItem("questionEditorDefaultBank", bank);
+      }
+      function toggleNewBank() {
+        const n = document.getElementById("newBank");
+        n.style.display = n.style.display === "block" ? "none" : "block";
+      }
+      async function createBank() {
+        const actor = document.getElementById("actor").value.trim(),
+          reason = document.getElementById("reason").value.trim(),
+          title = document.getElementById("newBankTitle").value.trim();
+        if (!actor || !reason) {
+          status(t("needActor"), "error");
+          return;
+        }
+        try {
+          const d = await api("/research/editors/question-banks", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ title, language, actor_id: actor, reason }),
+          });
+          await reloadCatalogLanguage();
+          renderBankFilters();
+          document.getElementById("saveBank").value = d.bank.bank_code;
+          localStorage.setItem("questionEditorDefaultBank", d.bank.bank_code);
+          document.getElementById("newBank").style.display = "none";
+          destinationChanged();
+          status(t("bankCreated"), "ok");
+        } catch (e) {
+          status(`${t("error")}: ${e.message}`, "error");
+        }
+      }
+      function buildPayload() {
+        captureLanguage();
+        updateWorking();
+        working.authorship = {
+          ...(working.authorship || {}),
+          primary_author: document.getElementById("author").value.trim(),
+        };
+        working.change_reason = document.getElementById("reason").value.trim();
+        const payload = structuredClone(working);
+        for (const k of [
+          "updated_at",
+          "created_at",
+          "registry_schema_version",
+          "schema_version",
+          "scale_reference",
+        ])
+          delete payload[k];
+        if (working.development_status !== "draft") {
+          payload.base_version =
+            working.question_version || working.base_version || 0;
+          delete payload.question_version;
+          delete payload.development_status;
+        }
+        payload.actor_id = document.getElementById("actor").value.trim();
+        return payload;
+      }
+      async function saveDraft() {
+        try {
+          const payload = buildPayload(),
+            target = document.getElementById("saveBank").value;
+          let d;
+          if (target === selected.bank_id) {
+            d = await api("/research/editors/questions/draft", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload),
+            });
+          } else {
+            d = await api("/research/editors/questions/fork", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                actor_id: payload.actor_id,
+                reason: payload.change_reason,
+                target_bank_id: target,
+                source_bank_id: selected.bank_id,
+                source_question_code: selected.question_code,
+                source_question_id: working.question_id,
+                source_question_version:
+                  working.question_version || working.base_version,
+                definition: payload,
+              }),
+            });
+          }
+          status(d.forked ? t("forked") : t("saved"), "ok");
+          await reloadCatalogLanguage();
+          const saved = d.definition;
+          await selectQuestion(saved.bank_id, saved.question_code);
+        } catch (e) {
+          status(`${t("error")}: ${e.message}`, "error");
+        }
+      }
+      function renderVersions() {
+        document.getElementById("versions").innerHTML =
+          (detail?.versions || [])
+            .sort((a, b) => b.question_version - a.question_version)
+            .map(
+              (v) =>
+                `<div class="version"><span class="badge ${esc(v.development_status)}">${esc(v.development_status)}</span> <b>v${v.question_version}</b> <span class="small">${esc(v.updated_at || "")}</span><div class="actions">${v.development_status === "draft" ? `<button onclick="transitionVersion(${v.question_version},'trial')">${t("toTrial")}</button><button class="danger" onclick="deleteVersion(${v.question_version})">${t("delete")}</button>` : ""}${v.development_status === "trial" ? `<button class="primary" onclick="transitionVersion(${v.question_version},'active')">${t("toActive")}</button>` : ""}</div></div>`,
+            )
+            .join("") || "—";
+      }
+      async function transitionVersion(v, target) {
+        try {
+          const actor = document.getElementById("actor").value.trim(),
+            reason = document.getElementById("reason").value.trim();
+          await api(
+            `/research/editors/questions/${encodeURIComponent(selected.bank_id)}/${encodeURIComponent(selected.question_code)}/${v}/transition/${target}`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ actor_id: actor, reason }),
+            },
+          );
+          status(t("done"), "ok");
+          await selectQuestion(selected.bank_id, selected.question_code);
+        } catch (e) {
+          status(`${t("error")}: ${e.message}`, "error");
+        }
+      }
+      async function deleteVersion(v) {
+        if (!confirm(t("confirmDelete"))) return;
+        try {
+          const actor = document.getElementById("actor").value.trim(),
+            reason = document.getElementById("reason").value.trim();
+          await api(
+            `/research/editors/questions/${encodeURIComponent(selected.bank_id)}/${encodeURIComponent(selected.question_code)}/${v}?actor_id=${encodeURIComponent(actor)}&reason=${encodeURIComponent(reason)}`,
+            { method: "DELETE" },
+          );
+          status(t("done"), "ok");
+          await selectQuestion(selected.bank_id, selected.question_code);
+        } catch (e) {
+          status(`${t("error")}: ${e.message}`, "error");
+        }
+      }
+      function updateTechnical() {
+        if (!working) return;
+        try {
+          const copy = structuredClone(working);
+          copy.system_fields = {
+            question_id: working.question_id || "automatic",
+            question_code: working.question_code,
+            bank_id: working.bank_id,
+            question_version: working.question_version || "automatic",
+            scale_reference: "automatic from registry",
+            schema_versions: "automatic",
+            timestamps: "automatic",
+            provenance: "automatic",
+          };
+          document.getElementById("technicalJson").textContent = JSON.stringify(
+            copy,
+            null,
+            2,
+          );
+        } catch {}
+      }
+      applyLang();
+      load();
+    </script>
+  </body>
+</html>

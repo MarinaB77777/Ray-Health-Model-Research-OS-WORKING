@@ -1,0 +1,1676 @@
+===== static/research_workspace.html =====
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Research Workspace</title>
+<style>
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f5f6f8;
+  color: #222;
+}
+.app {
+  display: grid;
+  grid-template-columns: 220px 1fr 320px;
+  height: 100vh;
+}
+.sidebar {
+  background: #151923;
+  color: white;
+  padding: 20px;
+}
+.sidebar h2 {
+  font-size: 18px;
+  margin-bottom: 24px;
+}
+.nav button {
+  display: block;
+  width: 100%;
+  margin: 8px 0;
+  padding: 12px;
+  border: 0;
+  border-radius: 10px;
+  background: #252b38;
+  color: white;
+  text-align: left;
+  cursor: pointer;
+}
+.nav button:hover {
+  background: #343c4d;
+}
+.main {
+  padding: 24px;
+  overflow: auto;
+}
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+.card {
+  background: white;
+  border-radius: 16px;
+  padding: 18px;
+  margin-bottom: 16px;
+  border: 1px solid #ddd;
+}
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+.ray {
+  background: #ffffff;
+  border-left: 1px solid #ddd;
+  padding: 20px;
+  overflow: auto;
+}
+.ray h2 {
+  margin-top: 0;
+}
+.ray-card {
+  background: #f7f7fb;
+  border-radius: 14px;
+  padding: 14px;
+  margin-bottom: 12px;
+  border: 1px solid #ddd;
+}
+.small {
+  color: #666;
+  font-size: 14px;
+}
+button.primary {
+  background: #111827;
+  color: white;
+  border: 0;
+  border-radius: 10px;
+  padding: 10px 14px;
+  cursor: pointer;
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <aside class="sidebar">
+    <h2>Research Workspace</h2>
+
+    <div class="nav">
+        <button onclick="showSection('dashboard')">
+            🧭 <span data-i18n="dashboard">Dashboard</span>
+          </button>
+
+          <button onclick="showSection('projects')">
+            📂 <span data-i18n="projects">Проекты</span>
+          </button>
+
+          <button onclick="showSection('hypotheses')">
+            🧪 <span data-i18n="independentStudies">Отдельные исследования</span>
+          </button>
+
+          <button onclick="showSection('assets')">
+            🧩 <span data-i18n="assets">Ресурсы</span>
+          </button>
+
+          <button onclick="showSection('tools')">
+            🛠 <span data-i18n="tools">Инструменты</span>
+          </button>
+
+          <button onclick="showSection('pilot')">
+            🚀 <span data-i18n="pilot">Пилот</span>
+          </button>
+
+          <hr style="margin:18px 0;border:0;border-top:1px solid #394152;">
+
+          <button onclick="location.href='/research-lab'">
+            ➕ <span data-i18n="newInvestigation">Новое исследование</span>
+          </button>
+ 
+    </div>
+  </aside>
+
+  <main class="main">
+      <div class="topbar">
+        <div>
+          <h1 id="sectionTitle">Research Workspace</h1>
+          <p class="small">
+            Рабочее пространство исследователя и Рэя.
+            Все проекты, исследования и совместная работа начинаются здесь.
+          </p>
+        </div>
+
+        <div>
+          <button class="primary"
+                  onclick="location.href='/research-lab'">
+            + New Investigation
+          </button>
+        </div>
+      </div>
+      
+      <section id="dashboard" class="workspace-section">
+
+        <div class="card">
+          <h2>Create New Project</h2>
+          <p class="small">
+            Здесь создаётся новый проект. Всё ниже относится только к текущему черновику.
+            После сохранения проект появится во вкладке Projects и останется редактируемым.
+          </p>
+
+          <label>Research request / вопрос / задание</label>
+          <textarea
+            id="projectRequestInput"
+            rows="4"
+            placeholder="Например: найти данные о связи хронического стресса и качества принятия решений"
+            style="width:100%;padding:10px;border-radius:10px;border:1px solid #ddd;margin:8px 0 12px;"
+          ></textarea>
+
+          <button class="primary" type="button">
+            Ask Ray to prepare review
+          </button>
+        </div>
+
+        <div class="card">
+          <h3>Ray Review Results</h3>
+          <p class="small">
+            Здесь Рэй будет показывать основные результаты по теме со ссылками.
+            Человек сможет выделять нужный текст и отправлять его в проектные блоки.
+          </p>
+
+          <div
+            id="rayReviewText"
+            style="background:#f7f7fb;border:1px solid #ddd;border-radius:12px;padding:14px;line-height:1.5;"
+          >
+            <p><b>Demo result:</b> Chronic stress may be associated with impaired decision-making under uncertainty. <span class="small">[Source: example]</span></p>
+            <p>Possible mechanisms include reduced cognitive control, higher emotional interference, and altered risk evaluation. <span class="small">[Source: example]</span></p>
+            <p>Some studies report mixed results depending on task type, chronicity and recovery resources. <span class="small">[Source: example]</span></p>
+          </div>
+
+          <div style="margin-top:12px;">
+            <button type="button" onclick="captureSelection('important')">Important</button>
+            <button type="button" onclick="captureSelection('hypotheses')">To hypotheses</button>
+            <button type="button" onclick="captureSelection('variables')">To variables / mechanisms</button>
+            <button type="button" onclick="captureSelection('check')">To check</button>
+            <button type="button" onclick="captureSelection('contradictions')">Contradiction</button>
+            <button type="button" onclick="captureSelection('questions')">Question</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Article / Source Viewer</h3>
+          <p class="small">
+            Окно просмотра статей и источников. Функционал выделения текста такой же.
+          </p>
+
+          <div
+            id="sourceViewerText"
+            style="background:#fff;border:1px solid #ddd;border-radius:12px;padding:14px;line-height:1.5;"
+          >
+            <p><b>Article demo:</b> Decision quality may depend not only on stress level, but also on available cognitive resources and recovery capacity. <span class="small">[Source: article demo]</span></p>
+          </div>
+
+          <div style="margin-top:12px;">
+            <button type="button" onclick="captureSelection('important')">Important</button>
+            <button type="button" onclick="captureSelection('hypotheses')">To hypotheses</button>
+            <button type="button" onclick="captureSelection('variables')">To variables / mechanisms</button>
+            <button type="button" onclick="captureSelection('check')">To check</button>
+            <button type="button" onclick="captureSelection('contradictions')">Contradiction</button>
+            <button type="button" onclick="captureSelection('questions')">Question</button>
+          </div>
+        </div>
+
+        <div class="grid">
+
+          <div class="card">
+            <h3>Project topic / goal</h3>
+            <p class="small">Название темы и цель могут формироваться Рэем по мере сбора данных. Человек может заполнить вручную.</p>
+            <input id="draftProjectTitle" placeholder="Project topic" style="width:100%;padding:10px;border-radius:10px;border:1px solid #ddd;margin-bottom:8px;">
+            <textarea id="draftProjectGoal" rows="3" placeholder="Project goal" style="width:100%;padding:10px;border-radius:10px;border:1px solid #ddd;"></textarea>
+          </div>
+
+          <div class="card">
+            <h3>Important notes</h3>
+            <div id="importantBox" class="small">Nothing selected yet.</div>
+          </div>
+
+          <div class="card">
+            <h3>Hypotheses</h3>
+            <div id="hypothesesBox" class="small">Nothing selected yet.</div>
+          </div>
+
+          <div class="card">
+            <h3>Variables / mechanisms</h3>
+            <div id="variablesBox" class="small">Nothing selected yet.</div>
+          </div>
+
+          <div class="card">
+            <h3>To check</h3>
+            <div id="checkBox" class="small">Nothing selected yet.</div>
+          </div>
+
+          <div class="card">
+            <h3>Contradictions</h3>
+            <div id="contradictionsBox" class="small">Nothing selected yet.</div>
+          </div>
+
+          <div class="card">
+            <h3>Open questions</h3>
+            <div id="questionsBox" class="small">Nothing selected yet.</div>
+          </div>
+
+          <div class="card">
+            <h3>Tools & resources</h3>
+            <p class="small">
+              Подключение вопросов, банков, статистики, моделей, сенсоров, приборов, игр и Рэя к этому проекту.
+            </p>
+            <button class="primary" onclick="showSection('tools')">Choose tools/resources</button>
+          </div>
+
+        </div>
+
+        <div class="card">
+          <button class="primary" type="button">
+            Save Project
+          </button>
+          <p class="small">
+            После сохранения проект появится во вкладке Projects. Позже его можно будет продолжать редактировать.
+          </p>
+        </div>
+
+        <div class="card">
+                  <h2>Create New Tools</h2>
+                  <p class="small">
+                    Создание новых ресурсов платформы: вопросы, банки, сенсоры, приборы, игры, VR/AR, статистические методы.
+                  </p>
+
+                  <div class="grid">
+                      <div class="card">
+                        <h3>Question constructor</h3>
+                        <p class="small">Создание и редактирование вопросов для банков RU / EN / ES.</p>
+                        <button class="primary" type="button" onclick="showSection('questionConstructor')">
+                          Open
+                        </button>
+                      </div>
+
+                    <div class="card">
+                      <h3>Sensors / devices</h3>
+                      <p class="small">Описание сенсоров, приборов, оборудования.</p>
+                      <button class="primary" type="button">Open</button>
+                    </div>
+
+                    <div class="card">
+                      <h3>Games / simulations</h3>
+                      <p class="small">Создание игр, симуляций, VR/AR сценариев.</p>
+                      <button class="primary" type="button">Open</button>
+                    </div>
+
+                    <div class="card">
+                      <h3>Research Methodology Constructor</h3>
+                      <p class="small">Research Methodology Constructor.</p>
+                      <button class="primary" type="button">Open</button>
+                    </div>
+                  </div>
+                </div>
+
+              </section>
+      
+      <section id="projects" class="workspace-section" style="display:none">
+        <div class="card">
+          <h2>Projects</h2>
+          <p class="small">
+            Здесь находятся уже сохранённые проекты. Нажатие на проект открывает его рабочую страницу.
+          </p>
+        </div>
+
+        <div class="grid">
+          <div class="card">
+            <h3>Health Model Pilot</h3>
+            <p class="small">Рабочий проект. Все разделы можно редактировать.</p>
+            <button class="primary" onclick="openProject('health_model_pilot')">
+              Open project
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <section id="projectPage" class="workspace-section" style="display:none">
+        <div class="card">
+          <button type="button" onclick="showSection('projects')">← Back to Projects</button>
+          <h2 id="projectPageTitle">Project</h2>
+          <p class="small">
+            Рабочая страница проекта. Все разделы исследования редактируемые.
+            Дополнительные разделы можно добавлять в нужное место.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3>Project sections</h3>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button type="button" onclick="openProjectSection('projectOverview')">Overview</button>
+            <button type="button" onclick="openProjectSection('projectReview')">Review</button>
+            <button type="button" onclick="openProjectSection('projectQuestions')">Questions</button>
+            <button type="button" onclick="openProjectSection('projectHypotheses')">Hypotheses</button>
+            <button type="button" onclick="openProjectSection('projectResources')">Resources</button>
+            <button type="button" onclick="openProjectSection('projectData')">Data</button>
+            <button type="button" onclick="openProjectSection('projectAnalysis')">Analysis</button>
+            <button type="button" onclick="openProjectSection('projectResults')">Results</button>
+            <button type="button" onclick="openProjectSection('projectPublications')">Publications</button>
+          </div>
+        </div>
+
+        <div id="projectOverview" class="card project-section">
+          <h3>Overview</h3>
+          <p class="small">Название, цель, состояние проекта, ключевые решения.</p>
+          <textarea rows="5" style="width:100%;padding:10px;border-radius:10px;border:1px solid #ddd;"></textarea>
+        </div>
+
+        <div id="projectReview" class="card project-section" style="display:none">
+          <h3>Review</h3>
+          <p class="small">Обзор, источники, выводы, противоречия, заметки Рэя и исследователя.</p>
+          <textarea rows="6" style="width:100%;padding:10px;border-radius:10px;border:1px solid #ddd;"></textarea>
+        </div>
+
+        <div id="projectQuestions" class="card project-section" style="display:none">
+          <h3>Questions</h3>
+          <p class="small">Вопросы, анкеты, банки вопросов, языковые версии RU / EN / ES.</p>
+          <button class="primary" type="button" onclick="showSection('questionConstructor')">
+            Open question constructor
+          </button>
+        </div>
+
+        <div id="projectHypotheses" class="card project-section" style="display:none">
+          <h3>Hypotheses</h3>
+          <p class="small">Гипотезы проекта и планы проверки.</p>
+          <button class="primary" onclick="location.href='/research-lab'">Open Research Designer</button>
+        </div>
+
+        <div id="projectResources" class="card project-section" style="display:none">
+          <h3>Resources</h3>
+          <p class="small">Подключённые инструменты, ресурсы, сенсоры, игры, модели, статистика.</p>
+          <button class="primary" onclick="showSection('tools')">Attach resources/tools</button>
+        </div>
+
+        <div id="projectData" class="card project-section" style="display:none">
+          <h3>Data</h3>
+          <p class="small">Участники, ответы, результаты анкет, сенсорные данные, качество данных.</p>
+          <button class="primary" onclick="showSection('pilot')">Open pilot data</button>
+        </div>
+
+        <div id="projectAnalysis" class="card project-section" style="display:none">
+          <h3>Analysis</h3>
+          <p class="small">Статистические проверки, модели, расчёты, неопределённость.</p>
+          <button class="primary" type="button">Open analysis</button>
+        </div>
+
+        <div id="projectResults" class="card project-section" style="display:none">
+          <h3>Results</h3>
+          <p class="small">Результаты проверки гипотез, выводы, ограничения.</p>
+          <button class="primary" type="button">Open results</button>
+        </div>
+
+        <div id="projectPublications" class="card project-section" style="display:none">
+          <h3>Publications</h3>
+          <p class="small">Статьи, отчёты, гранты, материалы публикаций.</p>
+          <button class="primary" type="button">Open publication workspace</button>
+        </div>
+
+        <div class="card">
+          <button type="button">+ Add section</button>
+          <button type="button">Remove section</button>
+        </div>
+      </section>
+    <section id="hypotheses" class="workspace-section" style="display:none">
+      <div class="card">
+        <h3>Hypotheses</h3>
+        <div id="hypothesesList">Loading...</div>
+      </div>
+    </section>
+    <section id="questionConstructor" class="workspace-section" style="display:none">
+      <div class="card">
+        <button type="button" onclick="showSection('dashboard')">← Back</button>
+        <h2>Question Bank Designer</h2>
+        <p class="small">Выберите подключенный банк, редактируйте вопросы и сразу смотрите, что получится.</p>
+      </div>
+
+      <div class="card">
+        <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+          <label>Банк вопросов</label>
+          <select id="questionBankSelect" onchange="loadQuestionBank(this.value)" style="padding:10px;border:1px solid #ddd;border-radius:10px;">
+            <option value="decision_under_uncertainty">Decision Under Uncertainty</option>
+            <option value="health_model">Health Model</option>
+            <option value="cognitive_resources">Cognitive Resources</option>
+          </select>
+
+          <button type="button" onclick="previousQuestion()">← Предыдущий</button>
+
+          <label>Вопрос №</label>
+          <input id="previewQuestionNumber" type="number" value="1" min="1" onchange="goToQuestion()" style="width:70px;padding:8px;text-align:center;">
+
+          <button type="button" onclick="nextQuestion()">Следующий →</button>
+          <button class="primary" type="button" onclick="saveQuestionBank()">Сохранить банк</button>
+          <button type="button" onclick="validateCurrentQuestion()">Проверить</button>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:280px 1fr 420px;gap:16px;align-items:start;">
+        <div class="card">
+          <h3>Структура банка</h3>
+          <div id="questionTree" class="small">Банк не загружен.</div>
+          <hr>
+          <button type="button" onclick="createNewQuestion()">+ Новый вопрос</button>
+          <button type="button" onclick="createNewBlock()">+ Новый блок</button>
+        </div>
+
+        <div class="card">
+          <h3>Редактирование вопроса</h3>
+
+          <label>Текст вопроса RU</label>
+          <textarea id="questionRu" rows="3" oninput="updateCurrentQuestionFromEditor()" style="width:100%;padding:10px;margin:8px 0;"></textarea>
+
+          <label>Текст вопроса EN</label>
+          <textarea id="questionEn" rows="3" oninput="updateCurrentQuestionFromEditor()" style="width:100%;padding:10px;margin:8px 0;"></textarea>
+
+          <label>Текст вопроса ES</label>
+          <textarea id="questionEs" rows="3" oninput="updateCurrentQuestionFromEditor()" style="width:100%;padding:10px;margin:8px 0;"></textarea>
+
+          <label>Тип вопроса</label>
+          <select id="questionType" onchange="updateCurrentQuestionFromEditor()" style="width:100%;padding:10px;margin:8px 0;">
+            <option value="single_select">Один вариант ответа</option>
+            <option value="multi_select">Несколько вариантов</option>
+            <option value="scale">Шкала</option>
+            <option value="number">Число</option>
+            <option value="text">Текст</option>
+            <option value="routing_only">Только переход</option>
+          </select>
+
+          <label>Как интерпретировать ответ</label>
+          <select id="scoreDirection" onchange="updateCurrentQuestionFromEditor()" style="width:100%;padding:10px;margin:8px 0;">
+            <option value="not_scored">Не считать</option>
+            <option value="routing_only">Только переход, не считать</option>
+            <option value="higher_is_more_risk">Чем выше, тем больше риск</option>
+            <option value="higher_is_more_resource">Чем выше, тем больше ресурс</option>
+            <option value="higher_is_more_observed_experience">Чем выше, тем больше опыт</option>
+            <option value="higher_is_more_external_confirmation">Чем выше, тем больше внешнее подтверждение</option>
+          </select>
+
+          <h3>Ответы и переходы</h3>
+          <div id="answersEditor"></div>
+          <button type="button" onclick="addAnswerToCurrentQuestion()">+ Новый ответ</button>
+        </div>
+
+        <div class="card">
+          <h3>Так увидит участник</h3>
+          <div id="questionParticipantPreview" style="border:1px solid #ddd;border-radius:12px;padding:12px;margin-bottom:12px;"></div>
+
+          <h3>Переходы</h3>
+          <div id="questionRoutingPreview" class="small">Переходы не заданы.</div>
+
+          <h3>Проверка</h3>
+          <div id="questionValidation" class="small"></div>
+
+          <details>
+            <summary>Developer JSON</summary>
+            <pre id="questionDraftOutput"></pre>
+          </details>
+        </div>
+      </div>
+    </section>
+    
+    <section id="assets" class="workspace-section" style="display:none">
+      <div class="card">
+        <h3>Assets</h3>
+        <p>Questions, model parameters, mechanisms, statistics.</p>
+        <button class="primary" onclick="loadEntities()">Load Assets</button>
+        <pre id="assetsOutput"></pre>
+      </div>
+    </section>
+
+    <section id="tools" class="workspace-section" style="display:none">
+      <div class="card">
+        <h3>Tools & Resources</h3>
+        <p class="small">
+          Здесь выбираются и подключаются ресурсы и инструменты к конкретному
+          проекту или исследованию. Настройки можно менять в любой момент.
+        </p>
+
+        <label class="small">Attach to project / investigation:</label>
+        <select style="width:100%;padding:10px;border-radius:10px;border:1px solid #ddd;margin:8px 0 16px;">
+          <option>Health Model Pilot</option>
+          <option>Independent Study</option>
+        </select>
+
+        <div class="grid">
+          <div class="card">
+            <h3>Questions</h3>
+            <p class="small">Question banks and questionnaires.</p>
+            <button class="primary" onclick="loadEntities()">Open resources</button>
+          </div>
+
+          <div class="card">
+            <h3>Model parameters</h3>
+            <p class="small">Calculated parameters, mechanisms and model outputs.</p>
+            <button class="primary" onclick="loadEntities()">Open resources</button>
+          </div>
+
+          <div class="card">
+            <h3>Statistics</h3>
+            <p class="small">Correlation, regression, group comparison and future methods.</p>
+            <button class="primary" onclick="loadEntities()">Open resources</button>
+          </div>
+
+          <div class="card">
+            <h3>Sensors & Devices</h3>
+            <p class="small">Sensors, instruments, laboratory equipment and calibration assets.</p>
+            <button class="primary" onclick="loadEntities()">Open resources</button>
+          </div>
+
+          <div class="card">
+            <h3>Games / Simulations / VR</h3>
+            <p class="small">Behavioral games, simulations, VR/AR scenarios and future modules.</p>
+            <button class="primary" onclick="loadEntities()">Open resources</button>
+          </div>
+
+          <div class="card">
+            <h3>Ray</h3>
+            <p class="small">Ray participation mode, rules, hypotheses and collaboration settings.</p>
+            <button class="primary" type="button">Configure Ray</button>
+          </div>
+        </div>
+
+        <pre id="assetsOutput"></pre>
+      </div>
+    </section>
+    
+    <section id="pilot" class="workspace-section" style="display:none">
+      <div class="card">
+        <h3>Health Model Pilot</h3>
+        <p class="small">
+          Управление проектом пилота: участники, вопросы, данные, гипотезы,
+          инструменты проверки и результаты.
+        </p>
+        <button class="primary" onclick="location.href='/assessment'">
+          Open participant page
+        </button>
+      </div>
+
+      <div class="grid">
+
+        <div class="card">
+          <h3>Question Constructor</h3>
+          <p class="small">
+            Создание и редактирование вопросов для банка на трёх языках:
+            RU / EN / ES.
+          </p>
+          <button class="primary" type="button" onclick="showSection('questionConstructor')">
+            Open constructor
+          </button>
+        </div>
+
+        <div class="card">
+          <h3>Question Bank</h3>
+          <p class="small">
+            Просмотр вопросов, вариантов ответов, кодов переменных и языковых версий.
+          </p>
+          <button class="primary" onclick="loadEntities()">
+            Open bank
+          </button>
+        </div>
+
+        <div class="card">
+          <h3>Participant Data</h3>
+          <p class="small">
+            Просмотр данных пилота: ответы участников, распределения,
+            статистика по вариантам ответов.
+          </p>
+          <button class="primary" type="button">
+            Open data
+          </button>
+        </div>
+
+        <div class="card">
+          <h3>Hypotheses</h3>
+          <p class="small">
+            Формирование гипотез на основе вопросов, параметров модели,
+            наблюдений и данных.
+          </p>
+          <button class="primary" onclick="location.href='/research-lab'">
+              Create / edit hypotheses
+            </button>
+        </div>
+
+        <div class="card">
+          <h3>Hypothesis Testing Tools</h3>
+          <p class="small">
+            Выбор статистики, параметров модели, переменных, методов проверки
+            и дополнительных инструментов.
+          </p>
+          <button class="primary" onclick="showSection('tools')">
+            Choose tools
+          </button>
+        </div>
+
+        <div class="card">
+          <h3>Hypothesis Testing Results</h3>
+          <p class="small">
+            Просмотр результатов проверки гипотез: что проверяли, каким методом,
+            на каких данных, какой результат получен и достаточно ли данных для вывода.
+          </p>
+
+          <p><b>Current status:</b> No completed tests yet.</p>
+          <p class="small">
+            После запуска статистики здесь будут отображаться N, method, predictor,
+            outcome, p-value, effect size, confidence interval and interpretation.
+          </p>
+
+          <button class="primary" type="button">
+            Open testing results
+          </button>
+        </div>
+
+      </div>
+    </section>
+  </main>
+
+  <aside class="ray">
+      <h2>Research Partner</h2>
+      <p class="small"><b>Ray</b> — коллега рядом, не отдельный чат.</p>
+
+      <div class="ray-card">
+        <b>Working now</b>
+        <p>• Проверяю Health Model Pilot.</p>
+        <p>• Слежу, чтобы мы не расширяли систему до запуска пилота.</p>
+        <p>• Помогаю навести порядок в Workspace / Project / Investigation.</p>
+      </div>
+
+      <div class="ray-card">
+        <b>My hypotheses</b>
+        <p>🟡 Workspace должен быть входом к проектам, а не местом всей работы.</p>
+        <p>⚪ Project screen нужен до расширения Research Lab.</p>
+        <p class="small">Все гипотезы Рэя — только кандидаты для проверки.</p>
+      </div>
+
+      <div class="ray-card">
+        <b>Ray → Human</b>
+        <p>□ Подтвердить: сначала порядок в существующих экранах, потом новые функции.</p>
+        <p>□ Решить: оставляем Pilot как временный пункт меню до запуска?</p>
+        <button class="primary" type="button">Discuss</button>
+        <button type="button" style="margin-left:6px; padding:10px 14px; border-radius:10px; border:1px solid #ddd; background:white; cursor:pointer;">Later</button>
+      </div>
+
+      <div class="ray-card">
+        <b>Rules</b>
+
+        <p><b>🔒 System Rules</b></p>
+        <p>• Нет данных — не выдумывать.</p>
+        <p>• Не знаешь — спроси.</p>
+        <p>• Гипотеза ≠ факт.</p>
+
+        <p><b>🧑 Research Preferences</b></p>
+        <p>• Минимум бюрократии.</p>
+        <p>• Что работает — не ломаем.</p>
+        <p>• Сначала пилот, потом расширение.</p>
+
+        <p><b>🤝 Collaboration Agreements</b></p>
+        <p>• Критикуй идеи, если видишь риск.</p>
+        <p>• Не соглашайся автоматически.</p>
+        <p>• Если появляется каша — остановись и разложи уровни.</p>
+      </div>
+    </aside>
+
+</div>
+
+<script>
+    const lang = "ru";
+
+    const I18N = {
+      ru: {
+        workspaceTitle: "Research Workspace",
+        workspaceSubtitle: "Рабочее пространство исследователя и Рэя.",
+        dashboard: "Dashboard",
+        projects: "Проекты",
+        independentStudies: "Отдельные исследования",
+        assets: "Ресурсы",
+        tools: "Инструменты",
+        pilot: "Пилот",
+        newInvestigation: "+ Новое исследование"
+      },
+      en: {
+        workspaceTitle: "Research Workspace",
+        workspaceSubtitle: "Researcher and Ray workspace.",
+        dashboard: "Dashboard",
+        projects: "Projects",
+        independentStudies: "Independent studies",
+        assets: "Assets",
+        tools: "Tools",
+        pilot: "Pilot",
+        newInvestigation: "+ New Investigation"
+      },
+      es: {
+        workspaceTitle: "Research Workspace",
+        workspaceSubtitle: "Espacio de trabajo del investigador y Ray.",
+        dashboard: "Dashboard",
+        projects: "Proyectos",
+        independentStudies: "Estudios independientes",
+        assets: "Recursos",
+        tools: "Herramientas",
+        pilot: "Piloto",
+        newInvestigation: "+ Nueva investigación"
+      }
+    };
+
+    const t = I18N[lang];
+    let currentQuestionBank = [];
+    let currentQuestionIndex = 0;
+    
+    function getCurrentQuestion() {
+      return currentQuestionBank[currentQuestionIndex] || null;
+    }
+    
+    async function loadQuestionBank(bankName) {
+      const response = await fetch(`/research/question-bank/${bankName}`);
+      const data = await response.json();
+
+      currentQuestionBank = normalizeQuestionBankResponse(data);
+      currentQuestionIndex = 0;
+
+      fillEditorFromCurrentQuestion();
+    }
+    
+    function showCurrentQuestion() {
+
+      const q = getCurrentQuestion();
+
+      if (!q) return;
+
+      renderBankQuestion(q);
+
+    }
+    
+    function showSection(id) {
+      document.querySelectorAll(".workspace-section").forEach(el => {
+        el.style.display = "none";
+      });
+
+      const section = document.getElementById(id);
+      if (!section) return;
+
+      section.style.display = "block";
+
+      document.getElementById("sectionTitle").innerText =
+        id.charAt(0).toUpperCase() + id.slice(1);
+
+      if (id === "questionConstructor") {
+        loadQuestionBank(document.getElementById("questionBankSelect").value);
+      }
+    }
+    
+    function applyTranslations() {
+      document.querySelectorAll("[data-i18n]").forEach(el => {
+        const key = el.getAttribute("data-i18n");
+        if (t[key]) {
+          el.innerText = t[key];
+        }
+      });
+    }
+
+    applyTranslations();
+ 
+ function openWorkflowStep(step) {
+   alert(
+     "Workflow step: " + step +
+     "\n\nFor pilot MVP this will open a dedicated workspace later."
+   );
+ }
+ 
+ function captureSelection(target) {
+   const selectedText = window.getSelection().toString().trim();
+
+   if (!selectedText) {
+     alert("Select text first.");
+     return;
+   }
+
+   const targetMap = {
+     important: "importantBox",
+     hypotheses: "hypothesesBox",
+     variables: "variablesBox",
+     check: "checkBox",
+     contradictions: "contradictionsBox",
+     questions: "questionsBox"
+   };
+
+   const boxId = targetMap[target];
+   const box = document.getElementById(boxId);
+
+   if (!box) return;
+
+   if (box.innerText === "Nothing selected yet.") {
+     box.innerHTML = "";
+   }
+
+   const item = document.createElement("div");
+   item.style.marginBottom = "8px";
+   item.innerHTML = `
+     <div>${selectedText}</div>
+     <div class="small">Source: demo source</div>
+   `;
+
+   box.appendChild(item);
+ }
+ 
+ function openProject(projectId) {
+   showSection("projectPage");
+
+   if (projectId === "health_model_pilot") {
+     document.getElementById("projectPageTitle").innerText = "Health Model Pilot";
+   }
+ }
+
+ function openProjectSection(sectionId) {
+   document.querySelectorAll(".project-section").forEach(el => {
+     el.style.display = "none";
+   });
+
+   document.getElementById(sectionId).style.display = "block";
+ }
+ 
+ function parseQuestionOptions(raw) {
+   if (!raw.trim()) return [];
+
+   return raw
+     .split("\n")
+     .map(line => line.trim())
+     .filter(Boolean)
+     .map(line => {
+       const parts = line.split("|").map(x => x.trim());
+
+       return {
+         value: Number(parts[0]),
+         text: {
+           ru: parts[1] || "",
+           en: parts[2] || "",
+           es: parts[3] || ""
+         }
+       };
+     });
+ }
+
+ function parseTransitions(raw) {
+   if (!raw.trim()) return [];
+
+   return raw
+     .split("\n")
+     .map(line => line.trim())
+     .filter(Boolean)
+     .map(line => {
+       const parts = line.split("->").map(x => x.trim());
+
+       return {
+         condition: parts[0] || "",
+         next: parts[1] || ""
+       };
+     });
+ }
+
+    function openQuestionDesignerPanel(panel) {
+      document.querySelectorAll(".qd-panel").forEach(el => {
+        el.style.display = "none";
+      });
+
+      const titles = {
+        identity: "Identity",
+        text: "Question",
+        type: "Type / Scale",
+        answers: "Answers",
+        routing: "Routing",
+        scoring: "Scoring",
+        metadata: "Metadata"
+      };
+
+      document.getElementById("qdPanel" + panel.charAt(0).toUpperCase() + panel.slice(1)).style.display = "block";
+      document.getElementById("questionDesignerPanelTitle").innerText = titles[panel] || panel;
+    }
+
+    function buildQuestionDraft() {
+      return {
+        question_id: "draft-" + Date.now(),
+        code: document.getElementById("newQuestionCode").value.trim(),
+        version: 1,
+        bank: document.getElementById("questionBankSelect").value,
+        block: document.getElementById("questionBlock").value.trim(),
+        family: document.getElementById("questionFamily").value.trim(),
+        domain: document.getElementById("questionDomain").value.trim(),
+        type: document.getElementById("questionType").value,
+        scale: document.getElementById("answerScaleType").value,
+        prompt: {
+          ru: document.getElementById("questionRu").value.trim(),
+          en: document.getElementById("questionEn").value.trim(),
+          es: document.getElementById("questionEs").value.trim()
+        },
+        options: parseQuestionOptions(document.getElementById("questionOptions").value),
+        routing: {
+          default_next: document.getElementById("defaultNextQuestion").value.trim(),
+          transitions: parseTransitions(document.getElementById("conditionalTransitions").value)
+        },
+        score_direction: document.getElementById("scoreDirection").value,
+        status: document.getElementById("questionStatus").value,
+        tags: document.getElementById("questionTags").value
+          .split(",")
+          .map(x => x.trim())
+          .filter(Boolean),
+        notes: document.getElementById("questionNotes").value.trim()
+      };
+    }
+
+    function validateQuestion(question) {
+      const checks = [];
+
+      checks.push(question.code ? "✓ Code" : "⚠ Code missing");
+      checks.push(question.prompt.ru ? "✓ RU" : "⚠ RU missing");
+      checks.push(question.prompt.en ? "✓ EN" : "⚠ EN missing");
+      checks.push(question.prompt.es ? "✓ ES" : "⚠ ES missing");
+      checks.push(question.type ? "✓ Type" : "⚠ Type missing");
+
+      if (["single_select", "multi_select"].includes(question.type)) {
+        checks.push(question.options.length > 0 ? "✓ Options" : "⚠ Options missing");
+      }
+
+      checks.push(question.routing.default_next || question.routing.transitions.length > 0
+        ? "✓ Routing"
+        : "⚠ Routing not set");
+
+      return checks;
+    }
+
+    function renderQuestionPreview(question) {
+      const preview = document.getElementById("questionParticipantPreview");
+      const prompt = question.prompt.ru || question.prompt.en || question.prompt.es || "Question text is empty.";
+
+      const optionsHtml = (question.options || []).map(option => {
+        const text = option.text.ru || option.text.en || option.text.es || "";
+        return `<label style="display:block;margin:6px 0;">
+          <input type="${question.type === "multi_select" ? "checkbox" : "radio"}" disabled>
+          ${text}
+        </label>`;
+      }).join("");
+
+      preview.innerHTML = `
+        <p><b>${prompt}</b></p>
+        ${optionsHtml || "<p class='small'>No options preview for this question type yet.</p>"}
+      `;
+    }
+    
+    function renderBankQuestion(question) {
+
+      const preview =
+          document.getElementById("questionParticipantPreview");
+
+      preview.innerHTML = "";
+
+      preview.innerHTML += `
+          <h3>Question ${currentQuestionIndex + 1}</h3>
+      `;
+
+      preview.innerHTML += `
+          <p>${question.prompt}</p>
+      `;
+
+      question.options.forEach(option=>{
+
+          preview.innerHTML += `
+          <label style="display:block;margin:8px 0;">
+              <input type="radio" disabled>
+              ${option.text}
+          </label>
+          `;
+
+      });
+
+    }
+    
+    function refreshQuestionDesigner() {
+      const question = buildQuestionDraft();
+
+      renderQuestionPreview(question);
+
+      document.getElementById("questionValidation").innerHTML =
+        validateQuestion(question).map(x => `<div>${x}</div>`).join("");
+
+      document.getElementById("questionDraftOutput").innerText =
+        JSON.stringify(question, null, 2);
+    }
+
+    function saveQuestionDraft() {
+      const question = buildQuestionDraft();
+      const saved = JSON.parse(localStorage.getItem("questionDrafts") || "[]");
+
+      saved.push(question);
+      localStorage.setItem("questionDrafts", JSON.stringify(saved));
+
+      refreshQuestionDesigner();
+      alert("Question saved locally.");
+    }
+
+    document.addEventListener("input", event => {
+      if (event.target.closest("#questionConstructor")) {
+        refreshQuestionDesigner();
+      }
+    });
+
+    function normalizeQuestionBankResponse(data) {
+      if (Array.isArray(data)) return data;
+      if (Array.isArray(data.questions)) return data.questions;
+      if (data.questions && typeof data.questions === "object") return Object.values(data.questions);
+      return [];
+    }
+
+    function currentQuestion() {
+      return currentQuestionBank[currentQuestionIndex] || null;
+    }
+
+    function questionLabel(index) {
+      return "Question " + (index + 1);
+    }
+
+    function fillEditorFromCurrentQuestion() {
+      const q = currentQuestion();
+      if (!q) return;
+
+      document.getElementById("previewQuestionNumber").value = currentQuestionIndex + 1;
+      document.getElementById("questionRu").value = q.prompt?.ru || q.prompt || "";
+      document.getElementById("questionEn").value = q.prompt?.en || "";
+      document.getElementById("questionEs").value = q.prompt?.es || "";
+      document.getElementById("questionType").value = q.type || "single_select";
+      document.getElementById("scoreDirection").value = q.score_direction || "not_scored";
+
+      renderAnswersEditor();
+      renderQuestionTree();
+      renderResultPreview();
+    }
+
+    function renderAnswersEditor() {
+      const q = currentQuestion();
+      const box = document.getElementById("answersEditor");
+      if (!q || !box) return;
+
+      q.options = q.options || [];
+
+      box.innerHTML = q.options.map((option, index) => `
+        <div style="border:1px solid #ddd;border-radius:12px;padding:12px;margin-bottom:10px;">
+          <b>Ответ ${index + 1}</b>
+
+          <label>RU</label>
+          <input value="${option.text?.ru || option.text || ""}" oninput="updateAnswerText(${index}, 'ru', this.value)" style="width:100%;padding:8px;margin:6px 0;">
+
+          <label>EN</label>
+          <input value="${option.text?.en || ""}" oninput="updateAnswerText(${index}, 'en', this.value)" style="width:100%;padding:8px;margin:6px 0;">
+
+          <label>ES</label>
+          <input value="${option.text?.es || ""}" oninput="updateAnswerText(${index}, 'es', this.value)" style="width:100%;padding:8px;margin:6px 0;">
+
+          <label>Если выбран этот ответ, перейти к</label>
+          <select onchange="updateAnswerNext(${index}, this.value)" style="width:100%;padding:8px;margin:6px 0;">
+            <option value="">Следующий вопрос</option>
+            ${currentQuestionBank.map((question, qIndex) => `
+              <option value="${qIndex}" ${String(option.next_index ?? "") === String(qIndex) ? "selected" : ""}>
+                ${questionLabel(qIndex)}
+              </option>
+            `).join("")}
+          </select>
+        </div>
+      `).join("");
+    }
+
+    function renderResultPreview() {
+      const q = currentQuestion();
+      if (!q) return;
+
+      const prompt = q.prompt?.ru || q.prompt?.en || q.prompt?.es || q.prompt || "Текст вопроса пустой.";
+
+      document.getElementById("questionParticipantPreview").innerHTML = `
+        <p class="small">${questionLabel(currentQuestionIndex)}</p>
+        <h3>${prompt}</h3>
+        ${(q.options || []).map(option => `
+          <label style="display:block;margin:8px 0;">
+            <input type="${q.type === "multi_select" ? "checkbox" : "radio"}" disabled>
+            ${option.text?.ru || option.text?.en || option.text?.es || option.text || ""}
+          </label>
+        `).join("")}
+      `;
+
+      document.getElementById("questionRoutingPreview").innerHTML =
+        (q.options || []).length
+          ? (q.options || []).map((option, index) => {
+              const target = option.next_index !== undefined && option.next_index !== ""
+                ? questionLabel(Number(option.next_index))
+                : "следующий вопрос";
+              return `Если выбран ответ <b>${index + 1}</b> → ${target}`;
+            }).join("<br>")
+          : "Переходы не заданы.";
+
+      document.getElementById("questionDraftOutput").innerText =
+        JSON.stringify(q, null, 2);
+    }
+
+    function renderQuestionTree() {
+      const tree = document.getElementById("questionTree");
+      if (!tree) return;
+
+      const grouped = {};
+      currentQuestionBank.forEach(q => {
+        const block = q.block || "Questions";
+        if (!grouped[block]) grouped[block] = [];
+        grouped[block].push(q);
+      });
+
+      tree.innerHTML = Object.keys(grouped).map(block => `
+        <div style="margin-bottom:12px;">
+          <b>▼ Block ${block}</b>
+          ${grouped[block].map(q => {
+            const index = currentQuestionBank.indexOf(q);
+            const active = index === currentQuestionIndex ? "➜ " : "";
+            const routes = (q.options || []).map((option, answerIndex) => {
+              if (option.next_index === undefined || option.next_index === "") return "";
+              return `<div style="margin-left:22px;">├── Ответ ${answerIndex + 1} → ${questionLabel(Number(option.next_index))}</div>`;
+            }).join("");
+
+            return `
+              <div style="margin:6px 0 6px 12px;">
+                <button type="button" onclick="selectQuestion(${index})">${active}${questionLabel(index)}</button>
+                ${routes}
+              </div>
+            `;
+          }).join("")}
+        </div>
+      `).join("");
+    }
+
+    function selectQuestion(index) {
+      currentQuestionIndex = index;
+      fillEditorFromCurrentQuestion();
+    }
+
+    function updateCurrentQuestionFromEditor() {
+      const q = currentQuestion();
+      if (!q) return;
+
+      q.prompt = {
+        ru: document.getElementById("questionRu").value,
+        en: document.getElementById("questionEn").value,
+        es: document.getElementById("questionEs").value
+      };
+
+      q.type = document.getElementById("questionType").value;
+      q.score_direction = document.getElementById("scoreDirection").value;
+
+      renderResultPreview();
+      renderQuestionTree();
+    }
+
+    function updateAnswerText(index, lang, value) {
+      const q = currentQuestion();
+      if (!q) return;
+
+      q.options[index].text =
+        typeof q.options[index].text === "object"
+          ? q.options[index].text
+          : { ru: q.options[index].text || "", en: "", es: "" };
+
+      q.options[index].text[lang] = value;
+      renderResultPreview();
+      renderQuestionTree();
+    }
+
+    function updateAnswerNext(index, value) {
+      const q = currentQuestion();
+      if (!q) return;
+
+      q.options[index].next_index = value === "" ? "" : Number(value);
+      renderResultPreview();
+      renderQuestionTree();
+    }
+
+    function addAnswerToCurrentQuestion() {
+      const q = currentQuestion();
+      if (!q) return;
+
+      q.options = q.options || [];
+      q.options.push({
+        value: q.options.length,
+        text: { ru: "", en: "", es: "" },
+        next_index: ""
+      });
+
+      renderAnswersEditor();
+      renderResultPreview();
+    }
+
+    function createNewQuestion() {
+      const block = currentQuestion()?.block || "Questions";
+      currentQuestionBank.push({
+        code: "",
+        block,
+        type: "single_select",
+        prompt: { ru: "", en: "", es: "" },
+        options: [],
+        score_direction: "not_scored",
+        status: "draft"
+      });
+
+      currentQuestionIndex = currentQuestionBank.length - 1;
+      fillEditorFromCurrentQuestion();
+    }
+
+    function createNewBlock() {
+      const name = prompt("Название нового блока");
+      if (!name) return;
+
+      currentQuestionBank.push({
+        code: "",
+        block: name,
+        type: "single_select",
+        prompt: { ru: "", en: "", es: "" },
+        options: [],
+        score_direction: "not_scored",
+        status: "draft"
+      });
+
+      currentQuestionIndex = currentQuestionBank.length - 1;
+      fillEditorFromCurrentQuestion();
+    }
+
+    function nextQuestion() {
+      if (currentQuestionIndex < currentQuestionBank.length - 1) {
+        currentQuestionIndex++;
+        fillEditorFromCurrentQuestion();
+      }
+    }
+
+    function previousQuestion() {
+      if (currentQuestionIndex > 0) {
+        currentQuestionIndex--;
+        fillEditorFromCurrentQuestion();
+      }
+    }
+
+    function goToQuestion() {
+      const index = Number(document.getElementById("previewQuestionNumber").value) - 1;
+      if (index >= 0 && index < currentQuestionBank.length) {
+        currentQuestionIndex = index;
+        fillEditorFromCurrentQuestion();
+      }
+    }
+
+    function validateCurrentQuestion() {
+      const q = currentQuestion();
+      if (!q) return;
+
+      const checks = [];
+      checks.push(q.prompt?.ru ? "✓ Есть текст RU" : "⚠ Нет текста RU");
+      checks.push((q.options || []).length ? "✓ Есть ответы" : "⚠ Нет ответов");
+      checks.push(q.type ? "✓ Тип вопроса выбран" : "⚠ Тип вопроса не выбран");
+
+      document.getElementById("questionValidation").innerHTML =
+        checks.map(x => `<div>${x}</div>`).join("");
+    }
+
+    function saveQuestionBank() {
+      alert("Следующий шаг: сохранить банк через API.");
+    }
+
+async function loadObjects() {
+  const response = await fetch("/research/objects");
+  const data = await response.json();
+
+  const objects = data.objects || [];
+  const objectCountEl = document.getElementById("objectCount");
+  if (objectCountEl) {
+    objectCountEl.innerText = objects.length + " saved objects";
+  }
+
+  document.getElementById("hypothesesList").innerHTML =
+    objects.length === 0
+      ? "<p class='small'>No hypotheses yet.</p>"
+      : objects.map(o => `
+          <div class="card">
+            <b>${o.title}</b>
+            <p class="small">${o.status || ""}</p>
+            <p>${o.research_question || ""}</p>
+          </div>
+        `).join("");
+}
+
+async function loadEntities() {
+  const response = await fetch("/research/entities?language=ru");
+  const data = await response.json();
+  document.getElementById("assetsOutput").innerText = JSON.stringify(data, null, 2);
+}
+
+loadObjects();
+</script>
+
+</body>
+</html>
+===== assessment/studies/decision_under_uncertainty/decision_under_uncertainty_questions_ru.py =====
+QUESTION_BANK_RU = {
+    "DU1": {
+        "question_id": "22222222-0000-4000-8000-000000000001",
+        "code": "DU1",
+        "version": 1,
+        "block": "DU",
+        "family": "decision_under_uncertainty",
+        "domain": "context",
+        "type": "single_select",
+        "prompt": "Что характерно для вашего образа жизни?",
+        "options": [
+            {"value": 0, "text": "Спокойный и размеренный, однотипный"},
+            {"value": 1, "text": "Иногда в жизни или работе появляются новые условия"},
+            {"value": 2, "text": "Периодически приходится подстраиваться под новые условия"},
+            {"value": 3, "text": "Часто приходится подстраиваться под новые условия жизни или работы"},
+            {"value": 4, "text": "Почти постоянно приходится быстро реагировать на новые условия жизни или работы"},
+            {"value": 5, "text": "Вся жизнь или работа: постоянная неизвестность, быстро меняющиеся условия"},
+        ],
+        "score_direction": "higher_is_more_risk",
+        "status": "active",
+    },
+
+    "DU2": {
+        "question_id": "22222222-0000-4000-8000-000000000002",
+        "code": "DU2",
+        "version": 1,
+        "block": "DU",
+        "family": "observed_experience",
+        "domain": "context",
+        "type": "single_select",
+        "prompt": "Как часто окружающие обращаются к вам за помощью в сложной или неожиданной ситуации?",
+        "options": [
+            {"value": 0, "text": "Практически никогда"},
+            {"value": 1, "text": "Редко"},
+            {"value": 2, "text": "Иногда"},
+            {"value": 3, "text": "Довольно часто"},
+            {"value": 4, "text": "Часто"},
+            {"value": 5, "text": "Очень часто"},
+        ],
+        "score_direction": "higher_is_more_observed_experience",
+        "status": "active",
+    },
+
+    "DU3": {
+        "question_id": "22222222-0000-4000-8000-000000000003",
+        "code": "DU3",
+        "version": 1,
+        "block": "DU",
+        "family": "external_confirmation",
+        "domain": "context",
+        "type": "single_select",
+        "prompt": "Как часто окружающие отмечают, что именно ваши действия помогли справиться со сложной или неожиданной ситуацией?",
+        "options": [
+            {"value": 0, "text": "Обычно это остаётся незамеченным"},
+            {"value": 1, "text": "Замечают очень редко"},
+            {"value": 2, "text": "Иногда отмечают"},
+            {"value": 3, "text": "Довольно часто отмечают"},
+            {"value": 4, "text": "Часто отмечают"},
+            {"value": 5, "text": "Практически всегда отмечают"},
+        ],
+        "score_direction": "higher_is_more_external_confirmation",
+        "status": "active",
+    },
+
+    "DU4": {
+        "question_id": "22222222-0000-4000-8000-000000000004",
+        "code": "DU4",
+        "version": 1,
+        "block": "DU",
+        "family": "experience_context_router",
+        "domain": "routing",
+        "type": "single_select",
+        "prompt": "Где это чаще происходит?",
+        "options": [
+            {"value": 0, "text": "В основном на работе"},
+            {"value": 1, "text": "И на работе, и в личной жизни"},
+            {"value": 2, "text": "В основном в личной жизни"},
+        ],
+        "score_direction": "routing_only",
+        "status": "active",
+    },
+}
+
+QUESTION_CODE_INDEX = {
+    question["code"]: question
+    for question in QUESTION_BANK_RU.
+
+values()
+}===== assessment/studies/decision_under_uncertainty/decision_under_uncertainty_questions_en.py =====
+QUESTION_BANK_EN = {
+    "DU1": {
+        "question_id": "22222222-0000-4000-8000-000000000001",
+        "code": "DU1",
+        "version": 1,
+        "block": "DU",
+        "family": "decision_under_uncertainty",
+        "domain": "context",
+        "type": "single_select",
+        "prompt": "Which best describes your lifestyle?",
+        "options": [
+            {"value": 0, "text": "Calm, predictable, and routine"},
+            {"value": 1, "text": "New situations occasionally arise in my life or work"},
+            {"value": 2, "text": "I periodically have to adapt to new situations"},
+            {"value": 3, "text": "I often have to adapt to new situations in life or work"},
+            {"value": 4, "text": "I almost constantly have to respond quickly to new situations in life or work"},
+            {"value": 5, "text": "My life or work is characterized by constant uncertainty and rapidly changing conditions"},
+        ],
+        "score_direction": "higher_is_more_risk",
+        "status": "active",
+    },
+
+    "DU2": {
+        "question_id": "22222222-0000-4000-8000-000000000002",
+        "code": "DU2",
+        "version": 1,
+        "block": "DU",
+        "family": "observed_experience",
+        "domain": "context",
+        "type": "single_select",
+        "prompt": "How often do other people ask you for help in difficult or unexpected situations?",
+        "options": [
+            {"value": 0, "text": "Almost never"},
+            {"value": 1, "text": "Rarely"},
+            {"value": 2, "text": "Sometimes"},
+            {"value": 3, "text": "Fairly often"},
+            {"value": 4, "text": "Often"},
+            {"value": 5, "text": "Very often"},
+        ],
+        "score_direction": "higher_is_more_observed_experience",
+        "status": "active",
+    },
+
+    "DU3": {
+        "question_id": "22222222-0000-4000-8000-000000000003",
+        "code": "DU3",
+        "version": 1,
+        "block": "DU",
+        "family": "external_confirmation",
+        "domain": "context",
+        "type": "single_select",
+        "prompt": "How often do other people say that your actions helped resolve a difficult or unexpected situation?",
+        "options": [
+            {"value": 0, "text": "It usually goes unnoticed"},
+            {"value": 1, "text": "Very rarely"},
+            {"value": 2, "text": "Sometimes"},
+            {"value": 3, "text": "Fairly often"},
+            {"value": 4, "text": "Often"},
+            {"value": 5, "text": "Almost always"},
+        ],
+        "score_direction": "higher_is_more_external_confirmation",
+        "status": "active",
+    },
+
+    "DU4": {
+        "question_id": "22222222-0000-4000-8000-000000000004",
+        "code": "DU4",
+        "version": 1,
+        "block": "DU",
+        "family": "experience_context_router",
+        "domain": "routing",
+        "type": "single_select",
+        "prompt": "Where does this happen most often?",
+        "options": [
+            {"value": 0, "text": "Mostly at work"},
+            {"value": 1, "text": "Both at work and in my personal life"},
+            {"value": 2, "text": "Mostly in my personal life"},
+        ],
+        "score_direction": "routing_only",
+        "status": "active",
+    },
+}===== assessment/studies/decision_under_uncertainty/decision_under_uncertainty_questions_es.py =====
+QUESTION_BANK_ES = {
+    "DU1": {
+        "question_id": "22222222-0000-4000-8000-000000000001",
+        "code": "DU1",
+        "version": 1,
+        "block": "DU",
+        "family": "decision_under_uncertainty",
+        "domain": "context",
+        "type": "single_select",
+        "prompt": "¿Cuál de las siguientes opciones describe mejor su estilo de vida?",
+        "options": [
+            {"value": 0, "text": "Tranquilo, predecible y rutinario"},
+            {"value": 1, "text": "Ocasionalmente surgen situaciones nuevas en mi vida o trabajo"},
+            {"value": 2, "text": "Periódicamente tengo que adaptarme a situaciones nuevas"},
+            {"value": 3, "text": "Con frecuencia tengo que adaptarme a nuevas situaciones en mi vida o trabajo"},
+            {"value": 4, "text": "Casi constantemente tengo que responder rápidamente a nuevas situaciones en mi vida o trabajo"},
+            {"value": 5, "text": "Mi vida o trabajo se caracterizan por una incertidumbre constante y condiciones que cambian rápidamente"},
+        ],
+        "score_direction": "higher_is_more_risk",
+        "status": "active",
+    },
+
+    "DU2": {
+        "question_id": "22222222-0000-4000-8000-000000000002",
+        "code": "DU2",
+        "version": 1,
+        "block": "DU",
+        "family": "observed_experience",
+        "domain": "context",
+        "type": "single_select",
+        "prompt": "¿Con qué frecuencia otras personas le piden ayuda en situaciones difíciles o inesperadas?",
+        "options": [
+            {"value": 0, "text": "Casi nunca"},
+            {"value": 1, "text": "Rara vez"},
+            {"value": 2, "text": "A veces"},
+            {"value": 3, "text": "Con bastante frecuencia"},
+            {"value": 4, "text": "Con frecuencia"},
+            {"value": 5, "text": "Muy frecuentemente"},
+        ],
+        "score_direction": "higher_is_more_observed_experience",
+        "status": "active",
+    },
+
+    "DU3": {
+        "question_id": "22222222-0000-4000-8000-000000000003",
+        "code": "DU3",
+        "version": 1,
+        "block": "DU",
+        "family": "external_confirmation",
+        "domain": "context",
+        "type": "single_select",
+        "prompt": "¿Con qué frecuencia otras personas comentan que sus acciones ayudaron a resolver una situación difícil o inesperada?",
+        "options": [
+            {"value": 0, "text": "Generalmente pasa desapercibido"},
+            {"value": 1, "text": "Muy rara vez lo mencionan"},
+            {"value": 2, "text": "A veces lo mencionan"},
+            {"value": 3, "text": "Con bastante frecuencia lo mencionan"},
+            {"value": 4, "text": "Con frecuencia lo mencionan"},
+            {"value": 5, "text": "Casi siempre lo mencionan"},
+        ],
+        "score_direction": "higher_is_more_external_confirmation",
+        "status": "active",
+    },
+
+    "DU4": {
+        "question_id": "22222222-0000-4000-8000-000000000004",
+        "code": "DU4",
+        "version": 1,
+        "block": "DU",
+        "family": "experience_context_router",
+        "domain": "routing",
+        "type": "single_select",
+        "prompt": "¿Dónde ocurre esto con mayor frecuencia?",
+        "options": [
+            {"value": 0, "text": "Principalmente en el trabajo"},
+            {"value": 1, "text": "Tanto en el trabajo como en mi vida personal"},
+            {"value": 2, "text": "Principalmente en mi vida personal"},
+        ],
+        "score_direction": "routing_only",
+        "status": "active",
+    },
+}===== assessment/studies/decision_under_uncertainty/scenarios.py =====
+"""
+Reserved.
+
+Future:
+
+WORK scenarios
+LIFE scenarios
+MIXED scenarios
+"""===== assessment/studies/decision_under_uncertainty/flow.py =====
+DU_FLOW = {
+    "DU1": {
+        "rules": [
+            {"if": {"value": 0}, "goto": "END_RESERVED"}
+        ],
+        "default": "DU2",
+    },
+    "DU2": {"default": "DU3"},
+    "DU3": {"default": "DU4"},
+    "DU4": {
+        "rules": [
+            {"if": {"value": 0}, "goto": "WORK_BRANCH_RESERVED"},
+            {"if": {"value": 1}, "goto": "MIXED_BRANCH_RESERVED"},
+            {"if": {"value": 2}, "goto": "LIFE_BRANCH_RESERVED"},
+        ],
+        "default": "END_RESERVED",
+    },
+}===== assessment/studies/decision_under_uncertainty/scoring.py =====
+class DUScoring:
+
+    def calculate(self, answers: dict) -> dict:
+        return {
+            "lifestyle_uncertainty": answers.get("DU1"),
+            "observed_experience": answers.get("DU2"),
+            "external_confirmation": answers.get("DU3"),
+            "experience_context": answers.get("DU4"),
+        }===== assessment/studies/decision_under_uncertainty/router.py =====
+from .flow import DU_FLOW
+
+
+def _matches(condition: dict, value) -> bool:
+    if not condition:
+        return False
+
+    if "value" in condition:
+        return value == condition["value"]
+
+    if "min_value" in condition:
+        return value >= condition["min_value"]
+
+    if "max_value" in condition:
+        return value <= condition["max_value"]
+
+    if "in" in condition:
+        return value in condition["in"]
+
+    return False
+
+
+def get_next_question_code(question_code: str, value):
+    next_config = DU_FLOW.get(question_code) or {}
+
+    for rule in next_config.get("rules", []):
+        if _matches(rule.get("if", {}), value):
+            return rule.get("goto")
+
+    return next_config.get("default")

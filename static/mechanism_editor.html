@@ -1,0 +1,640 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Mechanism Editor</title>
+    <style>
+      :root {
+        --ink: #14233b;
+        --violet: #6d28d9;
+        --line: #d9e2ee;
+        --muted: #607086;
+        --bad: #b42318;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family:
+          Inter,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          sans-serif;
+        background: #f1f0f8;
+        color: var(--ink);
+      }
+      header {
+        background: #2b1f4b;
+        color: #fff;
+        padding: 14px 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        position: sticky;
+        top: 0;
+        z-index: 5;
+      }
+      h1 {
+        font-size: 19px;
+        margin: 0;
+      }
+      header small {
+        color: #d0c8e8;
+      }
+      .grow {
+        flex: 1;
+      }
+      button,
+      select,
+      input,
+      textarea {
+        font: inherit;
+      }
+      button,
+      select {
+        padding: 9px 12px;
+        border: 1px solid #b9c6d6;
+        border-radius: 9px;
+        background: #fff;
+      }
+      button {
+        cursor: pointer;
+        font-weight: 700;
+      }
+      .primary {
+        background: var(--violet);
+        border-color: var(--violet);
+        color: #fff;
+      }
+      .danger {
+        color: var(--bad);
+      }
+      .shell {
+        display: grid;
+        grid-template-columns: 370px minmax(650px, 1fr);
+        min-height: calc(100vh - 66px);
+      }
+      aside {
+        background: #fff;
+        border-right: 1px solid var(--line);
+        padding: 15px;
+        overflow: auto;
+      }
+      .main {
+        padding: 20px;
+      }
+      .card {
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 15px;
+        padding: 16px;
+        margin-bottom: 14px;
+        box-shadow: 0 7px 20px #1e293b0b;
+      }
+      .search {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #c6d1df;
+        border-radius: 9px;
+      }
+      .item {
+        padding: 11px;
+        border: 1px solid var(--line);
+        border-radius: 11px;
+        margin: 7px 0;
+        cursor: pointer;
+      }
+      .item:hover,
+      .item.selected {
+        border-color: #9474db;
+        background: #f5f0ff;
+      }
+      .item b {
+        display: block;
+      }
+      .small {
+        font-size: 12px;
+        color: var(--muted);
+        line-height: 1.45;
+      }
+      .status {
+        padding: 10px 12px;
+        border-radius: 10px;
+        background: #eaf0f7;
+        margin-bottom: 12px;
+        white-space: pre-wrap;
+      }
+      .status.ok {
+        background: #e9f8f1;
+        color: #075b41;
+      }
+      .status.error {
+        background: #fff0ef;
+        color: #8d2118;
+      }
+      .badge {
+        display: inline-block;
+        border-radius: 999px;
+        padding: 4px 8px;
+        background: #e5eaf1;
+        font-size: 11px;
+        font-weight: 800;
+      }
+      .badge.active {
+        background: #d7f5e7;
+        color: #086342;
+      }
+      .badge.trial {
+        background: #dce9ff;
+        color: #244e9d;
+      }
+      .badge.draft {
+        background: #fff0c9;
+        color: #865300;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+      }
+      .kv {
+        border-bottom: 1px solid #e8edf4;
+        padding: 9px 0;
+      }
+      .kv b {
+        display: block;
+        font-size: 11px;
+        color: var(--muted);
+        text-transform: uppercase;
+      }
+      .field {
+        margin: 10px 0;
+      }
+      .field label {
+        display: block;
+        font-size: 12px;
+        font-weight: 750;
+        margin-bottom: 5px;
+      }
+      .field input,
+      .field textarea {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #c6d1df;
+        border-radius: 9px;
+      }
+      .json {
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        min-height: 480px !important;
+      }
+      .actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .version {
+        padding: 10px 0;
+        border-top: 1px solid #e8edf4;
+      }
+      .credit {
+        text-align: center;
+        color: #64748b;
+        font-size: 11px;
+        padding: 14px;
+      }
+      @media (max-width: 920px) {
+        .shell {
+          display: block;
+        }
+        .grid {
+          grid-template-columns: 1fr;
+        }
+        .main {
+          padding: 12px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div>
+        <h1 data-i18n="title">Редактор существующих механизмов</h1>
+        <small data-i18n="subtitle"
+          >Параметры · связи · задержки · условия · обратная связь</small
+        >
+      </div>
+      <div class="grow"></div>
+      <button onclick="location.href='/research-workspace'" data-i18n="back">
+        ← Рабочая среда</button
+      ><select id="lang" onchange="setLang(this.value)">
+        <option value="ru">RU</option>
+        <option value="en">EN</option>
+        <option value="es">ES</option>
+      </select>
+    </header>
+    <div class="shell">
+      <aside>
+        <input
+          id="search"
+          class="search"
+          oninput="renderList()"
+          data-ph="search"
+          placeholder="Поиск механизма"
+        />
+        <div id="list"></div>
+      </aside>
+      <main class="main">
+        <div id="status" class="status" data-i18n="loading">
+          Загрузка реестра…
+        </div>
+        <div id="empty" class="card">
+          <h2 data-i18n="choose">Выберите механизм и его версию</h2>
+          <p class="small" data-i18n="rule">
+            Механизм редактируется отдельно от параметров. Draft можно изменить;
+            Trial и Active неизменяемы.
+          </p>
+        </div>
+        <section id="editor" style="display: none">
+          <div class="card">
+            <span id="statusBadge" class="badge"></span>
+            <span id="identity" class="badge"></span>
+            <h2 id="name"></h2>
+            <div id="summary" class="grid"></div>
+            <p class="small" data-i18n="fullContract">
+              Полный контракт сохраняет состав параметров, направление,
+              задержки, условия, формулу, время, ограничения и происхождение.
+            </p>
+          </div>
+          <div class="card">
+            <div class="grid">
+              <div class="field">
+                <label data-i18n="actor">Кто вносит изменение</label
+                ><input id="actor" placeholder="researcher_id" />
+              </div>
+              <div class="field">
+                <label data-i18n="reason">Причина новой версии</label
+                ><input id="reason" />
+              </div>
+            </div>
+            <div class="field">
+              <label data-i18n="contract">Полный контракт механизма, JSON</label
+              ><textarea id="json" class="json" spellcheck="false"></textarea>
+            </div>
+            <div class="actions">
+              <button
+                id="createRevision"
+                class="primary"
+                onclick="createRevision()"
+                data-i18n="newDraft"
+              >
+                Создать Draft из выбранной версии</button
+              ><button
+                id="saveDraft"
+                class="primary"
+                onclick="saveDraft()"
+                data-i18n="saveDraft"
+              >
+                Сохранить изменения Draft</button
+              ><button
+                id="toTrial"
+                onclick="transition('trial')"
+                data-i18n="toTrial"
+              >
+                Передать в Trial</button
+              ><button
+                id="toActive"
+                onclick="transition('active')"
+                data-i18n="toActive"
+              >
+                Сделать Active</button
+              ><button
+                id="deleteDraft"
+                class="danger"
+                onclick="removeDraft()"
+                data-i18n="deleteDraft"
+              >
+                Удалить Draft
+              </button>
+            </div>
+          </div>
+          <div class="card">
+            <h3 data-i18n="versions">Все версии механизма</h3>
+            <div id="versions"></div>
+          </div>
+        </section>
+        <div class="credit">
+          Designed and developed collaboratively by Marina Boronenko and Ray, AI
+          research and engineering colleagues.
+        </div>
+      </main>
+    </div>
+    <script>
+      let language = ["ru", "en", "es"].includes(
+          localStorage.getItem("healthModelLanguage"),
+        )
+          ? localStorage.getItem("healthModelLanguage")
+          : "ru",
+        definitions = [],
+        selected = null;
+      const I = {
+        ru: {
+          title: "Редактор существующих механизмов",
+          subtitle: "Параметры · связи · задержки · условия · обратная связь",
+          back: "← Рабочая среда",
+          search: "Поиск механизма",
+          loading: "Загрузка реестра…",
+          ready: "Реестр загружен",
+          choose: "Выберите механизм и его версию",
+          rule: "Механизм редактируется отдельно от параметров. Draft можно изменить; Trial и Active неизменяемы.",
+          fullContract:
+            "Полный контракт сохраняет состав параметров, направление, задержки, условия, формулу, время, ограничения и происхождение.",
+          actor: "Кто вносит изменение",
+          reason: "Причина новой версии",
+          contract: "Полный контракт механизма, JSON",
+          newDraft: "Создать Draft из выбранной версии",
+          saveDraft: "Сохранить изменения Draft",
+          toTrial: "Передать в Trial",
+          toActive: "Сделать Active",
+          deleteDraft: "Удалить Draft",
+          versions: "Все версии механизма",
+          parameters: "Параметры",
+          direction: "Направление",
+          delay: "Задержка",
+          feedback: "Обратная связь",
+          error: "Ошибка",
+          done: "Действие выполнено",
+          confirm: "Удалить только эту Draft-версию?",
+        },
+        en: {
+          title: "Existing Mechanism Editor",
+          subtitle: "Parameters · relations · delays · conditions · feedback",
+          back: "← Workspace",
+          search: "Search mechanisms",
+          loading: "Loading registry…",
+          ready: "Registry loaded",
+          choose: "Select a mechanism and version",
+          rule: "Mechanisms are edited separately from parameters. Draft is editable; Trial and Active are immutable.",
+          fullContract:
+            "The complete contract preserves parameter composition, direction, delays, conditions, formula, time, limits, and provenance.",
+          actor: "Change actor",
+          reason: "New version reason",
+          contract: "Complete mechanism contract, JSON",
+          newDraft: "Create Draft from selected version",
+          saveDraft: "Save Draft changes",
+          toTrial: "Move to Trial",
+          toActive: "Make Active",
+          deleteDraft: "Delete Draft",
+          versions: "All mechanism versions",
+          parameters: "Parameters",
+          direction: "Direction",
+          delay: "Delay",
+          feedback: "Feedback",
+          error: "Error",
+          done: "Action completed",
+          confirm: "Delete only this Draft version?",
+        },
+        es: {
+          title: "Editor de mecanismos existentes",
+          subtitle:
+            "Parámetros · relaciones · demoras · condiciones · retroalimentación",
+          back: "← Espacio de trabajo",
+          search: "Buscar mecanismos",
+          loading: "Cargando registro…",
+          ready: "Registro cargado",
+          choose: "Elige mecanismo y versión",
+          rule: "Los mecanismos se editan aparte de los parámetros. Draft es editable; Trial y Active son inmutables.",
+          fullContract:
+            "El contrato completo conserva parámetros, dirección, demoras, condiciones, fórmula, tiempo, límites y procedencia.",
+          actor: "Responsable",
+          reason: "Motivo de la versión",
+          contract: "Contrato completo, JSON",
+          newDraft: "Crear Draft desde la versión",
+          saveDraft: "Guardar Draft",
+          toTrial: "Pasar a Trial",
+          toActive: "Activar",
+          deleteDraft: "Eliminar Draft",
+          versions: "Todas las versiones",
+          parameters: "Parámetros",
+          direction: "Dirección",
+          delay: "Demora",
+          feedback: "Retroalimentación",
+          error: "Error",
+          done: "Acción completada",
+          confirm: "¿Eliminar solo esta versión Draft?",
+        },
+      };
+      const t = (k) => I[language][k] || I.en[k] || k,
+        esc = (v) =>
+          String(v ?? "")
+            .replaceAll("&", "&amp;")
+            .replaceAll("<", "&lt;")
+            .replaceAll(">", "&gt;");
+      async function api(url, opt = {}) {
+        const r = await fetch(url, opt);
+        let d;
+        try {
+          d = await r.json();
+        } catch {
+          throw Error(`HTTP ${r.status}`);
+        }
+        if (!r.ok || d.ok === false)
+          throw Error(
+            typeof d.detail === "string"
+              ? d.detail
+              : JSON.stringify(d.detail || d),
+          );
+        return d;
+      }
+      function setStatus(m, k = "") {
+        const n = document.getElementById("status");
+        n.textContent = m;
+        n.className = `status ${k}`;
+      }
+      function applyLang() {
+        document.documentElement.lang = language;
+        document.getElementById("lang").value = language;
+        document.querySelectorAll("[data-i18n]").forEach((n) => {
+          if (I[language][n.dataset.i18n])
+            n.textContent = I[language][n.dataset.i18n];
+        });
+        document
+          .querySelectorAll("[data-ph]")
+          .forEach((n) => (n.placeholder = t(n.dataset.ph)));
+      }
+      function setLang(v) {
+        language = v;
+        localStorage.setItem("healthModelLanguage", v);
+        applyLang();
+        renderList();
+        if (selected) show(selected);
+      }
+      async function load() {
+        try {
+          const d = await api("/research/editors/mechanisms");
+          definitions = d.definitions || [];
+          renderList();
+          setStatus(t("ready"), "ok");
+        } catch (e) {
+          setStatus(`${t("error")}: ${e.message}`, "error");
+        }
+      }
+      function label(d) {
+        const n = d.names || d.name || {};
+        return typeof n === "string"
+          ? n
+          : n[language] || n.en || d.mechanism_code;
+      }
+      function version(d) {
+        return Number(d.definition_version || 1);
+      }
+      function statusOf(d) {
+        return (
+          d.development_status || d.lifecycle_status || d.status || "active"
+        );
+      }
+      function renderList() {
+        const q = document.getElementById("search").value.toLowerCase();
+        document.getElementById("list").innerHTML = definitions
+          .filter(
+            (d) =>
+              !q || `${d.mechanism_code} ${label(d)}`.toLowerCase().includes(q),
+          )
+          .map(
+            (d) =>
+              `<div class="item ${selected === d ? "selected" : ""}" onclick="showBy('${esc(d.mechanism_code)}',${version(d)})"><b>${esc(label(d))}</b><span class="small">${esc(d.mechanism_code)} · v${version(d)} · ${esc(statusOf(d))}</span></div>`,
+          )
+          .join("");
+      }
+      function showBy(code, v) {
+        show(
+          definitions.find(
+            (d) => d.mechanism_code === code && version(d) === v,
+          ),
+        );
+      }
+      function show(d) {
+        selected = d;
+        document.getElementById("empty").style.display = "none";
+        document.getElementById("editor").style.display = "block";
+        document.getElementById("name").textContent = label(d);
+        const st = statusOf(d),
+          b = document.getElementById("statusBadge");
+        b.textContent = st;
+        b.className = `badge ${st}`;
+        document.getElementById("identity").textContent =
+          `${d.mechanism_code} · v${version(d)}`;
+        const refs =
+          d.parameter_references || d.parameters || d.input_parameters || [];
+        document.getElementById("summary").innerHTML =
+          `<div class="kv"><b>${t("parameters")}</b>${esc(Array.isArray(refs) ? refs.map((x) => (typeof x === "string" ? x : x.parameter_code || x.code)).join(", ") : "—")}</div><div class="kv"><b>${t("direction")}</b>${esc(d.direction || d.relation_direction || "—")}</div><div class="kv"><b>${t("delay")}</b>${esc(JSON.stringify(d.delay || d.time_lag || d.temporal_relation || "—"))}</div><div class="kv"><b>${t("feedback")}</b>${esc(JSON.stringify(d.feedback || d.feedback_contract || "—"))}</div>`;
+        document.getElementById("json").value = JSON.stringify(d, null, 2);
+        document.getElementById("reason").value = d.change_reason || "";
+        document.getElementById("createRevision").style.display =
+          st === "draft" ? "none" : "inline-block";
+        document.getElementById("saveDraft").style.display =
+          st === "draft" ? "inline-block" : "none";
+        document.getElementById("toTrial").style.display =
+          st === "draft" ? "inline-block" : "none";
+        document.getElementById("toActive").style.display =
+          st === "trial" ? "inline-block" : "none";
+        document.getElementById("deleteDraft").style.display =
+          st === "draft" ? "inline-block" : "none";
+        renderVersions();
+        renderList();
+      }
+      function meta() {
+        const actor = document.getElementById("actor").value.trim(),
+          reason = document.getElementById("reason").value.trim();
+        if (!actor || !reason) throw Error("ACTOR_AND_REASON_REQUIRED");
+        return { actor, reason };
+      }
+      async function createRevision() {
+        try {
+          const m = meta(),
+            d = await api(
+              `/research/editors/mechanisms/${encodeURIComponent(selected.mechanism_code)}/${version(selected)}/revision`,
+              {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ actor_id: m.actor, reason: m.reason }),
+              },
+            );
+          await reload(d.definition);
+          setStatus(t("done"), "ok");
+        } catch (e) {
+          setStatus(`${t("error")}: ${e.message}`, "error");
+        }
+      }
+      async function saveDraft() {
+        try {
+          const m = meta(),
+            body = JSON.parse(document.getElementById("json").value);
+          body.change_reason = m.reason;
+          body.actor_id = m.actor;
+          const d = await api("/research/editors/mechanisms/draft", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+          });
+          await reload(d.definition);
+          setStatus(t("done"), "ok");
+        } catch (e) {
+          setStatus(`${t("error")}: ${e.message}`, "error");
+        }
+      }
+      async function transition(target) {
+        try {
+          const m = meta();
+          const d = await api(
+            `/research/editors/mechanisms/${encodeURIComponent(selected.mechanism_code)}/${version(selected)}/transition/${target}`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ actor_id: m.actor, reason: m.reason }),
+            },
+          );
+          await reload(d.definition);
+          setStatus(t("done"), "ok");
+        } catch (e) {
+          setStatus(`${t("error")}: ${e.message}`, "error");
+        }
+      }
+      async function removeDraft() {
+        if (!confirm(t("confirm"))) return;
+        try {
+          const m = meta();
+          await api(
+            `/research/editors/mechanisms/${encodeURIComponent(selected.mechanism_code)}/${version(selected)}?actor_id=${encodeURIComponent(m.actor)}&reason=${encodeURIComponent(m.reason)}`,
+            { method: "DELETE" },
+          );
+          selected = null;
+          await load();
+          document.getElementById("editor").style.display = "none";
+          document.getElementById("empty").style.display = "block";
+          setStatus(t("done"), "ok");
+        } catch (e) {
+          setStatus(`${t("error")}: ${e.message}`, "error");
+        }
+      }
+      async function reload(d) {
+        await load();
+        showBy(d.mechanism_code, version(d));
+      }
+      function renderVersions() {
+        document.getElementById("versions").innerHTML = definitions
+          .filter((x) => x.mechanism_code === selected.mechanism_code)
+          .sort((a, b) => version(b) - version(a))
+          .map(
+            (v) =>
+              `<div class="version"><span class="badge ${statusOf(v)}">${esc(statusOf(v))}</span> <b>v${version(v)}</b> · ${esc(v.definition_source || "registry")} <button onclick="showBy('${esc(v.mechanism_code)}',${version(v)})">${esc(label(v))}</button></div>`,
+          )
+          .join("");
+      }
+      applyLang();
+      load();
+    </script>
+  </body>
+</html>

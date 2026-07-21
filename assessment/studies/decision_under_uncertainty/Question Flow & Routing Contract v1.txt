@@ -1,0 +1,95 @@
+Question Flow & Routing Contract v1
+
+
+
+Core Principle
+
+
+Each question is an independent node.
+
+The questionnaire is not a fixed list but a directed graph.
+
+Each question defines where the session continues.
+
+
+Every question contains
+
+
+question metadata
+answer definition
+scoring metadata
+routing metadata (next)
+
+
+
+Routing supports
+
+
+
+1. Linear transition
+
+DU1 → DU2
+
+2. Jump to another question
+
+DU4 → GOAL7
+
+3. Branch
+
+if answer == 0 → WORK_BLOCK
+
+if answer == 1 → FAMILY_BLOCK
+
+default → NEXT_BLOCK
+
+4. Transition to another study
+
+DU → Cognitive
+
+DU → Resource
+
+DU → Game
+
+DU → Sensor
+
+5. Transition to a task
+
+Question
+↓
+
+Mini-game
+
+↓
+
+Back to questionnaire
+
+UI rule
+
+
+The UI never decides what comes next.
+
+The UI only requests
+next_question = router(current_question, answer)
+and displays the returned node.
+
+
+Future compatibility
+
+
+This contract supports
+
+adaptive questionnaires
+branching studies
+games
+sensor tasks
+conditional blocks
+skipping irrelevant questions
+future AI-driven routing
+
+
+
+Это граф исследования (Research Graph).
+
+Вопрос — это узел (Node), а переходы — связи (Edges).
+
+Именно так работают сложные диагностические системы. Через год-два, когда у нас появятся десятки исследований и игр, мы не будем ничего переделывать — мы просто будем добавлять новые узлы и новые связи. Я бы уже сейчас строил архитектуру именно вокруг Research Graph, а не вокруг “списка вопросов”. Это решение масштабируется практически без ограничений.

@@ -1,0 +1,985 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Research Data Editor</title>
+    <style>
+      :root {
+        --ink: #14233b;
+        --teal: #087f7a;
+        --line: #d9e2ee;
+        --muted: #607086;
+        --bad: #b42318;
+        --warn: #a55c00;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family:
+          Inter,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          sans-serif;
+        background: #edf4f4;
+        color: var(--ink);
+      }
+      header {
+        background: #123b43;
+        color: #fff;
+        padding: 14px 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        position: sticky;
+        top: 0;
+        z-index: 5;
+      }
+      h1 {
+        font-size: 19px;
+        margin: 0;
+      }
+      header small {
+        color: #b9d5d7;
+      }
+      .grow {
+        flex: 1;
+      }
+      button,
+      select,
+      input,
+      textarea {
+        font: inherit;
+      }
+      button,
+      select {
+        padding: 9px 12px;
+        border: 1px solid #b9c6d6;
+        border-radius: 9px;
+        background: #fff;
+      }
+      button {
+        cursor: pointer;
+        font-weight: 700;
+      }
+      .primary {
+        background: var(--teal);
+        border-color: var(--teal);
+        color: #fff;
+      }
+      .danger {
+        color: var(--bad);
+        border-color: #efb7b2;
+      }
+      .tabs {
+        display: flex;
+        gap: 8px;
+        padding: 14px 20px 0;
+      }
+      .tabs button.active {
+        background: #123b43;
+        color: #fff;
+      }
+      .main {
+        padding: 14px 20px 25px;
+      }
+      .view {
+        display: none;
+      }
+      .view.active {
+        display: block;
+      }
+      .card {
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 15px;
+        padding: 16px;
+        margin-bottom: 14px;
+        box-shadow: 0 7px 20px #1e293b0b;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+      }
+      .tri {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+      }
+      .field {
+        margin: 10px 0;
+      }
+      .field label {
+        display: block;
+        font-size: 12px;
+        font-weight: 750;
+        margin-bottom: 5px;
+      }
+      .field input,
+      .field select,
+      .field textarea {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #c6d1df;
+        border-radius: 9px;
+        background: #fff;
+      }
+      .field textarea {
+        min-height: 90px;
+      }
+      .json {
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        min-height: 300px !important;
+      }
+      .status {
+        padding: 10px 12px;
+        border-radius: 10px;
+        background: #eaf0f7;
+        margin-bottom: 12px;
+        white-space: pre-wrap;
+      }
+      .status.ok {
+        background: #e9f8f1;
+        color: #075b41;
+      }
+      .status.error {
+        background: #fff0ef;
+        color: #8d2118;
+      }
+      .small {
+        font-size: 12px;
+        color: var(--muted);
+        line-height: 1.45;
+      }
+      .operation {
+        border: 1px solid var(--line);
+        border-radius: 11px;
+        padding: 11px;
+        margin: 8px 0;
+      }
+      .operation-head {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .operation-fields {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+        margin-top: 8px;
+      }
+      .actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .summary {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-bottom: 10px;
+      }
+      .badge {
+        border-radius: 999px;
+        padding: 4px 8px;
+        background: #e7edf3;
+        font-size: 11px;
+        font-weight: 800;
+      }
+      .badge.usable {
+        background: #d7f5e7;
+        color: #086342;
+      }
+      .badge.excluded {
+        background: #ffe0dd;
+        color: #8c241c;
+      }
+      .session {
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 12px;
+        margin: 8px 0;
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 10px;
+      }
+      .eligible {
+        border-left: 4px solid #07936b;
+      }
+      .blocked {
+        border-left: 4px solid #c57b00;
+      }
+      .session-actions {
+        display: flex;
+        gap: 7px;
+        align-items: start;
+        flex-wrap: wrap;
+      }
+      .recipe {
+        border-top: 1px solid #e5ebf2;
+        padding: 11px 0;
+      }
+      .credit {
+        text-align: center;
+        color: #64748b;
+        font-size: 11px;
+        padding: 14px;
+      }
+      @media (max-width: 850px) {
+        .grid,
+        .tri,
+        .operation-fields {
+          grid-template-columns: 1fr;
+        }
+        .main {
+          padding: 12px;
+        }
+        .session {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div>
+        <h1 data-i18n="title">Редактор исследовательских данных</h1>
+        <small data-i18n="subtitle"
+          >Преобразования по типу источника · единое время · качество ·
+          аудит</small
+        >
+      </div>
+      <div class="grow"></div>
+      <button onclick="location.href='/research-workspace'" data-i18n="back">
+        ← Рабочая среда</button
+      ><select id="lang" onchange="setLang(this.value)">
+        <option value="ru">RU</option>
+        <option value="en">EN</option>
+        <option value="es">ES</option>
+      </select>
+    </header>
+    <div class="tabs">
+      <button
+        class="active"
+        data-view="transform"
+        onclick="showView('transform')"
+        data-i18n="transform"
+      >
+        Преобразование</button
+      ><button
+        data-view="sessions"
+        onclick="showView('sessions')"
+        data-i18n="sessions"
+      >
+        Сессии и удаление</button
+      ><button
+        data-view="recipes"
+        onclick="showView('recipes')"
+        data-i18n="recipes"
+      >
+        Рецепты и аудит
+      </button>
+    </div>
+    <main class="main">
+      <div id="status" class="status" data-i18n="loading">
+        Загрузка контрактов…
+      </div>
+      <section id="transform" class="view active">
+        <div class="card">
+          <h2 data-i18n="source">1. Источник и стандарт результата</h2>
+          <div class="tri">
+            <div class="field">
+              <label data-i18n="sourceType">Тип входных данных</label
+              ><select id="sourceType" onchange="renderOperations()"></select>
+            </div>
+            <div class="field">
+              <label data-i18n="study">Исследование</label
+              ><input id="studyId" />
+            </div>
+            <div class="field">
+              <label data-i18n="session">Сессия</label><input id="sessionId" />
+            </div>
+            <div class="field">
+              <label data-i18n="unit">Единица</label><input id="unit" />
+            </div>
+            <div class="field">
+              <label data-i18n="scale">Код шкалы</label><input id="scaleCode" />
+            </div>
+            <div class="field">
+              <label data-i18n="clock">Источник времени</label
+              ><input
+                id="clockSource"
+                placeholder="server_clock / device_clock"
+              />
+            </div>
+          </div>
+          <p class="small" data-i18n="immutability">
+            Исходные записи не изменяются. Результат получает отдельные
+            идентификаторы, хеш исходника, UTC-время, флаги качества и цепочку
+            преобразований.
+          </p>
+        </div>
+        <div class="card">
+          <h2 data-i18n="records">2. Входные записи</h2>
+          <p class="small" data-i18n="recordsHint">
+            JSON-массив. Для каждого наблюдения передайте observation_time или
+            timestamp; значение — value, answer_value, measurement_value, score
+            либо state_value.
+          </p>
+          <textarea id="recordsJson" class="json">[]</textarea>
+          <div class="actions">
+            <button id="loadFileButton" onclick="document.getElementById('dataFileInput').click()">Загрузить JSON / CSV / TSV</button>
+            <input id="dataFileInput" type="file" accept=".json,.csv,.tsv,.xlsx,.avi,.mp4,.mov,.wav,application/json,text/csv,text/tab-separated-values,video/*,audio/*" style="display:none" onchange="loadDataFile(this.files[0])">
+            <button id="profileButton" onclick="profileInput()">Построить профиль качества и варианты обработки</button>
+            <button id="rayDataButton" onclick="askRayAboutData()">Попросить Рэя объяснить варианты</button>
+            <button onclick="loadSessionAnswers()" data-i18n="loadSession">
+              Подхватить ответы выбранной сессии
+            </button>
+          </div>
+          <div id="fileFormatStatus" class="status" style="display:none"></div>
+          <div id="qualityProfile" class="card" style="display:none;margin-top:12px"></div>
+          <div id="rayDataLog" class="status" style="display:none"></div>
+        </div>
+        <div class="card">
+          <h2 data-i18n="operations">3. Инструменты преобразования</h2>
+          <div id="operations"></div>
+        </div>
+        <div class="card">
+          <h2 data-i18n="applyTitle">
+            4. Предпросмотр и воспроизводимое применение
+          </h2>
+          <div class="tri">
+            <div class="field">
+              <label data-i18n="recipeName">Название рецепта</label
+              ><input id="recipeName" />
+            </div>
+            <div class="field">
+              <label data-i18n="actor">Ответственный</label><input id="actor" />
+            </div>
+            <div class="field">
+              <label data-i18n="reason">Причина преобразования</label
+              ><input id="reason" />
+            </div>
+          </div>
+          <div class="actions">
+            <button onclick="preview()" data-i18n="preview">Предпросмотр</button
+            ><button
+              class="primary"
+              onclick="applyTransformation()"
+              data-i18n="apply"
+            >
+              Применить и записать рецепт
+            </button>
+          </div>
+        </div>
+        <div id="previewCard" class="card" style="display: none">
+          <h2 data-i18n="result">Результат</h2>
+          <div id="previewSummary" class="summary"></div>
+          <textarea id="previewJson" class="json" readonly></textarea>
+        </div>
+      </section>
+      <section id="sessions" class="view">
+        <div class="card">
+          <h2 data-i18n="sessionTitle">Сессии сбора данных</h2>
+          <p class="small" data-i18n="sessionRule">
+            Сессия с данными не удаляется этой кнопкой: её можно признать
+            недействительной с сохранением научного следа. Окончательно
+            удаляется только пустая техническая сессия после проверки всех
+            зависимостей.
+          </p>
+          <div class="grid">
+            <div class="field">
+              <label data-i18n="actor">Ответственный</label
+              ><input id="sessionActor" />
+            </div>
+            <div class="field">
+              <label data-i18n="reason">Причина действия</label
+              ><input id="sessionReason" />
+            </div>
+          </div>
+          <button onclick="loadSessions()" data-i18n="refresh">
+            Обновить список
+          </button>
+        </div>
+        <div id="sessionList"></div>
+      </section>
+      <section id="recipes" class="view">
+        <div class="card">
+          <h2 data-i18n="recipesTitle">Сохранённые рецепты преобразований</h2>
+          <button onclick="loadRecipes()" data-i18n="refresh">
+            Обновить список
+          </button>
+          <div id="recipeList"></div>
+        </div>
+        <div class="card">
+          <h2 data-i18n="auditTitle">Последние действия редакторов</h2>
+          <pre id="audit" class="json" style="white-space: pre-wrap"></pre>
+        </div>
+      </section>
+      <div class="credit">
+        Designed and developed collaboratively by Marina Boronenko and Ray, AI
+        research and engineering colleagues.
+      </div>
+    </main>
+    <script>
+      let language = ["ru", "en", "es"].includes(
+          localStorage.getItem("healthModelLanguage"),
+        )
+          ? localStorage.getItem("healthModelLanguage")
+          : "ru",
+        contract = null,
+        lastPreview = null,
+        lastQualityProfile = null,
+        currentResearcherId = "local-researcher";
+      const TYPES = [
+          "question_answer",
+          "sensor_observation",
+          "video_marker",
+          "game_event",
+          "parameter_measurement",
+          "mechanism_state",
+        ],
+        I = {
+          ru: {
+            title: "Редактор исследовательских данных",
+            subtitle:
+              "Преобразования по типу источника · единое время · качество · аудит",
+            back: "← Рабочая среда",
+            transform: "Преобразование",
+            sessions: "Сессии и удаление",
+            recipes: "Рецепты и аудит",
+            loading: "Загрузка контрактов…",
+            ready: "Контракты загружены",
+            source: "1. Источник и стандарт результата",
+            sourceType: "Тип входных данных",
+            study: "Исследование",
+            session: "Сессия",
+            unit: "Единица",
+            scale: "Код шкалы",
+            clock: "Источник времени",
+            immutability:
+              "Исходные записи не изменяются. Результат получает отдельные идентификаторы, хеш исходника, UTC-время, флаги качества и цепочку преобразований.",
+            records: "2. Входные записи",
+            recordsHint:
+              "JSON-массив. Для каждого наблюдения передайте observation_time или timestamp; значение — value, answer_value, measurement_value, score либо state_value.",
+            loadSession: "Подхватить ответы выбранной сессии",
+            operations: "3. Инструменты преобразования",
+            applyTitle: "4. Предпросмотр и воспроизводимое применение",
+            recipeName: "Название рецепта",
+            actor: "Ответственный",
+            reason: "Причина действия",
+            preview: "Предпросмотр",
+            apply: "Применить и записать рецепт",
+            result: "Результат",
+            sessionTitle: "Сессии сбора данных",
+            sessionRule:
+              "Сессия с данными не удаляется этой кнопкой: её можно признать недействительной с сохранением научного следа. Окончательно удаляется только пустая техническая сессия после проверки всех зависимостей.",
+            refresh: "Обновить список",
+            recipesTitle: "Сохранённые рецепты преобразований",
+            auditTitle: "Последние действия редакторов",
+            error: "Ошибка",
+            done: "Выполнено",
+            usable: "Пригодно",
+            excluded: "Исключено",
+            input: "Вход",
+            purge: "Удалить пустую",
+            invalidate: "Признать недействительной",
+            confirmPurge: "Для окончательного удаления введите точную фразу",
+            noRecords: "В сессии нет записей ответов.",
+          },
+          en: {
+            title: "Research Data Editor",
+            subtitle:
+              "Source-specific transformations · unified time · quality · audit",
+            back: "← Workspace",
+            transform: "Transformation",
+            sessions: "Sessions and deletion",
+            recipes: "Recipes and audit",
+            loading: "Loading contracts…",
+            ready: "Contracts loaded",
+            source: "1. Source and output standard",
+            sourceType: "Input data type",
+            study: "Study",
+            session: "Session",
+            unit: "Unit",
+            scale: "Scale code",
+            clock: "Clock source",
+            immutability:
+              "Raw records are immutable. Output receives separate identifiers, source hash, UTC time, quality flags, and transformation chain.",
+            records: "2. Input records",
+            recordsHint:
+              "JSON array. Each observation needs observation_time or timestamp; value may be value, answer_value, measurement_value, score, or state_value.",
+            loadSession: "Load responses from selected session",
+            operations: "3. Transformation tools",
+            applyTitle: "4. Preview and reproducible application",
+            recipeName: "Recipe name",
+            actor: "Responsible actor",
+            reason: "Action reason",
+            preview: "Preview",
+            apply: "Apply and record recipe",
+            result: "Result",
+            sessionTitle: "Data collection sessions",
+            sessionRule:
+              "A session containing data is not deleted by this control: it may be invalidated while preserving its scientific trace. Only an empty technical session can be purged after dependency checks.",
+            refresh: "Refresh",
+            recipesTitle: "Saved transformation recipes",
+            auditTitle: "Recent editor actions",
+            error: "Error",
+            done: "Completed",
+            usable: "Usable",
+            excluded: "Excluded",
+            input: "Input",
+            purge: "Delete empty",
+            invalidate: "Invalidate",
+            confirmPurge: "For permanent deletion enter the exact phrase",
+            noRecords: "The session contains no answer records.",
+          },
+          es: {
+            title: "Editor de datos de investigación",
+            subtitle:
+              "Transformaciones por fuente · tiempo unificado · calidad · auditoría",
+            back: "← Espacio de trabajo",
+            transform: "Transformación",
+            sessions: "Sesiones y eliminación",
+            recipes: "Recetas y auditoría",
+            loading: "Cargando contratos…",
+            ready: "Contratos cargados",
+            source: "1. Fuente y estándar de salida",
+            sourceType: "Tipo de entrada",
+            study: "Estudio",
+            session: "Sesión",
+            unit: "Unidad",
+            scale: "Código de escala",
+            clock: "Fuente del reloj",
+            immutability:
+              "Los registros originales son inmutables. La salida recibe identificadores, hash, hora UTC, calidad y cadena de transformaciones.",
+            records: "2. Registros de entrada",
+            recordsHint:
+              "Matriz JSON. Cada observación necesita observation_time o timestamp; el valor puede ser value, answer_value, measurement_value, score o state_value.",
+            loadSession: "Cargar respuestas de la sesión",
+            operations: "3. Herramientas",
+            applyTitle: "4. Vista previa y aplicación reproducible",
+            recipeName: "Nombre de receta",
+            actor: "Responsable",
+            reason: "Motivo",
+            preview: "Vista previa",
+            apply: "Aplicar y registrar receta",
+            result: "Resultado",
+            sessionTitle: "Sesiones de recopilación",
+            sessionRule:
+              "Una sesión con datos no se elimina aquí: puede invalidarse conservando el rastro científico. Solo una sesión técnica vacía puede eliminarse tras comprobar dependencias.",
+            refresh: "Actualizar",
+            recipesTitle: "Recetas guardadas",
+            auditTitle: "Acciones recientes",
+            error: "Error",
+            done: "Completado",
+            usable: "Utilizable",
+            excluded: "Excluido",
+            input: "Entrada",
+            purge: "Eliminar vacía",
+            invalidate: "Invalidar",
+            confirmPurge:
+              "Para eliminar definitivamente escribe la frase exacta",
+            noRecords: "La sesión no contiene respuestas.",
+          },
+        };
+      const t = (k) => I[language][k] || I.en[k] || k,
+        esc = (v) =>
+          String(v ?? "")
+            .replaceAll("&", "&amp;")
+            .replaceAll("<", "&lt;")
+            .replaceAll(">", "&gt;");
+      const FILE_TEXT={ru:{load:"Загрузить JSON / CSV / TSV",profile:"Построить профиль качества и варианты обработки",ray:"Попросить Рэя объяснить варианты",loaded:"Файл распознан и преобразован в записи",unsupported:"Этот формат распознан, но не является таблицей наблюдений. Видео и аудио сначала преобразуются в синхронизированные маркеры/признаки в редакторе соответствующего источника.",profileTitle:"Наблюдаемый профиль качества",recommendations:"Возможные методы — не применены автоматически",choose:"Выберите метод только после оценки его допущений и предпросмотра."},en:{load:"Load JSON / CSV / TSV",profile:"Build quality profile and processing options",ray:"Ask Ray to explain the options",loaded:"File recognized and converted into records",unsupported:"The format was recognized but is not an observation table. Video and audio must first be converted into synchronized markers/features in the source-specific editor.",profileTitle:"Observed quality profile",recommendations:"Candidate methods — not applied automatically",choose:"Select a method only after reviewing its assumptions and preview."},es:{load:"Cargar JSON / CSV / TSV",profile:"Crear perfil de calidad y opciones de procesamiento",ray:"Pedir a Ray que explique las opciones",loaded:"Archivo reconocido y convertido en registros",unsupported:"El formato fue reconocido, pero no es una tabla de observaciones. El video y el audio deben convertirse primero en marcadores/características sincronizados en el editor específico.",profileTitle:"Perfil de calidad observado",recommendations:"Métodos posibles — no aplicados automáticamente",choose:"Seleccione un método solo después de revisar sus supuestos y la vista previa."}};
+      async function api(url, opt = {}) {
+        const r = await fetch(url, opt);
+        let d;
+        try {
+          d = await r.json();
+        } catch {
+          throw Error(`HTTP ${r.status}`);
+        }
+        if (!r.ok || d.ok === false)
+          throw Error(
+            typeof d.detail === "string"
+              ? d.detail
+              : JSON.stringify(d.detail || d),
+          );
+        return d;
+      }
+      function setStatus(m, k = "") {
+        const n = document.getElementById("status");
+        n.textContent = m;
+        n.className = `status ${k}`;
+      }
+      function applyLang() {
+        document.documentElement.lang = language;
+        document.getElementById("lang").value = language;
+        document.querySelectorAll("[data-i18n]").forEach((n) => {
+          if (I[language][n.dataset.i18n])
+            n.textContent = I[language][n.dataset.i18n];
+        });
+        const ft=FILE_TEXT[language]||FILE_TEXT.ru;
+        document.getElementById("loadFileButton").textContent=ft.load;
+        document.getElementById("profileButton").textContent=ft.profile;
+        document.getElementById("rayDataButton").textContent=ft.ray;
+      }
+      function setLang(v) {
+        language = v;
+        localStorage.setItem("healthModelLanguage", v);
+        applyLang();
+        renderOperations();
+      }
+      function showView(id) {
+        document
+          .querySelectorAll(".view")
+          .forEach((n) => n.classList.toggle("active", n.id === id));
+        document
+          .querySelectorAll(".tabs button")
+          .forEach((n) => n.classList.toggle("active", n.dataset.view === id));
+        if (id === "sessions") loadSessions();
+        if (id === "recipes") loadRecipes();
+      }
+      const specs = {
+        missing_tokens: [["tokens", "json", '["", "NA"]']],
+        recode: [
+          ["mapping", "json", '{"yes":1,"no":0}'],
+          ["require_match", "boolean", false],
+        ],
+        reverse_score: [
+          ["minimum", "number", 0],
+          ["maximum", "number", 4],
+        ],
+        range_check: [
+          ["minimum", "number", 0],
+          ["maximum", "number", 100],
+        ],
+        calibration: [
+          ["gain", "number", 1],
+          ["offset", "number", 0],
+        ],
+        unit_conversion: [
+          ["factor", "number", 1],
+          ["offset", "number", 0],
+        ],
+        moving_average: [["window", "number", 3]],
+        median_filter: [["window", "number", 3]],
+        missing_linear_interpolation: [["maximum_gap", "number", 1]],
+        hampel_filter: [["window", "number", 5],["threshold", "number", 3],["replace", "boolean", false]],
+        center_mean: [],
+        z_score: [],
+        robust_z_score: [],
+        min_max_normalize: [["target_minimum", "number", 0],["target_maximum", "number", 1]],
+        confidence_threshold: [["minimum", "number", 0.8]],
+        time_offset_seconds: [["seconds", "number", 0]],
+        marker_mapping: [["mapping", "json", "{}"]],
+        event_mapping: [["mapping", "json", "{}"]],
+        latency_range: [
+          ["minimum", "number", 0],
+          ["maximum", "number", 10000],
+        ],
+        score_min_max: [
+          ["minimum", "number", 0],
+          ["maximum", "number", 100],
+        ],
+        definition_binding: [
+          ["definition_reference", "json", '{"code":"","version":1}'],
+        ],
+        state_mapping: [["mapping", "json", "{}"]],
+      };
+      function renderOperations() {
+        const type = document.getElementById("sourceType").value,
+          ops = contract?.operation_catalog?.[type] || [];
+        document.getElementById("operations").innerHTML = ops
+          .map(
+            (name) =>
+              `<div class="operation" data-operation="${name}"><div class="operation-head"><input type="checkbox" class="op-enabled"><b>${name}</b></div><div class="operation-fields">${(specs[name] || []).map(([key, kind, val]) => `<div class="field"><label>${key}</label>${kind === "boolean" ? `<input data-key="${key}" type="checkbox">` : `<input data-key="${key}" data-kind="${kind}" type="${kind === "number" ? "number" : "text"}" value='${esc(val)}'>`}</div>`).join("")}</div></div>`,
+          )
+          .join("");
+      }
+      function operations() {
+        return [...document.querySelectorAll(".operation")]
+          .filter((n) => n.querySelector(".op-enabled").checked)
+          .map((n) => {
+            const op = { type: n.dataset.operation };
+            n.querySelectorAll("[data-key]").forEach((input) => {
+              let v = input.type === "checkbox" ? input.checked : input.value;
+              if (input.dataset.kind === "number") v = Number(v);
+              if (input.dataset.kind === "json") v = JSON.parse(v);
+              op[input.dataset.key] = v;
+            });
+            return op;
+          });
+      }
+      function context() {
+        return {
+          study_id: document.getElementById("studyId").value.trim() || null,
+          session_id: document.getElementById("sessionId").value.trim() || null,
+          unit: document.getElementById("unit").value.trim() || null,
+          scale_reference: document.getElementById("scaleCode").value.trim()
+            ? { scale_code: document.getElementById("scaleCode").value.trim() }
+            : null,
+          clock_source:
+            document.getElementById("clockSource").value.trim() || null,
+          timezone: "UTC",
+        };
+      }
+      function parseDelimited(text,delimiter){const rows=[];let row=[],field="",quoted=false;for(let i=0;i<text.length;i++){const c=text[i];if(quoted){if(c==='"'&&text[i+1]==='"'){field+='"';i++}else if(c==='"')quoted=false;else field+=c}else if(c==='"')quoted=true;else if(c===delimiter){row.push(field);field=""}else if(c==='\n'){row.push(field);rows.push(row);row=[];field=""}else if(c!=='\r')field+=c}if(field||row.length){row.push(field);rows.push(row)}if(!rows.length)return[];const headers=rows.shift().map((h,i)=>String(h||`column_${i+1}`).trim());return rows.filter(r=>r.some(v=>String(v).trim()!=="")).map(r=>Object.fromEntries(headers.map((h,i)=>[h,r[i]??""])))}
+      async function detectFileFormat(file){
+        const name=file.name.toLowerCase();
+        const bytes=new Uint8Array(await file.slice(0,64).arrayBuffer());
+        const ascii=(start,length)=>String.fromCharCode(...bytes.slice(start,start+length));
+        if(bytes.length>=12&&ascii(0,4)==="RIFF"){
+          if(ascii(8,4)==="AVI ")return "AVI";
+          if(ascii(8,4)==="WAVE")return "WAV";
+          return "RIFF";
+        }
+        if(bytes.length>=8&&ascii(4,4)==="ftyp")return "MP4/MOV";
+        if(bytes[0]===0x89&&ascii(1,3)==="PNG")return "PNG";
+        if(bytes[0]===0xff&&bytes[1]===0xd8&&bytes[2]===0xff)return "JPEG";
+        if(ascii(0,4)==="PK\u0003\u0004")return name.endsWith(".xlsx")?"XLSX":"ZIP";
+        if(name.endsWith(".json")||file.type==="application/json")return "JSON";
+        if(name.endsWith(".tsv")||file.type.includes("tab-separated"))return "TSV";
+        if(name.endsWith(".csv")||file.type.includes("csv"))return "CSV";
+        return file.type||"UNKNOWN";
+      }
+      async function loadDataFile(file){
+        if(!file)return;
+        const ft=FILE_TEXT[language]||FILE_TEXT.ru;
+        const box=document.getElementById("fileFormatStatus");
+        box.style.display="block";
+        try{
+          const format=await detectFileFormat(file);
+          let records;
+          if(format==="JSON"){
+            const parsed=JSON.parse(await file.text());
+            records=Array.isArray(parsed)?parsed:parsed.records;
+          }else if(format==="CSV"||format==="TSV"){
+            records=parseDelimited(await file.text(),format==="TSV"?'\t':',');
+          }else{
+            throw Error(`${format}: ${ft.unsupported}`);
+          }
+          if(!Array.isArray(records)||!records.every(x=>x&&typeof x==="object"&&!Array.isArray(x)))
+            throw Error("FILE_MUST_CONTAIN_AN_ARRAY_OF_RECORD_OBJECTS");
+          document.getElementById("recordsJson").value=JSON.stringify(records,null,2);
+          box.textContent=`${ft.loaded}: ${format} · ${records.length}`;
+          box.className="status ok";
+          await profileInput();
+        }catch(e){box.textContent=e.message;box.className="status error"}
+      }
+      async function profileInput(){
+        try {
+          const body=requestBody();
+          const d=await api("/research/editors/data/profile",{
+            method:"POST",
+            headers:{"Content-Type":"application/json"},
+            body:JSON.stringify({source_type:body.source_type,records:body.records})
+          });
+          const ft=FILE_TEXT[language]||FILE_TEXT.ru;
+          const box=document.getElementById("qualityProfile");
+          const summary=d.numeric_summary||{};
+          const time=d.time_summary||{};
+          const selectLabel=language==="ru"
+            ? "Выбрать для предпросмотра"
+            : language==="es" ? "Seleccionar para vista previa" : "Select for preview";
+          const recommendations=(d.recommendations||[]).map((item)=>{
+            const warning=item.warning ? ` · ${esc(item.warning)}` : "";
+            return `<div class="operation"><b>${esc(item.operation)}</b><div class="small">${esc(item.reason)}${warning}</div><button onclick="enableRecommended('${esc(item.operation)}')">${esc(selectLabel)}</button></div>`;
+          }).join("")||`<p class="small">—</p>`;
+          box.style.display="block";
+          box.innerHTML=`<h3>${esc(ft.profileTitle)}</h3><div class="summary"><span class="badge">records: ${d.record_count}</span><span class="badge excluded">missing: ${d.missing_count}</span><span class="badge">numeric: ${summary.count}</span><span class="badge">median: ${esc(summary.median??"—")}</span><span class="badge">SD: ${esc(summary.sample_standard_deviation??"—")}</span><span class="badge">time Δ: ${esc(time.median_interval_seconds??"—")} s</span></div><h4>${esc(ft.recommendations)}</h4><p class="small">${esc(ft.choose)}</p>${recommendations}`;
+          setStatus(t("done"),"ok");
+        } catch(e) {
+          setStatus(`${t("error")}: ${e.message}`,"error");
+        }
+      }
+      async function askRayAboutData(){const log=document.getElementById("rayDataLog");log.style.display="block";try{const body=requestBody(),profile=await api("/research/editors/data/profile",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({source_type:body.source_type,records:body.records})}),d=await api("/ray-colleague/researcher/respond",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({researcher_id:currentResearcherId,page_id:"data_editor",lang:language,project_id:body.context.study_id,study_id:body.context.study_id,message:FILE_TEXT[language].ray,entity_refs:[],selection:{source_type:body.source_type,detected_format:document.getElementById("fileFormatStatus").textContent||"manual_json",quality_profile:{record_count:profile.record_count,missing_count:profile.missing_count,non_numeric_count:profile.non_numeric_count,numeric_summary:profile.numeric_summary,time_summary:profile.time_summary},normalization_candidates:(profile.recommendations||[]).map(x=>x.operation),selected_operations:body.operations.map(x=>x.type),time_reference:body.context.clock_source?"measurement-time-contract-1":null}})}),r=d.response||{};log.textContent=[r.message,...(r.clarification_questions||[]).map(x=>`• ${x}`),...(r.next_steps||[]).map(x=>`→ ${x}`)].join("\n");log.className=`status ${(r.unresolved||[]).length?"warn":"ok"}`}catch(e){log.textContent=e.message;log.className="status error"}}
+      async function resolveResearcher(){try{const d=await api("/researcher/auth/session");currentResearcherId=d.account?.account_id||currentResearcherId}catch{}}
+      function enableRecommended(name){const node=document.querySelector(`.operation[data-operation="${CSS.escape(name)}"]`);if(!node)return;node.querySelector(".op-enabled").checked=true;node.scrollIntoView({behavior:"smooth",block:"center"})}
+      function requestBody() {
+        return {
+          source_type: document.getElementById("sourceType").value,
+          records: JSON.parse(document.getElementById("recordsJson").value),
+          operations: operations(),
+          context: context(),
+        };
+      }
+      async function preview() {
+        try {
+          lastPreview = await api("/research/editors/data/preview", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(requestBody()),
+          });
+          showPreview(lastPreview);
+          setStatus(t("done"), "ok");
+        } catch (e) {
+          setStatus(`${t("error")}: ${e.message}`, "error");
+        }
+      }
+      function showPreview(d) {
+        document.getElementById("previewCard").style.display = "block";
+        document.getElementById("previewSummary").innerHTML =
+          `<span class="badge">${t("input")}: ${d.input_count}</span><span class="badge usable">${t("usable")}: ${d.usable_count}</span><span class="badge excluded">${t("excluded")}: ${d.excluded_count}</span>`;
+        document.getElementById("previewJson").value = JSON.stringify(
+          d,
+          null,
+          2,
+        );
+      }
+      async function applyTransformation() {
+        try {
+          const body = requestBody();
+          body.actor_id = document.getElementById("actor").value.trim();
+          body.reason = document.getElementById("reason").value.trim();
+          body.recipe_name = document.getElementById("recipeName").value.trim();
+          const d = await api("/research/editors/data/apply", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+          });
+          showPreview(d.run.result);
+          setStatus(t("done"), "ok");
+        } catch (e) {
+          setStatus(`${t("error")}: ${e.message}`, "error");
+        }
+      }
+      async function loadSessionAnswers() {
+        try {
+          const id = document.getElementById("sessionId").value.trim();
+          if (!id) throw Error("SESSION_ID_REQUIRED");
+          const d = await api(
+              `/pilot/sessions/${encodeURIComponent(id)}/research-answers`,
+            ),
+            records = d.research_answer_records || [];
+          if (!records.length) throw Error(t("noRecords"));
+          document.getElementById("sourceType").value = "question_answer";
+          renderOperations();
+          document.getElementById("recordsJson").value = JSON.stringify(
+            records.map((r) => ({
+              ...r,
+              value: r.answer_value,
+              observation_time: r.created_at,
+            })),
+            null,
+            2,
+          );
+          if (records[0]?.study_id)
+            document.getElementById("studyId").value = records[0].study_id;
+          setStatus(t("done"), "ok");
+        } catch (e) {
+          setStatus(`${t("error")}: ${e.message}`, "error");
+        }
+      }
+      async function loadSessions() {
+        try {
+          const d = await api("/research/editors/data/sessions");
+          document.getElementById("sessionList").innerHTML =
+            (d.sessions || [])
+              .map((s) => {
+                const a = s.purge_assessment || {};
+                return `<div class="session ${a.eligible ? "eligible" : "blocked"}"><div><b>${esc(s.session_id)}</b><div class="small">${esc(s.study_id || "—")} · ${esc(s.status)} · answers ${s.answers_count} · records ${s.research_answer_records_count}</div><div class="small">${a.eligible ? "EMPTY_SESSION_PURGE_ELIGIBLE" : esc((a.blockers || []).join(", "))}</div></div><div class="session-actions"><button onclick="useSession('${esc(s.session_id)}','${esc(s.study_id || "")}')">${t("transform")}</button>${a.eligible ? `<button class="danger" onclick="purgeSession('${esc(s.session_id)}')">${t("purge")}</button>` : `<button onclick="invalidateSession('${esc(s.session_id)}')">${t("invalidate")}</button>`}</div></div>`;
+              })
+              .join("") || "—";
+        } catch (e) {
+          setStatus(`${t("error")}: ${e.message}`, "error");
+        }
+      }
+      function useSession(id, study) {
+        document.getElementById("sessionId").value = id;
+        document.getElementById("studyId").value = study;
+        showView("transform");
+        loadSessionAnswers();
+      }
+      function sessionMeta() {
+        const actor = document.getElementById("sessionActor").value.trim(),
+          reason = document.getElementById("sessionReason").value.trim();
+        if (!actor || !reason) throw Error("ACTOR_AND_REASON_REQUIRED");
+        return { actor, reason };
+      }
+      async function purgeSession(id) {
+        try {
+          const m = sessionMeta(),
+            phrase = `DELETE EMPTY SESSION ${id}`,
+            confirmation = prompt(`${t("confirmPurge")}:\n${phrase}`);
+          if (confirmation === null) return;
+          await api(
+            `/research/editors/data/sessions/${encodeURIComponent(id)}`,
+            {
+              method: "DELETE",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                actor_id: m.actor,
+                reason: m.reason,
+                confirmation,
+              }),
+            },
+          );
+          setStatus(t("done"), "ok");
+          await loadSessions();
+        } catch (e) {
+          setStatus(`${t("error")}: ${e.message}`, "error");
+        }
+      }
+      async function invalidateSession(id) {
+        try {
+          const m = sessionMeta();
+          await api(
+            `/research/editors/data/sessions/${encodeURIComponent(id)}/invalidate`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ actor_id: m.actor, reason: m.reason }),
+            },
+          );
+          setStatus(t("done"), "ok");
+          await loadSessions();
+        } catch (e) {
+          setStatus(`${t("error")}: ${e.message}`, "error");
+        }
+      }
+      async function loadRecipes() {
+        try {
+          const [r, a] = await Promise.all([
+            api("/research/editors/data/recipes"),
+            api("/research/editors/audit?limit=100"),
+          ]);
+          document.getElementById("recipeList").innerHTML =
+            (r.recipes || [])
+              .slice()
+              .reverse()
+              .map(
+                (x) =>
+                  `<div class="recipe"><b>${esc(x.recipe_name)}</b> <span class="badge">${esc(x.source_type)}</span><div class="small">${esc(x.created_at)} · ${esc(x.created_by)} · ${esc(x.reason)}</div><pre class="small">${esc(JSON.stringify(x.operations, null, 2))}</pre></div>`,
+              )
+              .join("") || "—";
+          document.getElementById("audit").textContent = JSON.stringify(
+            a.events || [],
+            null,
+            2,
+          );
+        } catch (e) {
+          setStatus(`${t("error")}: ${e.message}`, "error");
+        }
+      }
+      async function load() {
+        try {
+          contract = await api("/research/editors/data/contract");
+          document.getElementById("sourceType").innerHTML = TYPES.map(
+            (x) => `<option value="${x}">${x}</option>`,
+          ).join("");
+          renderOperations();
+          setStatus(t("ready"), "ok");
+        } catch (e) {
+          setStatus(`${t("error")}: ${e.message}`, "error");
+        }
+      }
+      applyLang();
+      resolveResearcher();
+      load();
+    </script>
+  </body>
+</html>

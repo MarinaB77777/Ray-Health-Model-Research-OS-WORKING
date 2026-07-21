@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Health Model Explorer</title>
+<style>
+body{margin:0;font-family:Arial,sans-serif;background:#eef2f7;color:#111827}
+.page{height:100vh;display:grid;grid-template-rows:64px 1fr}
+.topbar{background:#0f172a;color:white;padding:10px 18px;display:flex;gap:12px;align-items:center}
+.topbar h2{margin:0 18px 0 0;font-size:20px}
+.navbtn{background:#1e293b;color:white;border:1px solid #475569;border-radius:12px;padding:10px 14px;cursor:pointer}
+.status{margin-left:auto;color:#cbd5e1;font-size:14px}
+.workspace{display:grid;grid-template-columns:330px 1fr;height:calc(100vh - 64px)}
+.sidebar{background:#f8fafc;border-right:1px solid #cbd5e1;padding:16px;overflow:auto}
+.tabs{display:flex;gap:6px;margin-bottom:12px}
+.tab{flex:1;background:white;border:1px solid #cbd5e1;border-radius:10px;padding:9px;cursor:pointer;font-weight:700}
+.tab.active{background:#e0ecff;border-color:#1d4ed8;color:#1d4ed8}
+.inspector{padding:22px;overflow:auto}
+.card{background:white;border:1px solid #d7dde8;border-radius:18px;padding:18px;margin-bottom:16px}
+.tree-title{font-weight:800;margin:14px 0 8px;color:#0f172a}
+.tree-item{padding:9px 10px;border-radius:10px;cursor:pointer;margin:3px 0}
+.tree-item:hover,.tree-item.active{background:#e0ecff;color:#1d4ed8}
+.small{color:#64748b;font-size:14px}
+.badge{display:inline-block;padding:4px 9px;border-radius:999px;background:#e0ecff;color:#1d4ed8;font-size:13px;margin:4px 6px 4px 0}
+.section{margin-top:18px}
+.list-item{padding:6px 0;border-bottom:1px solid #eef2f7}
+.linkish{color:#1d4ed8;cursor:pointer;font-weight:700}
+pre{white-space:pre-wrap;background:#0f172a;color:#e5e7eb;padding:12px;border-radius:12px;max-height:260px;overflow:auto;font-size:13px}
+</style>
+</head>
+
+<body>
+<div class="page">
+  <header class="topbar">
+    <h2>Health Model Explorer</h2>
+    <button class="navbtn" onclick="location.href='/research-workspace'">Workspace</button>
+    <button class="navbtn" onclick="location.href='/analysis-builder'">Analysis Builder</button>
+    <button class="navbtn" onclick="loadEntities()">Refresh</button>
+    <span id="statusText" class="status">Loading...</span>
+  </header>
+
+  <div class="workspace">
+      <aside class="sidebar">
+            <div class="tabs">
+              <button id="functionsTab" class="tab active" onclick="selectTreeSection('function')">Functions</button>
+              <button id="mechanismsTab" class="tab" onclick="selectTreeSection('mechanism')">Mechanisms</button>
+              <button id="constellationsTab" class="tab" onclick="selectTreeSection('constellation')">Constellations</button>
+            </div>
+
+            <div id="treeBox" class="small">Loading...</div>
+          </aside>
+
+    <main class="inspector">
+      <div id="inspectorBox" class="card">
+        Select an entity from the tree.
+      </div>
+    </main>
+  </div>
+</div>
+
+<script>
+let entities = [];
+let selectedEntityId = null;
+let activeTreeSection = "function";
+
+document.addEventListener("DOMContentLoaded", loadEntities);
+
+function setStatus(text){
+  document.getElementById("statusText").innerText = text;
+}
+
+async function loadEntities(){
+  setStatus("Loading entities...");
+
+  const response = await fetch("/research/health-model/research-variables");
+  const data = await response.json();
+
+  if(!response.ok || !data.ok){
+    setStatus("Error");
+    document.getElementById("inspectorBox").innerHTML = "Failed to load Health Model entities.";
+    return;
+  }
+
+  entities = data.variables || [];
+  renderTree();
+
+  if(!selectedEntityId && entities.length){
+    selectedEntityId = entities[0].id;
+  }
+
+  renderInspector();
+  setStatus("Ready");
+}
+
+    function renderTree(){
+      document.getElementById("functionsTab").classList.toggle(
+        "active",
+        activeTreeSection === "function"
+      );
+      document.getElementById("mechanismsTab").classList.toggle(
+        "active",
+        activeTreeSection === "mechanism"
+      );
+      document.getElementById("constellationsTab").classList.toggle(
+        "active",
+        activeTreeSection === "constellation"
+      );
+
+      renderTreeGroup("treeBox", activeTreeSection);
+    }
+    function selectTreeSection(type){
+      activeTreeSection = type;
+
+      const firstEntity = entities.find(item => item.type === type);
+
+      if(firstEntity){
+        selectedEntityId = firstEntity.id;
+      }
+
+      renderTree();
+      renderInspector();
+    }
+function renderTreeGroup(boxId, type){
+  const box = document.getElementById(boxId);
+  const items = entities.filter(item => item.type === type);
+
+  if(!items.length){
+    box.innerHTML = "No items.";
+    return;
+  }
+
+  box.innerHTML = items.map(item => {
+    const active = item.id === selectedEntityId ? "active" : "";
+
+    return `
+      <div class="tree-item ${active}" data-entity-id="${escapeHtml(item.id)}">
+        ${escapeHtml(item.title || item.id)}
+      </div>
+    `;
+  }).join("");
+
+  box.querySelectorAll(".tree-item").forEach(element => {
+    element.addEventListener("click", () => {
+      selectedEntityId = element.dataset.entityId;
+      renderTree();
+      renderInspector();
+    });
+  });
+}
+
+function renderInspector(){
+  const box = document.getElementById("inspectorBox");
+
+  const entity = entities.find(item => item.id === selectedEntityId);
+
+  if(!entity){
+    box.innerHTML = "Select an entity from the tree.";
+    return;
+  }
+
+  box.innerHTML = `
+    <h1>${escapeHtml(entity.title || entity.id)}</h1>
+    <div class="small">${escapeHtml(entity.id)}</div>
+    <div>
+      <span class="badge">${escapeHtml(entity.type || "entity")}</span>
+      <span class="badge">${escapeHtml(entity.calculation_status || "registry_only")}</span>
+      ${
+        entity.category
+          ? `<span class="badge">${escapeHtml(entity.category)}</span>`
+          : ""
+      }
+    </div>
+
+    ${renderEntityBody(entity)}
+
+    <div class="section">
+      <h2>Technical Status</h2>
+      <div><b>Value type:</b> ${escapeHtml(entity.value_type || "—")}</div>
+      <div><b>Scale type:</b> ${escapeHtml(entity.scale_type || "—")}</div>
+      <div><b>Schema:</b> ${escapeHtml(entity.schema_version || "—")}</div>
+    </div>
+
+    <div class="section">
+      <h2>Actions</h2>
+      <button class="navbtn" disabled>Edit</button>
+      <button class="navbtn" disabled>Validate</button>
+      <button class="navbtn" disabled>Run Test</button>
+      <p class="small">Actions are disabled until write/edit endpoints are implemented.</p>
+    </div>
+
+    <div class="section">
+      <h2>JSON</h2>
+      <pre>${escapeHtml(JSON.stringify(entity, null, 2))}</pre>
+    </div>
+  `;
+}
+
+function renderEntityBody(entity){
+  if(entity.type === "function"){
+    return `
+      ${renderClickableList("Domains", entity.domains)}
+      ${renderClickableList("Used by mechanisms", entity.used_by, "mechanism")}
+    `;
+  }
+
+  if(entity.type === "mechanism"){
+    return `
+      ${renderClickableList("Required functions", entity.required_functions, "function")}
+      ${renderClickableList("Supporting functions", entity.supporting_functions, "function")}
+      ${renderClickableList("Contributes to", entity.trajectory_contributes_to)}
+    `;
+  }
+
+  if(entity.type === "constellation"){
+    return `
+      ${renderClickableList("Required mechanisms", entity.required_mechanisms, "mechanism")}
+      ${renderClickableList("Optional amplifiers", entity.optional_amplifiers)}
+      ${renderClickableList("Protective signals", entity.protective_signals)}
+    `;
+  }
+
+  return "";
+}
+
+function renderClickableList(title, values, targetType){
+  if(!values || !values.length){
+    return `
+      <div class="section">
+        <h2>${escapeHtml(title)}</h2>
+        <div class="small">None.</div>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="section">
+      <h2>${escapeHtml(title)}</h2>
+      ${values.map(value => renderRelatedItem(value, targetType)).join("")}
+    </div>
+  `;
+}
+
+function renderRelatedItem(value, targetType){
+  const linkedEntity = targetType
+    ? findEntityBySourceId(targetType, value)
+    : null;
+
+  if(linkedEntity){
+    return `
+      <div class="list-item">
+        <span class="linkish" onclick="openEntity('${escapeHtml(linkedEntity.id)}')">
+          ${escapeHtml(value)}
+        </span>
+      </div>
+    `;
+  }
+
+  return `<div class="list-item">${escapeHtml(value)}</div>`;
+}
+
+function findEntityBySourceId(type, sourceId){
+  return entities.find(item =>
+    item.type === type &&
+    item.source_id === sourceId
+  );
+}
+
+function openEntity(entityId){
+  selectedEntityId = entityId;
+  renderTree();
+  function selectTreeSection(type){
+    activeTreeSection = type;
+
+    const firstEntity = entities.find(item => item.type === type);
+
+    if(firstEntity){
+      selectedEntityId = firstEntity.id;
+    }
+
+    renderTree();
+    renderInspector();
+  }
+  renderInspector();
+}
+
+function escapeHtml(value){
+  return String(value ?? "")
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;");
+}
+</script>
+<script src="/static/collaboration_credit.js"></script>
+</body>
+</html>

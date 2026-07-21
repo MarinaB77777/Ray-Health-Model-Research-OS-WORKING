@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Analysis Builder</title>
+<style>
+body{margin:0;font-family:Arial,sans-serif;background:#eef2f7;color:#111827}
+.page{height:100vh;display:grid;grid-template-rows:64px 1fr}
+.topbar{background:#0f172a;color:white;padding:10px 18px;display:flex;gap:12px;align-items:center}
+.topbar h2{margin:0 18px 0 0;font-size:20px}
+.navbtn{background:#1e293b;color:white;border:1px solid #475569;border-radius:12px;padding:10px 14px;cursor:pointer}
+.status{margin-left:auto;color:#cbd5e1;font-size:14px}
+.main{padding:22px;overflow:auto}
+.header{text-align:center;margin-bottom:18px}
+.header h1{margin:0 0 10px;font-size:32px}
+.relationship{font-size:20px;font-weight:700;color:#1e293b}
+.and{font-size:30px;font-weight:900;margin:4px 0 12px;color:#0f172a}
+.builder{display:grid;grid-template-columns:1fr 90px 1fr;gap:16px;align-items:start}
+.middle{text-align:center;padding-top:86px;font-size:28px;font-weight:900;color:#0f172a}
+.card{background:white;border:1px solid #d7dde8;border-radius:18px;padding:18px;margin-bottom:16px}
+.selector-card{min-height:560px}
+h2{margin:0 0 12px;font-size:21px}
+.small{color:#64748b;font-size:14px}
+.choice{display:block;width:100%;text-align:left;border:1px solid #cbd5e1;border-radius:14px;background:white;padding:12px;margin:9px 0;cursor:pointer}
+.choice:hover,.choice.active{background:#e0ecff;border-color:#1d4ed8}
+.primary{background:#111827;color:white;border:0;border-radius:12px;padding:11px 15px;cursor:pointer}
+.secondary{background:white;color:#111827;border:1px solid #cbd5e1;border-radius:12px;padding:10px 14px;cursor:pointer}
+input,select{width:100%;box-sizing:border-box;padding:10px;border:1px solid #cbd5e1;border-radius:12px;margin:8px 0}
+.kv{display:grid;grid-template-columns:140px 1fr;gap:10px;padding:8px 0;border-bottom:1px solid #eef2f7}
+.badge{display:inline-block;padding:4px 9px;border-radius:999px;background:#dcfce7;color:#166534;font-size:13px}
+.warn{background:#fef3c7;color:#92400e}
+pre{white-space:pre-wrap;background:#0f172a;color:#e5e7eb;padding:12px;border-radius:12px;max-height:260px;overflow:auto;font-size:13px}
+.hidden{display:none}
+.result-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
+@media(max-width:1000px){
+  .builder{grid-template-columns:1fr}
+  .middle{padding:0}
+}
+</style>
+</head>
+
+<body>
+<div class="page">
+  <header class="topbar">
+    <h2>Analysis Builder</h2>
+    <button class="navbtn" onclick="location.href='/data-preparation'">← Data Preparation</button>
+    <button class="navbtn" onclick="location.href='/research-workspace'">Workspace</button>
+    <button class="navbtn" onclick="location.href='/question-metadata'">Question Metadata</button>
+    <span id="statusText" class="status">Loading...</span>
+  </header>
+
+  <main class="main">
+    <div class="header">
+      <h1>What would you like to study?</h1>
+      <div class="relationship">Relationship between</div>
+    </div>
+
+    <div class="builder">
+      <div id="leftBox" class="card selector-card"></div>
+
+      <div class="middle">AND</div>
+
+      <div id="rightBox" class="card selector-card"></div>
+    </div>
+
+    <div class="card">
+      <h2>Research request</h2>
+      <div id="requestPreview" class="small">Choose both sides.</div>
+      <button class="primary" onclick="buildRequest()">Continue</button>
+      <button class="secondary" onclick="toggleJson()">Show / hide technical JSON</button>
+      <pre id="jsonBox" class="hidden"></pre>
+    </div>
+
+    <div class="result-grid">
+      <div class="card">
+        <h2>Loaded data</h2>
+        <div id="dataBox" class="small">Loading...</div>
+      </div>
+
+      <div class="card">
+        <h2>Next step</h2>
+        <p class="small">
+          After this request is built, Analyzer will check sample size, missing values,
+          scales, groups, and possible standard methods.
+        </p>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+let studyId = null;
+let recordId = null;
+let record = null;
+let catalog = null;
+let variables = [];
+
+let builderState = {
+  left: createEmptySide(),
+  right: createEmptySide(),
+};
+
+document.addEventListener("DOMContentLoaded", init);
+
+function createEmptySide(){
+  return {
+    type: null,
+    question_code: null,
+    question_codes: [],
+    group_key: null,
+    selected_answers: [],
+    calculated_score: null,
+    model_indicator: null,
+    search: "",
+  };
+}
+
+function setStatus(text){
+  document.getElementById("statusText").innerText = text;
+}
+
+async function init(){
+  const params = new URLSearchParams(window.location.search);
+  studyId = params.get("study_id") || "resource";
+  recordId = params.get("record_id");
+
+  await loadData();
+  renderAll();
+}
+
+async function loadData(){
+  setStatus("Loading data...");
+
+  const catalogResponse = await fetch(
+    "/research/analysis/catalog?study_id=" + encodeURIComponent(studyId)
+  );
+  catalog = await catalogResponse.json();
+
+  if(recordId){
+    const recordResponse = await fetch(
+      "/research/participant-data/records/" + encodeURIComponent(recordId)
+    );
+    const recordData = await recordResponse.json();
+    if(recordResponse.ok && recordData.ok) record = recordData.record;
+  }
+
+  variables = getVariables();
+
+  setStatus("Ready");
+}
+
+function getVariables(){
+  if(catalog?.single_variable_analyses){
+    return catalog.single_variable_analyses.map(item => item.variable);
+  }
+
+  const map = {};
+  (catalog?.analyses || []).forEach(item => {
+    if(item.left_variable?.question_code) map[item.left_variable.question_code] = item.left_variable;
+    if(item.right_variable?.question_code) map[item.right_variable.question_code] = item.right_variable;
+  });
+
+  return Object.values(map);
+}
+
+function renderAll(){
+  renderSide("left");
+  renderSide("right");
+  renderLoadedData();
+  renderRequestPreview();
+}
+
+function renderSide(side){
+  const state = builderState[side];
+  const box = document.getElementById(side + "Box");
+
+  box.innerHTML = `
+    <h2>What would you like to include?</h2>
+
+    ${renderTypeButton(side, "one_question", "One question", "Use one questionnaire question.")}
+    ${renderTypeButton(side, "several_questions", "Several questions", "Use several selected questions.")}
+    ${renderTypeButton(side, "question_group", "Question group", "Use a whole domain, block, or family of questions.")}
+    ${renderTypeButton(side, "specific_answers", "Specific answer(s)", "Use people who selected specific answers.")}
+    ${renderTypeButton(side, "calculated_score", "Calculated score", "Use a score calculated from answers.")}
+    ${renderTypeButton(side, "model_indicator", "Model indicator", "Use an output from the model.")}
+
+    <div style="margin-top:14px;">
+      ${renderSideDetails(side)}
+    </div>
+  `;
+}
+
+function renderTypeButton(side, type, title, description){
+  const active = builderState[side].type === type ? "active" : "";
+
+  return `
+    <button class="choice ${active}" onclick="selectSideType('${side}','${type}')">
+      <b>${title}</b><br>
+      <span class="small">${description}</span>
+    </button>
+  `;
+}
+
+function selectSideType(side, type){
+  builderState[side] = createEmptySide();
+  builderState[side].type = type;
+  renderAll();
+}
+
+function renderSideDetails(side){
+  const state = builderState[side];
+
+  if(!state.type){
+    return `<p class="small">Select what this side of the relationship should include.</p>`;
+  }
+
+  if(state.type === "one_question"){
+    return renderQuestionSelector(side, false);
+  }
+
+  if(state.type === "several_questions"){
+    return renderQuestionSelector(side, true);
+  }
+
+  if(state.type === "question_group"){
+    return renderGroupSelector(side);
+  }
+
+  if(state.type === "specific_answers"){
+    return renderSpecificAnswersSelector(side);
+  }
+
+  if(state.type === "calculated_score"){
+    return renderSimpleSelect(
+      side,
+      "calculated_score",
+      "Choose calculated score",
+      [
+        ["domain_score_physical", "Physical resource score"],
+        ["domain_score_recovery", "Recovery score"],
+        ["domain_score_cognitive", "Cognitive resource score"],
+        ["current_state", "Current state"],
+      ]
+    );
+  }
+
+  if(state.type === "model_indicator"){
+    return renderSimpleSelect(
+      side,
+      "model_indicator",
+      "Choose model indicator",
+      [
+        ["risk_level", "Risk level"],
+        ["trajectory_risk", "Trajectory risk"],
+        ["modeled_burden", "Modeled burden"],
+        ["public_warning_count", "Warnings"],
+      ]
+    );
+  }
+
+  return "";
+}
+
+function renderQuestionSelector(side, multi){
+  const state = builderState[side];
+  const filtered = filterQuestions(state.search);
+
+  return `
+    <label class="small">Search question</label>
+    <input
+      value="${escapeHtml(state.search)}"
+      oninput="setSearch('${side}', this.value)"
+      placeholder="Type code or words from question..."
+    >
+
+    <div>
+      ${filtered.map(q => renderQuestionButton(side, q, multi)).join("")}
+    </div>
+  `;
+}
+
+function renderQuestionButton(side, q, multi){
+  const state = builderState[side];
+  const code = q.question_code;
+  const selected = multi
+    ? state.question_codes.includes(code)
+    : state.question_code === code;
+
+  return `
+    <button class="choice ${selected ? "active" : ""}" onclick="selectQuestion('${side}','${escapeHtml(code)}',${multi})">
+      <b>${escapeHtml(code)}</b><br>
+      <span class="small">
+        ${escapeHtml(q.title || "No title")}<br>
+        scale: ${escapeHtml(q.scale_type || "not set")}
+      </span>
+    </button>
+  `;
+}
+
+function setSearch(side, value){
+  builderState[side].search = value;
+  renderSide(side);
+}
+
+function selectQuestion(side, code, multi){
+  const state = builderState[side];
+
+  if(multi){
+    if(state.question_codes.includes(code)){
+      state.question_codes = state.question_codes.filter(item => item !== code);
+    } else {
+      state.question_codes.push(code);
+    }
+  } else {
+    state.question_code = code;
+  }
+
+  renderAll();
+}
+
+function renderGroupSelector(side){
+  const groups = buildQuestionGroups();
+  const state = builderState[side];
+
+  return `
+    <label class="small">Choose group</label>
+    <select onchange="selectGroup('${side}', this.value)">
+      <option value="">Not selected</option>
+      ${groups.map(group => `
+        <option value="${escapeHtml(group.key)}" ${state.group_key === group.key ? "selected" : ""}>
+          ${escapeHtml(group.label)} (${group.count})
+        </option>
+      `).join("")}
+    </select>
+  `;
+}
+
+function selectGroup(side, key){
+  builderState[side].group_key = key || null;
+  renderAll();
+}
+
+function renderSpecificAnswersSelector(side){
+  const state = builderState[side];
+  const question = variables.find(q => q.question_code === state.question_code);
+
+  return `
+    ${renderQuestionSelector(side, false)}
+
+    <div style="margin-top:12px;">
+      <h3>Choose answer(s)</h3>
+      ${
+        question
+          ? renderAnswerOptions(side, question)
+          : "<p class='small'>Choose a question first.</p>"
+      }
+    </div>
+  `;
+}
+
+function renderAnswerOptions(side, question){
+  const options = question.options || [];
+  const state = builderState[side];
+
+  if(!options.length){
+    return "<p class='small'>No answer options found for this question.</p>";
+  }
+
+  return options.map(opt => {
+    const value = String(opt.value);
+    const selected = state.selected_answers.map(String).includes(value);
+
+    return `
+      <button class="choice ${selected ? "active" : ""}" onclick="toggleAnswer('${side}','${escapeHtml(value)}')">
+        <b>${escapeHtml(value)}</b><br>
+        <span class="small">${escapeHtml(opt.text || "")}</span>
+      </button>
+    `;
+  }).join("");
+}
+
+function toggleAnswer(side, value){
+  const state = builderState[side];
+  const values = state.selected_answers.map(String);
+
+  if(values.includes(String(value))){
+    state.selected_answers = state.selected_answers.filter(item => String(item) !== String(value));
+  } else {
+    state.selected_answers.push(value);
+  }
+
+  renderAll();
+}
+
+function renderSimpleSelect(side, field, label, options){
+  const state = builderState[side];
+
+  return `
+    <label class="small">${label}</label>
+    <select onchange="selectSimpleValue('${side}','${field}',this.value)">
+      <option value="">Not selected</option>
+      ${options.map(([value, title]) => `
+        <option value="${escapeHtml(value)}" ${state[field] === value ? "selected" : ""}>
+          ${escapeHtml(title)}
+        </option>
+      `).join("")}
+    </select>
+  `;
+}
+
+function selectSimpleValue(side, field, value){
+  builderState[side][field] = value || null;
+  renderAll();
+}
+
+function filterQuestions(search){
+  const text = String(search || "").toLowerCase().trim();
+
+  if(!text){
+    return variables.slice(0, 40);
+  }
+
+  return variables.filter(q =>
+    String(q.question_code || "").toLowerCase().includes(text) ||
+    String(q.title || "").toLowerCase().includes(text)
+  ).slice(0, 40);
+}
+
+function buildQuestionGroups(){
+  const groups = {};
+
+  variables.forEach(q => {
+    [
+      ["domain", q.domain],
+      ["block", q.block],
+      ["family", q.family],
+    ].forEach(([kind, value]) => {
+      if(!value) return;
+
+      const key = kind + ":" + value;
+
+      if(!groups[key]){
+        groups[key] = {
+          key,
+          label: kind + " — " + value,
+          count: 0,
+          question_codes: [],
+        };
+      }
+
+      groups[key].count += 1;
+      groups[key].question_codes.push(q.question_code);
+    });
+  });
+
+  return Object.values(groups).sort((a,b) => a.label.localeCompare(b.label));
+}
+
+function renderLoadedData(){
+  document.getElementById("dataBox").innerHTML = `
+    <div class="kv"><b>Study</b><span>${escapeHtml(studyId || "—")}</span></div>
+    <div class="kv"><b>Record</b><span>${escapeHtml(recordId || "not selected")}</span></div>
+    <div class="kv"><b>Questions</b><span>${variables.length}</span></div>
+  `;
+}
+
+function renderRequestPreview(){
+  const request = buildResearchRequest(false);
+
+  document.getElementById("requestPreview").innerHTML = `
+    <div class="kv"><b>Left</b><span>${describeSide(request.left)}</span></div>
+    <div class="kv"><b>Right</b><span>${describeSide(request.right)}</span></div>
+  `;
+
+  document.getElementById("jsonBox").innerText =
+    JSON.stringify(request, null, 2);
+}
+
+    function buildRequest(){
+      const request = buildResearchRequest(true);
+
+      document.getElementById("jsonBox").innerText =
+        JSON.stringify(request, null, 2);
+
+      document.getElementById("jsonBox").classList.remove("hidden");
+
+      sessionStorage.setItem(
+        "analysis_request",
+        JSON.stringify(request)
+      );
+
+      console.log(request);
+    }
+
+function buildResearchRequest(includeStatus){
+  const request = {
+    request_type: "relationship_between_two_research_objects",
+    study_id: studyId,
+    record_id: recordId,
+    left: normalizeSide(builderState.left),
+    right: normalizeSide(builderState.right),
+  };
+
+  if(includeStatus){
+    request.status = isComplete(request)
+      ? "ready_for_analyzer_checks"
+      : "incomplete";
+  }
+
+  return request;
+}
+
+function normalizeSide(state){
+  return {
+    type: state.type,
+    question_code: state.question_code,
+    question_codes: state.question_codes,
+    group_key: state.group_key,
+    selected_answers: state.selected_answers,
+    calculated_score: state.calculated_score,
+    model_indicator: state.model_indicator,
+  };
+}
+
+function isComplete(request){
+  return sideComplete(request.left) && sideComplete(request.right);
+}
+
+function sideComplete(side){
+  if(!side.type) return false;
+  if(side.type === "one_question") return Boolean(side.question_code);
+  if(side.type === "several_questions") return side.question_codes.length > 0;
+  if(side.type === "question_group") return Boolean(side.group_key);
+  if(side.type === "specific_answers") return Boolean(side.question_code) && side.selected_answers.length > 0;
+  if(side.type === "calculated_score") return Boolean(side.calculated_score);
+  if(side.type === "model_indicator") return Boolean(side.model_indicator);
+  return false;
+}
+
+function describeSide(side){
+  if(!side.type) return "Not selected";
+
+  if(side.type === "one_question"){
+    return "One question: " + escapeHtml(side.question_code || "not selected");
+  }
+
+  if(side.type === "several_questions"){
+    return "Several questions: " + escapeHtml(side.question_codes.join(", ") || "none");
+  }
+
+  if(side.type === "question_group"){
+    return "Question group: " + escapeHtml(side.group_key || "not selected");
+  }
+
+  if(side.type === "specific_answers"){
+    return "Answers " + escapeHtml(side.selected_answers.join(", ") || "none") +
+      " to question " + escapeHtml(side.question_code || "not selected");
+  }
+
+  if(side.type === "calculated_score"){
+    return "Calculated score: " + escapeHtml(side.calculated_score || "not selected");
+  }
+
+  if(side.type === "model_indicator"){
+    return "Model indicator: " + escapeHtml(side.model_indicator || "not selected");
+  }
+
+  return escapeHtml(side.type);
+}
+
+function toggleJson(){
+  document.getElementById("jsonBox").classList.toggle("hidden");
+}
+
+function escapeHtml(value){
+  return String(value ?? "")
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;");
+}
+</script>
+</body>
+</html>

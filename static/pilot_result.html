@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Результат</title>
+<style>
+body { font-family: Arial, sans-serif; max-width: 900px; margin: 40px auto; padding: 20px; }
+.card { border: 1px solid #ddd; border-radius: 12px; padding: 18px; margin-bottom: 16px; }
+.small { color: #665; font-size: 14px; }
+.hidden { display: none; }
+</style>
+</head>
+<body>
+
+<h1>Результат</h1>
+<p id="status" class="small">Загрузка...</p>
+
+<div id="modelResult" class="card hidden"></div>
+<div id="participantReport" class="card hidden"></div>
+
+<script>
+const params = new URLSearchParams(window.location.search);
+const sessionId = params.get("session_id");
+
+function setStatus(text) {
+  document.getElementById("status").innerText = text;
+}
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;");
+}
+
+    function renderModelResult(model) {
+      const box = document.getElementById("modelResult");
+
+      if (!model || Object.keys(model).length === 0) {
+        box.classList.remove("hidden");
+        box.innerHTML = `
+          <h2>Результат модели недоступен</h2>
+          <p>В сохранённой сессии не найден raw_engine_result.</p>
+        `;
+        return;
+      }
+
+      box.classList.remove("hidden");
+
+      const currentState = model.current_state || {};
+      const stressBurden = model.stress_burden || {};
+      const modeledBurden = model.modeled_burden || {};
+      const trajectoryRisk = model.trajectory_risk || {};
+      const stateRisk = model.state_risk || {};
+      const mapping = model.questionnaire_mapping || {};
+
+      box.innerHTML = `
+        <h2>${escapeHtml(model.model_id || "Модель здоровья")}</h2>
+
+        <div class="card">
+          <h3>Текущее состояние</h3>
+          <p><b>Статус:</b> ${escapeHtml(currentState.status || "not_found")}</p>
+          <p><b>Current state final:</b> ${escapeHtml(currentState.current_state_final ?? "not_found")}</p>
+          <p><b>Mode:</b> ${escapeHtml(currentState.mode || "not_found")}</p>
+          <p><b>Burden-manifestation delta:</b> ${escapeHtml(currentState.burden_manifestation_delta ?? "not_found")}</p>
+        </div>
+
+        <div class="card">
+          <h3>Нагрузка / burden</h3>
+          <p><b>Stress burden status:</b> ${escapeHtml(stressBurden.status || "not_found")}</p>
+          <p><b>Stress burden final:</b> ${escapeHtml(stressBurden.stress_burden_final ?? "not_found")}</p>
+          <p><b>Modeled burden:</b> ${escapeHtml(modeledBurden.modeled_burden ?? "not_found")}</p>
+          <p><b>Pressure proxy:</b> ${escapeHtml(modeledBurden.pressure_proxy ?? "not_found")}</p>
+          <p><b>Resource deficit:</b> ${escapeHtml(modeledBurden.resource_deficit ?? "not_found")}</p>
+        </div>
+
+        <div class="card">
+          <h3>Прогноз / trajectory</h3>
+          <p><b>Forecast allowed:</b> ${escapeHtml(model.forecast_allowed ?? "not_found")}</p>
+          <p><b>Readiness:</b> ${escapeHtml(model.readiness_status || "not_found")}</p>
+          <p><b>State risk:</b> ${escapeHtml(stateRisk.status || "not_found")}</p>
+          <p>${escapeHtml(stateRisk.reason || "")}</p>
+          <p><b>Trajectory risk:</b> ${escapeHtml(trajectoryRisk.status || "not_found")}</p>
+          <p>${escapeHtml(trajectoryRisk.reason || "")}</p>
+        </div>
+
+        <div class="card">
+          <h3>Questionnaire mapping</h3>
+          <p><b>Mapping:</b> ${escapeHtml(mapping.mapping_id || "not_found")}</p>
+          <pre>${escapeHtml(JSON.stringify(mapping.domain_scores || {}, null, 2))}</pre>
+        </div>
+      `;
+    }
+    function renderGenericResult(record) {
+      const box = document.getElementById("modelResult");
+      const raw = record.raw_engine_result || {};
+      const publicExplanation = raw.public_explanation || record.public_output || {};
+      const uncertainty = raw.uncertainty || record.uncertainty_snapshot || {};
+      const summary = raw.summary || raw.analysis?.summary || {};
+      const forecast = raw.forecast || raw.analysis?.forecast || {};
+      const analysis = raw.analysis || {};
+      const primaryHypothesis =
+        analysis.primary_hypothesis ||
+        analysis.analysis?.primary_hypothesis ||
+        null;
+    
+      box.classList.remove("hidden");
+
+      box.innerHTML = `
+        <h2>${escapeHtml(publicExplanation.title || "Результат исследования")}</h2>
+        <p>${escapeHtml(publicExplanation.message || publicExplanation.summary || "")}</p>
+        ${summary.message ? `
+          <div class="card">
+            <h3>${escapeHtml(summary.title || "Результат")}</h3>
+            <p>${escapeHtml(summary.message)}</p>
+            <p><b>Confidence:</b> ${escapeHtml(summary.confidence || "not_found")}</p>
+          </div>
+        ` : ""}
+
+        ${forecast.message ? `
+          <div class="card">
+            <h3>Прогноз</h3>
+            <p>${escapeHtml(forecast.message)}</p>
+            <p><b>Confidence:</b> ${escapeHtml(forecast.confidence || "not_found")}</p>
+            <p><b>Needs more data:</b> ${escapeHtml(forecast.needs_more_data ?? "not_found")}</p>
+          </div>
+        ` : ""}
+
+        ${primaryHypothesis ? `
+          <div class="card">
+            <h3>Основная гипотеза</h3>
+            <p><b>ID:</b> ${escapeHtml(primaryHypothesis.id || "not_found")}</p>
+            <p><b>Status:</b> ${escapeHtml(primaryHypothesis.status || "not_found")}</p>
+            <p><b>Confidence:</b> ${escapeHtml(primaryHypothesis.confidence ?? "not_found")}</p>
+          </div>
+        ` : ""}
+
+        <div class="card">
+          <h3>Статус</h3>
+          <p><b>Study:</b> ${escapeHtml(record.study_id || "not_found")}</p>
+          <p><b>Session:</b> ${escapeHtml(record.session_id || "not_found")}</p>
+          <p><b>Status:</b> ${escapeHtml(record.status || "not_found")}</p>
+          <p><b>Updated:</b> ${escapeHtml(record.updated_at || "not_found")}</p>
+        </div>
+
+        <div class="card">
+          <h3>Uncertainty</h3>
+          <p><b>Status:</b> ${escapeHtml(uncertainty.status || "not_found")}</p>
+          <p>${escapeHtml(uncertainty.reason || "")}</p>
+        </div>
+      `;
+    }
+
+function renderParticipantReport(report) {
+  const box = document.getElementById("participantReport");
+
+  if (!report || !report.resource_cards || report.resource_cards.length === 0) {
+    box.classList.add("hidden");
+    return;
+  }
+
+  box.classList.remove("hidden");
+
+  box.innerHTML = `
+    <h2>${escapeHtml(report.title || "Индивидуальный отчёт")}</h2>
+    <p>${escapeHtml(report.summary || "")}</p>
+
+    ${report.resource_cards.map(card => `
+      <div class="card">
+        <h3>${escapeHtml(card.title)}</h3>
+        <p><b>${escapeHtml(card.level_label)}</b></p>
+        <p>${escapeHtml(card.summary || "")}</p>
+
+        <h4>На что стоит обратить внимание</h4>
+        <p>${escapeHtml(card.what_may_be_sensitive || "")}</p>
+
+        <h4>Как это может влиять на решения</h4>
+        <p>${escapeHtml(card.decision_context || "")}</p>
+      </div>
+    `).join("")}
+
+    <h3>Ограничения</h3>
+    <ul>
+      ${(report.limitations || []).map(item => `<li>${escapeHtml(item)}</li>`).join("")}
+    </ul>
+  `;
+}
+
+async function loadResult() {
+  if (!sessionId) {
+    setStatus("session_id не найден");
+    return;
+  }
+
+  setStatus("Загрузка результата...");
+
+  const recordResponse = await fetch(
+      "/research/participant-data/records/" + encodeURIComponent(sessionId)
+  );
+  const recordData = await recordResponse.json();
+
+  if (recordResponse.ok && recordData.ok) {
+    const record = recordData.record || {};
+    const model = record.raw_engine_result || {};
+
+    if (record.study_id === "health_model") {
+      renderModelResult(model);
+    } else {
+      renderGenericResult(record);
+    }
+  }
+
+  const reportResponse = await fetch("/pilot/sessions/" + encodeURIComponent(sessionId) + "/participant-report");
+  const reportData = await reportResponse.json();
+
+  if (reportResponse.ok && reportData.ok) {
+    renderParticipantReport(reportData.participant_report);
+  }
+
+  setStatus("Готово");
+}
+
+loadResult();
+</script>
+
+</body>
+</html>

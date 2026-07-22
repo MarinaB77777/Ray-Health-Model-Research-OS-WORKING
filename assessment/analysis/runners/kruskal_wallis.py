@@ -1,6 +1,4 @@
-from assessment.analysis.statistics.grouping import (
-    collect_grouped_numeric_values_bidirectional,
-)
+from assessment.analysis.statistics.parametric_groups import collect_independent_groups
 from assessment.analysis.statistics.descriptive import (
     group_descriptive_summary,
 )
@@ -16,11 +14,14 @@ def run_kruskal_wallis(
     right_question_code: str,
     answer_records: list[dict],
 ) -> dict:
-    groups = collect_grouped_numeric_values_bidirectional(
+    collected = collect_independent_groups(
         answer_records=answer_records,
         left_question_code=left_question_code,
         right_question_code=right_question_code,
     )
+    if not collected.get("ok"):
+        return {"ok": False, "method_id": "kruskal_wallis", **collected}
+    groups = collected["groups"]
 
     if len(groups) < 3:
         return {
@@ -59,6 +60,7 @@ def run_kruskal_wallis(
         "degrees_of_freedom": test_result["degrees_of_freedom"],
         "alpha": alpha,
         "p_value": p_value,
+        "p_value_method": test_result["p_value_method"],
         "is_statistically_significant": (
             p_value is not None and p_value < alpha
         ),

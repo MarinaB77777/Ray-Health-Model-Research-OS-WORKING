@@ -103,6 +103,16 @@ class ProbabilisticMethodTests(unittest.TestCase):
         with self.assertRaisesRegex(ProbabilisticMethodError, "NOT_EXECUTABLE"):
             self.execute(logistic["method_id"], {"outcome": [0, 1]})
 
+    def test_bayesian_counts_are_not_silently_truncated(self):
+        with self.assertRaisesRegex(ProbabilisticMethodError, "BINOMIAL_COUNTS_INVALID"):
+            self.execute("bayesian_beta_binomial", {"successes": 1.5, "trials": 3})
+        with self.assertRaisesRegex(ProbabilisticMethodError, "INTEGERS"):
+            self.execute("bayesian_dirichlet_multinomial", {"counts": [1, 2.5]})
+
+    def test_nonfinite_probabilistic_inputs_are_rejected(self):
+        with self.assertRaisesRegex(ProbabilisticMethodError, "FINITE"):
+            self.execute("bayesian_normal_inverse_gamma", {"values": [1, float("nan")]})
+
 
 if __name__ == "__main__":
     unittest.main()

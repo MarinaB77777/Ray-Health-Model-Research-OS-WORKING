@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from math import sqrt
+from math import isfinite, sqrt
 
 from .numerics import beta_quantile, mean, sample_variance, student_t_quantile
 
@@ -11,15 +11,25 @@ def _credible_tail(mass: float) -> float:
     return (1.0 - mass) / 2.0
 
 
+def _count(value, error_code: str) -> int:
+    try:
+        numeric = float(value)
+    except (TypeError, ValueError):
+        raise ValueError(error_code)
+    if not isfinite(numeric) or numeric < 0 or not numeric.is_integer():
+        raise ValueError(error_code)
+    return int(numeric)
+
+
 def beta_binomial(payload: dict) -> dict:
-    successes = int(payload.get("successes", -1))
-    trials = int(payload.get("trials", -1))
+    successes = _count(payload.get("successes", -1), "BINOMIAL_COUNTS_INVALID")
+    trials = _count(payload.get("trials", -1), "BINOMIAL_COUNTS_INVALID")
     alpha = float(payload.get("prior_alpha", 1.0))
     beta = float(payload.get("prior_beta", 1.0))
     mass = float(payload.get("credible_mass", 0.95))
     if trials < 0 or successes < 0 or successes > trials:
         raise ValueError("BINOMIAL_COUNTS_INVALID")
-    if alpha <= 0 or beta <= 0:
+    if not all(isfinite(value) for value in (alpha, beta, mass)) or alpha <= 0 or beta <= 0:
         raise ValueError("BETA_PRIOR_SHAPES_MUST_BE_POSITIVE")
     tail = _credible_tail(mass)
     posterior_alpha = alpha + successes
@@ -42,12 +52,12 @@ def dirichlet_multinomial(payload: dict) -> dict:
     raw_counts = payload.get("counts")
     if not isinstance(raw_counts, list) or len(raw_counts) < 2:
         raise ValueError("CATEGORY_COUNTS_REQUIRED")
-    counts = [int(value) for value in raw_counts]
+    counts = [_count(value, "CATEGORY_COUNTS_MUST_BE_NONNEGATIVE_INTEGERS") for value in raw_counts]
     if any(value < 0 for value in counts):
         raise ValueError("CATEGORY_COUNTS_MUST_BE_NONNEGATIVE")
     raw_prior = payload.get("prior_concentration")
     prior = [1.0] * len(counts) if raw_prior is None else [float(value) for value in raw_prior]
-    if len(prior) != len(counts) or any(value <= 0 for value in prior):
+    if len(prior) != len(counts) or any(not isfinite(value) or value <= 0 for value in prior):
         raise ValueError("DIRICHLET_PRIOR_INVALID")
     mass = float(payload.get("credible_mass", 0.95))
     tail = _credible_tail(mass)
@@ -84,6 +94,8 @@ def normal_inverse_gamma(payload: dict) -> dict:
     alpha0 = float(payload.get("prior_shape", 1e-6))
     beta0 = float(payload.get("prior_scale", 1e-6))
     mass = float(payload.get("credible_mass", 0.95))
+    if any(not isfinite(value) for value in values + [mu0, kappa0, alpha0, beta0, mass]):
+        raise ValueError("NORMAL_MODEL_VALUES_MUST_BE_FINITE")
     if min(kappa0, alpha0, beta0) <= 0:
         raise ValueError("NORMAL_INVERSE_GAMMA_PRIOR_MUST_BE_POSITIVE")
     tail = _credible_tail(mass)

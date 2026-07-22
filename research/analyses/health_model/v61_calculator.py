@@ -11,9 +11,10 @@ def _num(answers: dict, code: str):
         return None
 
     try:
-        return float(value)
+        numeric = float(value)
     except (TypeError, ValueError):
         return None
+    return numeric if math.isfinite(numeric) else None
 
 
 def _mean(values: list[float]):
@@ -91,9 +92,14 @@ def calculate_health_model_v61(
         current_state["current_state_final"] = 5
         stress["stress_burden_final"] = 10
 
+    partial_inputs = any(
+        block.get("status") in {NOT_ENOUGH_DATA, "completed_with_partial_inputs", "unknown"}
+        for block in (load, resources, load_failure, manifestation, stress, critical)
+    )
+
     return {
         "model_id": "health_model_v6_1",
-        "status": "completed",
+        "status": "completed_with_partial_inputs" if partial_inputs else "completed",
         "load_blocks": load,
         "resource_deficit_domains": resources,
         "load_failure_risk": load_failure,
@@ -117,6 +123,7 @@ def calculate_health_model_v61(
 
 
 def calculate_load_blocks(answers: dict) -> dict:
+    missing_components = []
     d11_max = max(
         value for value in [
             _num(answers, "d11a"),
@@ -144,6 +151,8 @@ def calculate_load_blocks(answers: dict) -> dict:
 
     l_environment = None
     if l_environment_base is not None:
+        if b8 is None:
+            missing_components.append("b8")
         l_environment = l_environment_base + (
             b8 / 4 if b8 is not None else 0
         )
@@ -159,6 +168,8 @@ def calculate_load_blocks(answers: dict) -> dict:
     l_external = None
     if external_values:
         b9 = _num(answers, "b9")
+        if b9 is None:
+            missing_components.append("b9")
         l_external = min(5, sum(external_values)) + (
             b9 / 4 if b9 is not None else 0
         )
@@ -181,7 +192,15 @@ def calculate_load_blocks(answers: dict) -> dict:
             * (1 + d15 / 3)
         )
     else:
-        l_additional = 0
+        l_additional = None
+        missing_components.extend([
+            code for code, value in {
+                "l_environment_additional": l_environment_additional,
+                "d14": d14,
+                "d15": d15,
+            }.items()
+            if value is None
+        ])
 
     l_total = _mean([
         l_environment,
@@ -191,6 +210,8 @@ def calculate_load_blocks(answers: dict) -> dict:
     ])
 
     return {
+        "status": "completed" if not missing_components else "completed_with_partial_inputs",
+        "missing_components": sorted(set(missing_components)),
         "l_environment": l_environment,
         "l_requirements": l_requirements,
         "l_external": l_external,
@@ -233,10 +254,7 @@ def calculate_external_pressure_values(answers: dict) -> list[float]:
     if None not in [e7b, e7c]:
         values.append((e7c * (3 - e7b)) / 3)
 
-    return [
-        value for value in values
-        if value != 0
-    ]
+    return values
 
 
 def calculate_resource_deficit(answers: dict) -> dict:
@@ -310,6 +328,13 @@ def calculate_resource_deficit(answers: dict) -> dict:
     corrected["resource_deficit_global"] = _mean(
         list(corrected.values())
     )
+
+    domain_codes = ["r_phys", "r_psych", "r_goal", "r_social", "r_fin", "r_spiritual"]
+    missing_domains = [code for code in domain_codes if corrected.get(code) is None]
+    corrected["status"] = (
+        "completed" if not missing_domains else "completed_with_partial_inputs"
+    )
+    corrected["missing_domains"] = missing_domains
 
     return corrected
 
@@ -407,48 +432,26 @@ def calculate_load_failure_risk(
     l_external = load.get("l_external")
     l_environment = load.get("l_environment")
 
-    p1 = (
-        d1_mean * r_phys / 5
-        if d1_mean is not None and r_phys is not None
-        and d1_mean >= 3 and r_phys >= 3
-        else 0
-    )
+    def failure_component(left, right):
+        if left is None or right is None:
+            return None
+        return left * right / 5 if left >= 3 and right >= 3 else 0.0
 
-    p2 = (
-        d2_mean * r_psych / 5
-        if d2_mean is not None and r_psych is not None
-        and d2_mean >= 3 and r_psych >= 3
-        else 0
-    )
-
-    p3 = (
-        d3_mean * r_social / 5
-        if d3_mean is not None and r_social is not None
-        and d3_mean >= 3 and r_social >= 3
-        else 0
-    )
-
-    p4 = (
-        l_external * r_spiritual / 5
-        if l_external is not None and r_spiritual is not None
-        and l_external >= 3 and r_spiritual >= 3
-        else 0
-    )
-
-    p5 = (
-        l_environment * r_goal / 5
-        if l_environment is not None and r_goal is not None
-        and l_environment >= 3 and r_goal >= 3
-        else 0
-    )
+    p1 = failure_component(d1_mean, r_phys)
+    p2 = failure_component(d2_mean, r_psych)
+    p3 = failure_component(d3_mean, r_social)
+    p4 = failure_component(l_external, r_spiritual)
+    p5 = failure_component(l_environment, r_goal)
+    components = {"p1": p1, "p2": p2, "p3": p3, "p4": p4, "p5": p5}
+    missing_components = [code for code, value in components.items() if value is None]
+    known_values = [value for value in components.values() if value is not None]
 
     return {
-        "p1": p1,
-        "p2": p2,
-        "p3": p3,
-        "p4": p4,
-        "p5": p5,
-        "p_total": p1 + p2 + p3 + p4 + p5,
+        **components,
+        "p_total": sum(known_values) if known_values else None,
+        "status": "completed" if not missing_components else "completed_with_partial_inputs",
+        "missing_components": missing_components,
+        "p_total_semantics": "sum_of_observed_components" if missing_components else "complete_sum",
     }
 
 
@@ -523,18 +526,26 @@ def calculate_manifestation_layer(answers: dict) -> dict:
     ]
 
     k_fact = _mean(values)
+    observed_count = sum(value is not None for value in values)
+    missing_markers = [f"k{index}" for index, value in enumerate(values, start=1) if value is None]
 
     if k_fact is None:
         return {
             "manifestation_score": None,
             "manifestation_score_norm": None,
             "status": NOT_ENOUGH_DATA,
+            "observed_marker_count": 0,
+            "required_marker_count": 22,
+            "missing_markers": missing_markers,
         }
 
     return {
         "manifestation_score": k_fact,
         "manifestation_score_norm": k_fact / 5 * 10,
-        "status": "completed",
+        "status": "completed" if observed_count == 22 else "completed_with_partial_inputs",
+        "observed_marker_count": observed_count,
+        "required_marker_count": 22,
+        "missing_markers": missing_markers,
     }
 
 
@@ -573,16 +584,25 @@ def calculate_stress_burden(
     k23 = _num(answers, "k23")
     k24 = _num(answers, "k24")
 
-    critical_override = (
+    threshold_met = (
         (k23 is not None and k23 >= 3)
         or (k24 is not None and k24 >= 2)
     )
 
-    if critical_override:
+    if threshold_met:
         final = 10
+        critical_override = True
+    elif k23 is not None and k24 is not None:
+        critical_override = False
+    else:
+        critical_override = None
 
+    partial_inputs = any(
+        block.get("status") == "completed_with_partial_inputs"
+        for block in (load, resources, load_failure, manifestation)
+    ) or critical_override is None
     return {
-        "status": "completed",
+        "status": "completed_with_partial_inputs" if partial_inputs else "completed",
         "stress_burden_raw": raw,
         "stress_burden_norm": norm,
         "stress_burden_final": final,
@@ -610,6 +630,12 @@ def calculate_modeled_burden(
     ])
 
     return {
+        "status": (
+            "completed_with_partial_inputs"
+            if load.get("status") == "completed_with_partial_inputs"
+            or resources.get("status") == "completed_with_partial_inputs"
+            else "completed"
+        ),
         "pressure_proxy": pressure_proxy,
         "resource_deficit": resource_deficit,
         "modeled_burden": modeled,
@@ -649,7 +675,12 @@ def calculate_current_state(
         mode = "DIAGNOSTIC_MODE"
 
     return {
-        "status": "completed",
+        "status": (
+            "completed_with_partial_inputs"
+            if modeled_burden.get("status") == "completed_with_partial_inputs"
+            or manifestation.get("status") == "completed_with_partial_inputs"
+            else "completed"
+        ),
         "current_state_final": current,
         "burden_manifestation_delta": delta,
         "mode": mode,
@@ -660,13 +691,27 @@ def calculate_critical_status(answers: dict) -> dict:
     k23 = _num(answers, "k23")
     k24 = _num(answers, "k24")
 
-    is_critical = (
+    threshold_met = (
         (k23 is not None and k23 >= 3)
         or (k24 is not None and k24 >= 2)
     )
+    if threshold_met:
+        is_critical = True
+        status = "critical"
+    elif k23 is not None and k24 is not None:
+        is_critical = False
+        status = "not_critical"
+    else:
+        is_critical = None
+        status = "unknown"
 
     return {
+        "status": status,
         "is_critical": is_critical,
         "k23": k23,
         "k24": k24,
+        "missing_critical_inputs": [
+            code for code, value in {"k23": k23, "k24": k24}.items()
+            if value is None
+        ],
     }

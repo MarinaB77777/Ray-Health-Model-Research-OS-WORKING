@@ -2,6 +2,7 @@ from assessment.analysis.statistics.mann_whitney import (
     mann_whitney_u_statistic,
     mann_whitney_two_sided_p_value,
 )
+from assessment.analysis.statistics.parametric_groups import collect_independent_groups
 
 
 def _collect_grouped_values(
@@ -61,18 +62,14 @@ def run_mann_whitney_u(
     right_question_code: str,
     answer_records: list[dict],
 ) -> dict:
-    groups = _collect_grouped_values(
+    collected = collect_independent_groups(
         answer_records=answer_records,
-        group_question_code=left_question_code,
-        value_question_code=right_question_code,
+        left_question_code=left_question_code,
+        right_question_code=right_question_code,
     )
-
-    if len(groups) != 2:
-        groups = _collect_grouped_values(
-            answer_records=answer_records,
-            group_question_code=right_question_code,
-            value_question_code=left_question_code,
-        )
+    if not collected.get("ok"):
+        return {"ok": False, "method_id": "mann_whitney_u", **collected}
+    groups = collected["groups"]
 
     if len(groups) != 2:
         return {

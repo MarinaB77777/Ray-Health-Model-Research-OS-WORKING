@@ -19,7 +19,6 @@ METHOD_CHECK_MAP = {
         "not_constant_variable",
         "linear_relationship_plausible",
         "no_extreme_outliers",
-        "approximately_normal_outcome_within_groups_or_sufficient_sample_size",
     ],
 
     "mann_whitney_u": [
@@ -40,7 +39,7 @@ METHOD_CHECK_MAP = {
         "independent_observations",
         "two_groups",
         "minimum_group_size",
-        "approximately_normal_outcome_within_groups_or_sufficient_sample_size",
+        "normality_diagnostic_within_groups",
         "variance_assumption_checked",
         "no_extreme_outliers",
     ],
@@ -54,7 +53,7 @@ METHOD_CHECK_MAP = {
         "three_or_more_groups",
         "minimum_group_size",
         "group_balance",
-        "approximately_normal_outcome_within_groups_or_sufficient_sample_size",
+        "normality_diagnostic_within_groups",
         "variance_assumption_checked",
         "no_extreme_outliers",
     ],

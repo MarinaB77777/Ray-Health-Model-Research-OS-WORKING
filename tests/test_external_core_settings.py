@@ -173,6 +173,47 @@ class SettingsRegistryLifecycleTests(unittest.TestCase):
                 actor_id="research_lead",
             )
 
+    def test_activating_replacement_deactivates_other_id_for_same_scope(self) -> None:
+        first = RaySettingsRevision(
+            layer=SettingsLayer.ROLE,
+            scope_id="research_colleague",
+            created_by="research_lead",
+        )
+        second = RaySettingsRevision(
+            layer=SettingsLayer.ROLE,
+            scope_id="research_colleague",
+            created_by="research_lead",
+        )
+        for revision in (first, second):
+            self.registry.save_draft(revision)
+            self.registry.transition(
+                revision.settings_id,
+                1,
+                SettingsStatus.TRIAL,
+                actor_id="research_lead",
+            )
+            self.registry.transition(
+                revision.settings_id,
+                1,
+                SettingsStatus.ACTIVE,
+                actor_id="research_lead",
+            )
+
+        active = self.registry.active_for(
+            SettingsLayer.ROLE,
+            "research_colleague",
+        )
+        self.assertEqual(second.settings_id, active.settings_id)
+        current = [
+            item
+            for item in self.registry.list_revisions(
+                layer=SettingsLayer.ROLE,
+                scope_id="research_colleague",
+            )
+            if item["status"] == "active" and item["current"]
+        ]
+        self.assertEqual(1, len(current))
+
     def test_setting_identifiers_are_strict_and_unique(self) -> None:
         revision = RaySettingsRevision(
             layer=SettingsLayer.ROLE,

@@ -34,6 +34,19 @@ PAGE_CAPABILITIES: dict[str, PageCapability] = {
             "review_analysis_readiness",
         ),
     ),
+    "evidence_review": PageCapability(
+        "evidence_review",
+        (
+            "review_evidence_question_and_scope",
+            "review_eligibility_criteria",
+            "review_search_reproducibility",
+            "review_screening_and_extraction",
+            "review_critical_appraisal_plan",
+            "review_registered_evidence_acquisition_choices",
+            "review_synthesis_compatibility",
+            "review_contradictory_evidence_and_claim_rules",
+        ),
+    ),
     "model_parameter_constructor": PageCapability(
         "model_parameter_constructor",
         (

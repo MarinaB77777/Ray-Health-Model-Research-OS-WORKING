@@ -1125,6 +1125,35 @@ def build_model_parameter_pair_dataset(
     ),
     participant_reference: str | None = None,
 ) -> dict:
+    study_ids = sorted({
+        str(study)
+        for record in parameter_records
+        for study in (
+            record.get("study_ids")
+            or ([record.get("study_id")] if record.get("study_id") else [])
+        )
+        if study
+    })
+    records_without_study = [
+        record for record in parameter_records
+        if not record.get("study_id") and not record.get("study_ids")
+    ]
+    if len(study_ids) > 1:
+        return {
+            "ok": False,
+            "status": "study_scope_required",
+            "study_ids": study_ids,
+            "reason": "Calculated parameters from different studies must not be pooled implicitly.",
+        }
+    if records_without_study:
+        return {
+            "ok": False,
+            "status": "study_provenance_missing",
+            "study_ids": study_ids,
+            "record_count_without_study": len(records_without_study),
+            "reason": "Every calculated parameter observation requires study provenance before research analysis.",
+        }
+
     if (
         left_parameter_code
         == right_parameter_code
@@ -1331,7 +1360,10 @@ def build_model_parameter_pair_dataset(
     answer_records = (
         _to_compatible_answer_records(
             observations=observations,
-            study_id=model_id,
+            # Keep the research origin distinct from the calculator/model
+            # identity.  The dataset is admitted above only when every
+            # parameter record resolves to one study.
+            study_id=study_ids[0],
             analysis_scope=analysis_scope,
             left_parameter_code=(
                 left_parameter_code
@@ -1355,6 +1387,7 @@ def build_model_parameter_pair_dataset(
             MODEL_PARAMETER_PAIR_DATASET_SCHEMA_VERSION
         ),
         "model_id": model_id,
+        "study_id": study_ids[0] if len(study_ids) == 1 else None,
         "analysis_scope": analysis_scope,
         "observation_unit": (
             "participant"

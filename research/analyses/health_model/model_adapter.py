@@ -192,11 +192,20 @@ def build_registered_health_model_parameter_records(
     input_references: list | None = None,
     input_snapshot: dict | None = None,
 ) -> list[dict]:
+    study_ids = sorted({
+        str(reference.study_id)
+        for reference in (input_references or [])
+        if getattr(reference, "study_id", None)
+    })
     records = build_health_model_parameter_records(
         session_id=session_id,
         participant_id=participant_id,
         subject_link_id=subject_link_id,
-        study_id="model_calculation",
+        study_id=(
+            study_ids[0]
+            if len(study_ids) == 1
+            else None
+        ),
         analysis_output=analysis_output,
         observation_time=observation_time,
     )
@@ -213,6 +222,16 @@ def build_registered_health_model_parameter_records(
                 calculation_version
             ),
             "source_session_id": session_id,
+            "study_ids": study_ids,
+            "study_scope_status": (
+                "single_study"
+                if len(study_ids) == 1
+                else (
+                    "multiple_studies"
+                    if study_ids
+                    else "study_unknown"
+                )
+            ),
             "input_reference_ids": [
                 reference.input_reference_id
                 for reference in (

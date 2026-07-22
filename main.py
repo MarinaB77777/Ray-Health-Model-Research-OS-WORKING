@@ -108,6 +108,13 @@ from research.qualitative_hypothesis import (
     compatible_qualitative_methods,
     qualitative_hypothesis_contract,
 )
+from research.evidence_review import (
+    EvidenceReviewError,
+    build_plan as build_evidence_review_plan,
+    contract as evidence_review_contract,
+    list_reviews as list_evidence_reviews,
+    save_review as save_evidence_review,
+)
 from research.researcher_accounts import (
     SESSION_COOKIE_NAME,
     SESSION_TTL_HOURS,
@@ -255,6 +262,9 @@ from research.editors.model_entity_classification import (
 from research.editors.model_definition_explainer import explain_model_definition
 from research.editors.data_pipeline import (
     apply_transformation,
+    build_transformation_run_dataset,
+    get_transformation_run,
+    list_transformation_runs,
     profile_records,
     list_recipes,
     transformation_contract,
@@ -702,6 +712,15 @@ class QualitativeHypothesisResultInput(BaseModel):
     project_id: str | None = None
 
 
+class EvidenceReviewInput(BaseModel):
+    plan: dict[str, Any]
+    status: str = "draft"
+    language: str = "ru"
+    project_id: str | None = None
+    block_id: str | None = None
+    review_id: str | None = None
+
+
 class ResearcherRegistrationInput(BaseModel):
     login: str
     display_name: str
@@ -872,6 +891,7 @@ class AnalysisCheckInput(BaseModel):
 
 class ParameterAnalysisCheckInput(BaseModel):
     model_id: str = "health_model_v6_1"
+    study_id: str | None = None
     left_parameter_code: str
     right_parameter_code: str
     method_id: str
@@ -881,6 +901,7 @@ class ParameterAnalysisCheckInput(BaseModel):
 
 class ModelParameterStatisticalRunInput(BaseModel):
     model_id: str = "health_model_v6_1"
+    study_id: str | None = None
     left_parameter_code: str
     right_parameter_code: str
     method_id: str
@@ -890,6 +911,7 @@ class ModelParameterStatisticalRunInput(BaseModel):
 
 class ModelParameterDatasetInput(BaseModel):
     model_id: str = "health_model_v6_1"
+    study_id: str | None = None
     left_parameter_code: str
     right_parameter_code: str
     analysis_scope: str = "CROSS_PARTICIPANT"
@@ -905,6 +927,7 @@ class StatisticalAnalysisRunInput(BaseModel):
 
 class QuestionnaireMultivariableAnalysisInput(BaseModel):
     project_id: str = "health_model_pilot"
+    study_id: str | None = None
     questionnaire_id: str
     question_uuids: list[str]
     analysis_scope: str = "cross_participant"
@@ -1600,11 +1623,13 @@ def ray_colleague_participant_respond(
 @app.post("/ray-colleague/researcher/memory")
 def create_ray_researcher_memory(
     data: RayColleagueMemoryInput,
+    request: Request,
 ):
+    context = _researcher_session(request, require_csrf=True)
     try:
         record = ray_colleague_service.remember(
             role=RayRole.RESEARCH_COLLEAGUE,
-            owner_id=data.owner_id,
+            owner_id=context["account"]["account_id"],
             scope=data.scope,
             summary=data.summary,
             provenance=data.provenance,
@@ -1642,13 +1667,15 @@ def create_ray_participant_memory(
 @app.get("/ray-colleague/researcher/memory/{researcher_id}")
 def list_ray_researcher_memory(
     researcher_id: str,
+    request: Request,
     project_id: str | None = None,
 ):
+    context = _researcher_session(request)
     return {
         "ok": True,
         "records": ray_colleague_service.memory.list_for_owner(
             RayRole.RESEARCH_COLLEAGUE,
-            researcher_id,
+            context["account"]["account_id"],
             project_id=project_id,
         ),
     }
@@ -1673,11 +1700,13 @@ def list_ray_participant_memory(
 def delete_ray_researcher_memory(
     record_id: str,
     researcher_id: str,
+    request: Request,
 ):
+    context = _researcher_session(request, require_csrf=True)
     try:
         record = ray_colleague_service.memory.delete(
             RayRole.RESEARCH_COLLEAGUE,
-            researcher_id,
+            context["account"]["account_id"],
             record_id,
         )
         return {"ok": True, "record": record}
@@ -1725,12 +1754,14 @@ def submit_ray_colleague_feedback(
 def confirm_ray_researcher_action(
     action_id: str,
     data: RayActionConfirmationInput,
+    request: Request,
 ):
+    context = _researcher_session(request, require_csrf=True)
     try:
         action = ray_colleague_service.confirm_action(
             action_id,
             role=RayRole.RESEARCH_COLLEAGUE,
-            owner_id=data.owner_id,
+            owner_id=context["account"]["account_id"],
         )
         return {"ok": True, "action": action}
     except (ValueError, PermissionError, KeyError) as exc:
@@ -2645,6 +2676,15 @@ def research_project_entity_catalog(request: Request, language: str = "ru"):
             "source_schema_version": "probabilistic-method-registry-1",
             "source_route": f"/probabilistic-methods?method_id={method_id}",
         })
+    for method in METHODS:
+        method_id = str(method["method_id"])
+        entities.append({
+            "entity_type": "analysis_method", "registry_id": method_id,
+            "version": 1, "status": method.get("execution_status", "registered_without_runner"),
+            "display_name": str(method.get("title") or method_id),
+            "source_schema_version": "analysis-method-registry-1",
+            "source_route": f"/analysis-builder?method_id={method_id}",
+        })
     for instrument in list_connected_instruments():
         instrument_id = str(instrument.get("instrument_id"))
         connector = instrument.get("connector") or {}
@@ -2663,6 +2703,8 @@ def research_project_entity_catalog(request: Request, language: str = "ru"):
             "questionnaire_result": "questionnaire_result", "parameter_result": "parameter_result",
             "result": "analysis_result", "analysis_result": "analysis_result", "hypothesis_result": "hypothesis_result",
             "observable_marker": "observable_marker",
+            "citation_collection": "citation_collection",
+            "evidence_review": "evidence_review",
         }.get(object_type)
         if not mapped:
             continue
@@ -2671,9 +2713,159 @@ def research_project_entity_catalog(request: Request, language: str = "ru"):
             "version": record.get("version", 1), "status": record.get("status", "draft"),
             "display_name": str(record.get("title") or record.get("id")),
             "source_schema_version": record.get("schema_version"),
-            "source_route": "/data-preparation" if "result" not in mapped else "/scientific-results",
+            "source_route": (
+                "/evidence-review" if mapped == "evidence_review"
+                else "/citation-workspace" if mapped == "citation_collection"
+                else "/data-preparation" if "result" not in mapped
+                else "/scientific-results"
+            ),
         })
     return {"ok": True, "schema_version": "research-project-entity-catalog-1", "language": language, "entities": entities}
+
+
+def _evidence_review_catalog(request: Request, language: str) -> dict[str, Any]:
+    if language not in {"ru", "en", "es"}:
+        raise HTTPException(status_code=400, detail="UNSUPPORTED_CONTENT_LANGUAGE")
+    entities = research_project_entity_catalog(request, language)["entities"]
+    category_by_type = {
+        "question_bank": "questionnaires", "question": "questions",
+        "model_parameter": "model_parameters", "mechanism": "model_mechanisms",
+        "measurement_instrument": "connected_instruments",
+        "measurement_dataset": "registered_data", "questionnaire_result": "registered_data",
+        "parameter_result": "registered_data", "analysis_result": "registered_results",
+        "hypothesis_result": "registered_results", "observable_marker": "observable_markers",
+        "analysis_method": "statistical_methods", "probabilistic_method": "probabilistic_methods",
+        "citation_collection": "scientific_sources", "evidence_review": "previous_reviews",
+    }
+    items: list[dict[str, Any]] = []
+    seen: set[str] = set()
+
+    def add(*, category: str, registry_id: str, title: str, version: Any = 1,
+            status: str = "registered", source_route: str = "", details: dict[str, Any] | None = None) -> None:
+        catalog_id = f"{category}:{registry_id}:v{version}"
+        if catalog_id in seen:
+            return
+        seen.add(catalog_id)
+        items.append({
+            "catalog_id": catalog_id, "category": category,
+            "registry_id": registry_id, "version": version, "title": title,
+            "status": status, "source_route": source_route, "details": details or {},
+        })
+
+    for entity in entities:
+        entity_type = str(entity.get("entity_type") or "")
+        category = category_by_type.get(entity_type, "registered_objects")
+        add(
+            category=category, registry_id=str(entity.get("registry_id")),
+            version=entity.get("version", 1), title=str(entity.get("display_name") or entity.get("registry_id")),
+            status=str(entity.get("status") or "registered"), source_route=str(entity.get("source_route") or ""),
+            details={"entity_type": entity_type, "schema_version": entity.get("source_schema_version")},
+        )
+
+    for method in qualitative_hypothesis_contract().get("analytic_approaches", []):
+        add(
+            category="qualitative_methods", registry_id=str(method["method_id"]),
+            title=str(method.get("title") or method["method_id"]),
+            status="registered_planning_method_requires_bound_material", source_route="/research-lab",
+            details={"materials": method.get("materials", []), "modes": method.get("modes", [])},
+        )
+    for method in sensor_hypothesis_contract().get("methods", []):
+        add(
+            category="sensor_validation_methods", registry_id=str(method["method_id"]),
+            title=str(method.get("title") or method["method_id"]),
+            status=str(method.get("execution_status") or "registered_without_validated_runner"),
+            source_route="/technical-hypothesis-lab",
+            details={"aims": method.get("aims", []), "data_kinds": method.get("data_kinds", [])},
+        )
+
+    browser_sources = [
+        ("camera", "Camera / video", "MediaDevices"),
+        ("microphone", "Microphone / audio", "MediaDevices"),
+        ("web_serial", "Web Serial sensor or device", "WebSerial"),
+        ("web_usb", "WebUSB device", "WebUSB"),
+        ("web_bluetooth", "Bluetooth device", "WebBluetooth"),
+        ("geolocation", "Geolocation", "Geolocation"),
+        ("measurement_file", "Measurement file", "FileAPI"),
+        ("manual_measurement", "Manual registered measurement description", "manual_form"),
+    ]
+    for registry_id, title, capability in browser_sources:
+        add(
+            category="available_acquisition_methods", registry_id=registry_id,
+            title=title, status="requires_explicit_researcher_selection_and_permission",
+            source_route="/measurement-setup", details={"connection_method": capability},
+        )
+    return {
+        "schema_version": "evidence-acquisition-catalog-1", "language": language,
+        "selection_policy": "registered_choice_does_not_assert_scientific_compatibility_or_execution_readiness",
+        "items": sorted(items, key=lambda item: (item["category"], item["title"].casefold(), item["catalog_id"])),
+    }
+
+
+@app.get("/research/evidence-review/contract")
+def research_evidence_review_contract(request: Request, language: str = "ru"):
+    _researcher_session(request)
+    return {"ok": True, "contract": evidence_review_contract(), "catalog": _evidence_review_catalog(request, language)}
+
+
+@app.get("/research/evidence-reviews")
+def research_evidence_reviews(request: Request, review_id: str | None = None):
+    context = _researcher_session(request)
+    return {"ok": True, "reviews": list_evidence_reviews(context["account"]["account_id"], review_id=review_id)}
+
+
+@app.post("/research/evidence-review/validate")
+def validate_research_evidence_review(data: EvidenceReviewInput, request: Request):
+    _researcher_session(request, require_csrf=True)
+    catalog = _evidence_review_catalog(request, data.language)
+    catalog_items_by_id = {item["catalog_id"]: item for item in catalog["items"]}
+    try:
+        plan = build_evidence_review_plan(
+            data.plan, status=data.status,
+            valid_catalog_ids=set(catalog_items_by_id),
+            catalog_items_by_id=catalog_items_by_id,
+        )
+    except EvidenceReviewError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.code) from exc
+    return {"ok": True, "plan": plan}
+
+
+@app.post("/research/evidence-reviews")
+def save_research_evidence_review_api(data: EvidenceReviewInput, request: Request):
+    context = _researcher_session(request, require_csrf=True)
+    owner = context["account"]["account_id"]
+    catalog = _evidence_review_catalog(request, data.language)
+    catalog_items_by_id = {item["catalog_id"]: item for item in catalog["items"]}
+    try:
+        plan = build_evidence_review_plan(
+            data.plan, status=data.status,
+            valid_catalog_ids=set(catalog_items_by_id),
+            catalog_items_by_id=catalog_items_by_id,
+        )
+        record = save_evidence_review(
+            owner=owner, authorship=_project_authorship(owner), status=data.status,
+            language=data.language, plan=plan, project_id=data.project_id,
+            block_id=data.block_id, review_id=data.review_id,
+        )
+        project = None
+        if data.project_id and data.block_id:
+            current = get_modular_research_project(data.project_id, owner)
+            block = next((item for item in current.get("blocks", []) if item.get("block_id") == data.block_id), None)
+            field_code = {"introduction": "source_notes", "scientific_context": "evidence_links"}.get((block or {}).get("block_type"))
+            if field_code:
+                project = connect_project_entity(
+                    data.project_id, owner, data.block_id, field_code=field_code,
+                    entity={
+                        "entity_type": "evidence_review", "registry_id": record["review_id"],
+                        "version": record["version"], "status": record["status"],
+                        "display_name": record["title"], "source_schema_version": record["schema_version"],
+                        "source_route": f"/evidence-review?review_id={record['review_id']}",
+                    },
+                )
+    except (EvidenceReviewError, ProjectWorkspaceError) as exc:
+        status_code = getattr(exc, "status_code", 422)
+        code = getattr(exc, "code", str(exc))
+        raise HTTPException(status_code=status_code, detail=code) from exc
+    return {"ok": True, "review": record, "plan": plan, "project": project}
 
 
 @app.post("/research/projects/{project_id}/blocks/{block_id}/entities")
@@ -2898,12 +3090,38 @@ def list_participant_data_records(request: Request, study_id: str | None = None)
         for session in pilot_sessions
     ]
 
-    all_items = research_items + pilot_items
+    transformation_items = []
+    for run in list_transformation_runs(study_id=study_id):
+        result = run.get("result") or {}
+        transformation_items.append({
+            "record_id": run.get("run_id"),
+            "record_source": "data_transformation_run",
+            "record_type": result.get("source_type"),
+            "status": "RUN_COMPLETED",
+            "created_at": run.get("applied_at"),
+            "updated_at": run.get("applied_at"),
+            "session_id": None,
+            "account_id": None,
+            "participant_id": None,
+            "subject_link_id": None,
+            "study_id": run.get("study_id"),
+            "study_ids": run.get("study_ids", []),
+            "study_scope_status": run.get("study_scope_status"),
+            "language": None,
+            "answers_count": result.get("usable_count", 0),
+            "has_raw_engine_result": False,
+            "has_public_output": False,
+        })
+
+    all_items = research_items + pilot_items + transformation_items
 
     if study_id:
         all_items = [
             item for item in all_items
-            if item.get("study_id") == study_id
+            if (
+                item.get("study_id") == study_id
+                or study_id in (item.get("study_ids") or [])
+            )
         ]
 
     all_items = sorted(
@@ -2966,7 +3184,48 @@ def get_participant_data_record(record_id: str, request: Request):
             },
         }
 
+    transformation_run = get_transformation_run(record_id)
+    if transformation_run is not None:
+        result = transformation_run.get("result") or {}
+        return {
+            "ok": True,
+            "record_source": "data_transformation_run",
+            "record": {
+                "record_id": transformation_run.get("run_id"),
+                "record_source": "data_transformation_run",
+                "record_type": result.get("source_type"),
+                "status": "RUN_COMPLETED",
+                "created_at": transformation_run.get("applied_at"),
+                "updated_at": transformation_run.get("applied_at"),
+                "study_id": transformation_run.get("study_id"),
+                "study_ids": transformation_run.get("study_ids", []),
+                "study_scope_status": transformation_run.get("study_scope_status"),
+                "answers_count": result.get("usable_count", 0),
+                "prepared_observations": result.get("records", []),
+                "transformation_run": transformation_run,
+            },
+        }
+
     raise HTTPException(status_code=404, detail="Record not found")
+
+
+@app.get("/research/prepared-data/{run_id}/dataset")
+def get_prepared_transformation_dataset(
+    run_id: str,
+    request: Request,
+    analysis_scope: str,
+    repeated_measure_policy: str = "reject_repeated",
+    participant_reference: str | None = None,
+    study_id: str | None = None,
+):
+    _researcher_session(request)
+    return build_transformation_run_dataset(
+        run_id=run_id,
+        analysis_scope=analysis_scope,
+        repeated_measure_policy=repeated_measure_policy,
+        participant_reference=participant_reference,
+        study_id=study_id,
+    )
 
 
 def _scientific_raw_result(record: dict) -> dict:
@@ -3474,6 +3733,10 @@ def technical_hypothesis_lab_page():
 @app.get("/citation-workspace")
 def citation_workspace_page():
     return FileResponse("static/citation_workspace.html")
+
+@app.get("/evidence-review", response_class=HTMLResponse)
+def evidence_review_page():
+    return FileResponse("static/scientific_evidence_review.html")
 
 @app.get("/research-workspace", response_class=HTMLResponse)
 def research_workspace_page():
@@ -5004,6 +5267,7 @@ def _question_group_metadata(
 def build_questionnaire_measurement_catalog(
     *,
     project_id: str,
+    study_id: str | None = None,
     questionnaire_id: str | None = None,
     include_all_measurements: bool = False,
 ) -> dict:
@@ -5017,6 +5281,17 @@ def build_questionnaire_measurement_catalog(
         connected_questionnaire_ids
     )
 
+    available_study_ids = sorted({
+        str(session.study_id)
+        for session in store.list_all()
+        if session.study_id
+        and session.status.value in RESEARCH_USABLE_SESSION_STATUSES
+        and not session.invalidated
+    })
+    study_scope_required = study_id is None and len(available_study_ids) > 1
+    if study_id is None and len(available_study_ids) == 1:
+        study_id = available_study_ids[0]
+
     groups: dict[
         tuple[str, str],
         dict,
@@ -5024,12 +5299,22 @@ def build_questionnaire_measurement_catalog(
 
     excluded_records: list[dict] = []
     configuration_issues: list[dict] = []
+    if study_scope_required:
+        configuration_issues.append({
+            "issue_code": "STUDY_SCOPE_REQUIRED",
+            "available_study_ids": available_study_ids,
+            "reason": "Questionnaire results from different studies must not be pooled implicitly.",
+        })
 
     seen_unconnected_questionnaires: set[
         str
     ] = set()
 
     for session in store.list_all():
+        if study_scope_required:
+            continue
+        if study_id is not None and session.study_id != study_id:
+            continue
         session_status = session.status.value
 
         records = (
@@ -5628,6 +5913,9 @@ def build_questionnaire_measurement_catalog(
     return {
         "ok": True,
         "project_id": project_id,
+        "study_id": study_id,
+        "available_study_ids": available_study_ids,
+        "study_scope_required": study_scope_required,
         "selected_questionnaire_id": (
             questionnaire_id
         ),
@@ -5672,10 +5960,12 @@ def build_questionnaire_measurement_catalog(
 @app.get("/research/questionnaire-measurements")
 def get_questionnaire_measurements(
     project_id: str = "health_model_pilot",
+    study_id: str | None = None,
     questionnaire_id: str | None = None,
 ):
     return build_questionnaire_measurement_catalog(
         project_id=project_id,
+        study_id=study_id,
         questionnaire_id=questionnaire_id,
     )
 
@@ -5684,6 +5974,7 @@ def get_questionnaire_measurements(
 def get_questionnaire_sample_summaries(
     request: Request,
     project_id: str = "health_model_pilot",
+    study_id: str | None = None,
 ):
     """Lightweight catalogue for the left side of Data Explorer.
 
@@ -5694,6 +5985,7 @@ def get_questionnaire_sample_summaries(
     _researcher_session(request)
     catalog = build_questionnaire_measurement_catalog(
         project_id=project_id,
+        study_id=study_id,
     )
 
     questionnaires = []
@@ -5792,6 +6084,9 @@ def get_questionnaire_sample_summaries(
             "questionnaire-sample-catalog-1"
         ),
         "project_id": project_id,
+        "study_id": catalog.get("study_id"),
+        "available_study_ids": catalog.get("available_study_ids", []),
+        "study_scope_required": catalog.get("study_scope_required", False),
         "connected_questionnaire_ids": (
             catalog["connected_questionnaire_ids"]
         ),
@@ -5815,6 +6110,7 @@ def get_questionnaire_dataset(
     question_uuid: str,
     scope: str = "cross_participant",
     project_id: str = "health_model_pilot",
+    study_id: str | None = None,
     participant_reference: str | None = None,
 ):
     _researcher_session(request)
@@ -5847,6 +6143,7 @@ def get_questionnaire_dataset(
 
     catalog = build_questionnaire_measurement_catalog(
         project_id=project_id,
+        study_id=study_id,
         questionnaire_id=questionnaire_id,
         include_all_measurements=True,
     )
@@ -5923,6 +6220,7 @@ def get_questionnaire_dataset(
             "questionnaire-analysis-dataset-1"
         ),
         "project_id": project_id,
+        "study_id": catalog.get("study_id"),
         "questionnaire_id": questionnaire_id,
         "question": public_question,
         "scope": normalized_scope,
@@ -6001,6 +6299,7 @@ def _build_questionnaire_multivariable_dataset(
 
     catalog = build_questionnaire_measurement_catalog(
         project_id=data.project_id,
+        study_id=data.study_id,
         questionnaire_id=data.questionnaire_id,
         include_all_measurements=True,
     )
@@ -6143,7 +6442,10 @@ def _build_questionnaire_multivariable_dataset(
             answer_records.append({
                 "answer_record_id": observation.get("answer_record_id"),
                 "record_type": "questionnaire_answer",
-                "study_id": data.project_id,
+                "study_id": (
+                    observation.get("study_id")
+                    or data.study_id
+                ),
                 "questionnaire_id": data.questionnaire_id,
                 "question_uuid": question.get("question_uuid"),
                 "question_code": variable_code,
@@ -6185,6 +6487,7 @@ def _build_questionnaire_multivariable_dataset(
         "status": "ready" if rows else "no_complete_observation_units",
         "schema_version": "questionnaire-multivariable-dataset-1",
         "project_id": data.project_id,
+        "study_id": data.study_id,
         "questionnaire_id": data.questionnaire_id,
         "analysis_scope": scope,
         "participant_reference": data.participant_reference,
@@ -7235,6 +7538,7 @@ def get_model_calculation_api(
 def list_model_parameter_records_api(
     request: Request,
     model_id: str | None = None,
+    study_id: str | None = None,
     parameter_id: str | None = None,
     parameter_code: str | None = None,
     calculation_run_id: str | None = None,
@@ -7248,6 +7552,7 @@ def list_model_parameter_records_api(
         model_calculation_store
         .list_parameter_records(
             model_id=model_id,
+            study_id=study_id,
             parameter_id=parameter_id,
             parameter_code=parameter_code,
             calculation_run_id=(
@@ -7270,6 +7575,7 @@ def list_model_parameter_records_api(
             "model_calculation_store"
         ),
         "model_id": model_id,
+        "study_id": study_id,
         "parameter_id": parameter_id,
         "parameter_code": parameter_code,
         "calculation_run_id": (
@@ -7293,12 +7599,14 @@ def list_model_parameter_records_api(
 def list_model_parameter_measurements_api(
     request: Request,
     model_id: str = "health_model_v6_1",
+    study_id: str | None = None,
 ):
     _researcher_session(request)
     parameter_records = (
         model_calculation_store
         .list_parameter_records(
             model_id=model_id,
+            study_id=study_id,
             include_invalidated_runs=False,
         )
     )
@@ -7333,12 +7641,14 @@ def get_model_parameter_pair_options_api(
     left_parameter_code: str,
     right_parameter_code: str,
     model_id: str = "health_model_v6_1",
+    study_id: str | None = None,
 ):
     _researcher_session(request)
     parameter_records = (
         model_calculation_store
         .list_parameter_records(
             model_id=model_id,
+            study_id=study_id,
             include_invalidated_runs=False,
         )
     )
@@ -7376,12 +7686,14 @@ def list_model_parameter_pair_participants_api(
     left_parameter_code: str,
     right_parameter_code: str,
     model_id: str = "health_model_v6_1",
+    study_id: str | None = None,
 ):
     _researcher_session(request)
     parameter_records = (
         model_calculation_store
         .list_parameter_records(
             model_id=model_id,
+            study_id=study_id,
             include_invalidated_runs=False,
         )
     )
@@ -7427,6 +7739,7 @@ def build_model_parameter_dataset_api(
         model_calculation_store
         .list_parameter_records(
             model_id=data.model_id,
+            study_id=data.study_id,
             include_invalidated_runs=False,
         )
     )
@@ -7459,6 +7772,7 @@ def check_model_parameter_analysis(
         model_calculation_store
         .list_parameter_records(
             model_id=data.model_id,
+            study_id=data.study_id,
             include_invalidated_runs=False,
         )
     )
@@ -7498,6 +7812,7 @@ def run_model_parameter_statistical_analysis(
         model_calculation_store
         .list_parameter_records(
             model_id=data.model_id,
+            study_id=data.study_id,
             include_invalidated_runs=False,
         )
     )

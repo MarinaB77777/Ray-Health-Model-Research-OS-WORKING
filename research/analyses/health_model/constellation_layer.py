@@ -1,3 +1,5 @@
+import math
+
 from research.analyses.health_model.constellation_registry import (
     list_constellations,
 )
@@ -8,7 +10,10 @@ CONSTELLATION_LAYER_SCHEMA_VERSION = "constellation-layer-1"
 def _clip_0_5(value):
     if value is None:
         return None
-    return max(0, min(5, float(value)))
+    numeric = float(value)
+    if not math.isfinite(numeric):
+        return None
+    return max(0, min(5, numeric))
 
 
 def _mechanism_score(mechanisms: dict, mechanism_id: str):
@@ -55,6 +60,7 @@ def build_constellation_layer(mechanism_layer: dict) -> dict:
     constellations = {}
     active_constellations = {}
     suspected_constellations = {}
+    not_supported_constellations = {}
     blocked_constellations_due_to_missing_data = {}
 
     for constellation in list_constellations():
@@ -90,7 +96,7 @@ def build_constellation_layer(mechanism_layer: dict) -> dict:
         if missing_required:
             status = "NOT_ENOUGH_DATA"
         elif below_threshold_required:
-            status = "SUSPECTED"
+            status = "NOT_SUPPORTED"
         else:
             status = "ACTIVE"
 
@@ -132,6 +138,8 @@ def build_constellation_layer(mechanism_layer: dict) -> dict:
             active_constellations[constellation_id] = item
         elif status == "SUSPECTED":
             suspected_constellations[constellation_id] = item
+        elif status == "NOT_SUPPORTED":
+            not_supported_constellations[constellation_id] = item
         else:
             blocked_constellations_due_to_missing_data[constellation_id] = item
 
@@ -163,10 +171,12 @@ def build_constellation_layer(mechanism_layer: dict) -> dict:
         "constellation_count": len(constellations),
         "active_count": len(active_constellations),
         "suspected_count": len(suspected_constellations),
+        "not_supported_count": len(not_supported_constellations),
         "blocked_count": len(blocked_constellations_due_to_missing_data),
         "constellations": constellations,
         "active_constellations": active_constellations,
         "suspected_constellations": suspected_constellations,
+        "not_supported_constellations": not_supported_constellations,
         "blocked_constellations_due_to_missing_data": (
             blocked_constellations_due_to_missing_data
         ),

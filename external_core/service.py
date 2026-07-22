@@ -28,7 +28,8 @@ class ExternalCoreService:
         self.settings = RaySettingsRegistry(root / "settings.json")
         self.domains = DomainRayRegistry(root / "domains.json")
         self.resolver = EffectiveSettingsResolver()
-        self._bootstrap_if_empty()
+        self._ensure_required_active_settings()
+        self._bootstrap_domain_if_empty()
         self._migrate_external_ai_gateway_permissions()
 
     def contract(self) -> dict[str, Any]:
@@ -109,12 +110,37 @@ class ExternalCoreService:
                 continue
         return self.resolver.resolve(profiles, allow_trial=allow_trial).to_dict()
 
-    def _bootstrap_if_empty(self) -> None:
-        if not self.settings.list_revisions():
-            self._activate(self._base_settings())
-            self._activate(self._researcher_settings())
-            self._activate(self._participant_settings())
-            self._activate(self._domain_settings())
+    def _ensure_required_active_settings(self) -> None:
+        """Complete older or partially initialized settings registries safely.
+
+        Existing active profiles are preserved. A system default is created only
+        when a required layer/scope has no active current revision. Multiple
+        active revisions remain an explicit data-integrity error rather than being
+        resolved by silently choosing one.
+        """
+        required = (
+            self._base_settings(),
+            self._researcher_settings(),
+            self._participant_settings(),
+            self._domain_settings(),
+        )
+        revisions = self.settings.list_revisions()
+        for default in required:
+            active = [
+                item
+                for item in revisions
+                if item.get("layer") == default.layer.value
+                and item.get("scope_id") == default.scope_id
+                and item.get("status") == SettingsStatus.ACTIVE.value
+                and item.get("current") is True
+            ]
+            if len(active) > 1:
+                raise KeyError("EXACTLY_ONE_ACTIVE_SETTINGS_REVISION_REQUIRED")
+            if not active:
+                self._activate(default)
+                revisions = self.settings.list_revisions()
+
+    def _bootstrap_domain_if_empty(self) -> None:
         if not self.domains.list_all():
             domain = health_model_research_domain(
                 owner_id="health_model_team",

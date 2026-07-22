@@ -100,13 +100,17 @@ class RayColleagueService:
             unresolved=unresolved,
         )
 
-        if clean_message and self.external_ai_gateway is not None:
+        # Participant messages are research-session data. They must remain in
+        # the local participant-guide path and must never be forwarded as raw
+        # prompts to an external provider. The external gateway is currently
+        # an explicitly researcher-scoped information tool only.
+        if (
+            clean_message
+            and role == RayRole.RESEARCH_COLLEAGUE
+            and self.external_ai_gateway is not None
+        ):
             external_result = self.external_ai_gateway.ask(
-                account_id=(
-                    owner_id
-                    if role == RayRole.RESEARCH_COLLEAGUE
-                    else None
-                ),
+                account_id=owner_id,
                 role=role.value,
                 message=clean_message,
                 language=context.language.value,
@@ -223,7 +227,70 @@ class RayColleagueService:
                 unresolved.append(code)
                 questions.append(localized(context.language, text_key))
 
-        if context.page_id == "model_parameter_constructor":
+        if context.page_id == "evidence_review":
+            plan = selection.get("review_plan") or {}
+            readiness = selection.get("validation") or plan.get("readiness") or {}
+            eligibility = plan.get("eligibility") or {}
+            search = plan.get("search") or {}
+            screening = plan.get("screening") or {}
+            extraction = plan.get("extraction") or {}
+            appraisal = plan.get("appraisal") or {}
+            synthesis = plan.get("synthesis") or {}
+            acquisition = plan.get("evidence_acquisition_plan") or {}
+            selected_items = (
+                selection.get("selected_catalog_items")
+                or acquisition.get("selected_catalog_items")
+                or []
+            )
+            require(
+                self._has(plan, "review_question") and self._has(plan, "review_type"),
+                "evidence_review_question_scope",
+                "evidence_review_question_scope",
+            )
+            require(
+                self._has(eligibility, "inclusion_criteria") and self._has(eligibility, "exclusion_criteria"),
+                "evidence_review_eligibility",
+                "evidence_review_eligibility",
+            )
+            require(
+                bool(search.get("sources"))
+                and all(item.get("planned_query") for item in search.get("sources", []) if isinstance(item, dict)),
+                "evidence_review_search",
+                "evidence_review_search",
+            )
+            require(
+                self._has(screening, "screening_process")
+                and self._has(screening, "exclusion_reason_policy")
+                and bool(extraction.get("data_items")),
+                "evidence_review_selection_extraction",
+                "evidence_review_selection_extraction",
+            )
+            require(
+                bool(appraisal.get("approach_ids")),
+                "evidence_review_appraisal",
+                "evidence_review_appraisal",
+            )
+            require(
+                bool(selected_items),
+                "evidence_review_acquisition",
+                "evidence_review_acquisition",
+            )
+            require(
+                bool(synthesis.get("approach_ids")) and self._has(synthesis, "compatibility_rule"),
+                "evidence_review_synthesis",
+                "evidence_review_synthesis",
+            )
+            require(
+                self._has(plan, "contradictory_evidence_rule")
+                and self._has(plan, "claim_decision_rule"),
+                "evidence_review_claim_rules",
+                "evidence_review_claim_rules",
+            )
+            for issue in readiness.get("issues") or []:
+                code = f"protocol:{issue}"
+                if code not in unresolved:
+                    unresolved.append(code)
+        elif context.page_id == "model_parameter_constructor":
             require(
                 self._has(selection, "name", "preliminary_definition"),
                 "preliminary_definition",

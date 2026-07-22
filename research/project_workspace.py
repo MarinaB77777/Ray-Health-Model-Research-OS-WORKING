@@ -94,7 +94,7 @@ BLOCK_CATALOG: dict[str, dict[str, Any]] = {
         ],
         "actions": [
             _action("save_block", "save", "Сохранить введение", "Save introduction", "Guardar introducción"),
-            _action("request_scientific_review", "ray_external", "Попросить Рэя подготовить научный обзор", "Ask Ray for a scientific review", "Pedir a Ray una revisión científica", capability="external_scientific_ai"),
+            _action("request_scientific_review", "route", "Открыть научный обзор с Рэем", "Open the scientific review with Ray", "Abrir la revisión científica con Ray", route="/evidence-review"),
             _action("open_sources", "route", "Настроить научные источники", "Configure scientific sources", "Configurar fuentes científicas", route="/ray-settings"),
         ],
     },
@@ -110,7 +110,7 @@ BLOCK_CATALOG: dict[str, dict[str, Any]] = {
         ],
         "actions": [
             _action("save_block", "save", "Сохранить основания", "Save foundations", "Guardar fundamentos"),
-            _action("verify_claims", "ray_external", "Проверить утверждения по источникам", "Verify claims against sources", "Verificar afirmaciones con fuentes", capability="external_scientific_ai"),
+            _action("verify_claims", "route", "Открыть обзор и проверку доказательств", "Open evidence review and claim verification", "Abrir revisión y verificación de evidencia", route="/evidence-review"),
         ],
     },
     "hypotheses": {
@@ -240,7 +240,7 @@ BLOCK_CATALOG: dict[str, dict[str, Any]] = {
         ],
         "actions": [
             _action("save_block", "save", "Сохранить обсуждение", "Save discussion", "Guardar discusión"),
-            _action("compare_with_evidence", "ray_external", "Сопоставить с научными источниками", "Compare with scientific evidence", "Comparar con evidencia científica", capability="external_scientific_ai"),
+            _action("compare_with_evidence", "route", "Сопоставить с доказательной базой", "Compare with the evidence base", "Comparar con la base de evidencia", route="/evidence-review"),
         ],
     },
     "bibliography_citations": {
@@ -453,6 +453,8 @@ BLOCK_CATALOG: dict[str, dict[str, Any]] = {
 # text fields remain available for reasoning and interpretation; they are never
 # used as substitutes for an actual registry connection.
 ENTITY_FIELD_ACCEPTS: dict[tuple[str, str], list[str]] = {
+    ("introduction", "source_notes"): ["scientific_source", "citation_collection", "evidence_review"],
+    ("scientific_context", "evidence_links"): ["scientific_source", "citation_collection", "evidence_review"],
     ("hypotheses", "hypothesis_versions"): ["hypothesis"],
     ("variables_mechanisms", "constructs"): ["observable_marker", "model_parameter"],
     ("variables_mechanisms", "parameter_links"): ["model_parameter"],

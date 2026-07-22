@@ -100,6 +100,7 @@ def kruskal_wallis_test(
         "test_statistic_name": "Kruskal-Wallis H",
         "degrees_of_freedom": degrees_of_freedom,
         "p_value": p_value,
+        "p_value_method": "chi_square_asymptotic_with_tie_correction",
         "alpha": alpha,
         "is_statistically_significant": (
             p_value is not None

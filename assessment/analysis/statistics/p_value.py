@@ -1,4 +1,5 @@
 import math
+from itertools import permutations
 
 
 def _betacf(a: float, b: float, x: float) -> float:
@@ -148,6 +149,61 @@ def spearman_p_value(
         t_statistic=t_statistic,
         degrees_of_freedom=sample_size - 2,
     )
+
+
+def spearman_permutation_p_value(
+    *,
+    left_ranks: list[float],
+    right_ranks: list[float],
+    maximum_exact_sample_size: int = 9,
+) -> dict:
+    """Two-sided conditional permutation inference for Spearman's rho.
+
+    All permutations are enumerated for small samples, including tied ranks.
+    Larger samples use the traditional t approximation and are labelled as
+    approximate rather than exact.
+    """
+    sample_size = len(left_ranks)
+    if sample_size != len(right_ranks) or sample_size < 3:
+        return {"p_value": None, "p_value_method": "not_available"}
+
+    def correlation(x_values: list[float], y_values: tuple[float, ...] | list[float]) -> float | None:
+        mean_x = sum(x_values) / len(x_values)
+        mean_y = sum(y_values) / len(y_values)
+        numerator = sum(
+            (x - mean_x) * (y - mean_y)
+            for x, y in zip(x_values, y_values)
+        )
+        denominator_x = sum((x - mean_x) ** 2 for x in x_values)
+        denominator_y = sum((y - mean_y) ** 2 for y in y_values)
+        denominator = math.sqrt(denominator_x * denominator_y)
+        return numerator / denominator if denominator > 0 else None
+
+    observed = correlation(left_ranks, right_ranks)
+    if observed is None:
+        return {"p_value": None, "p_value_method": "not_available"}
+
+    if sample_size <= maximum_exact_sample_size:
+        extreme_count = 0
+        permutation_count = 0
+        observed_magnitude = abs(observed)
+        tolerance = 1e-12
+        for permuted in permutations(right_ranks):
+            permuted_rho = correlation(left_ranks, permuted)
+            permutation_count += 1
+            if permuted_rho is not None and abs(permuted_rho) >= observed_magnitude - tolerance:
+                extreme_count += 1
+        return {
+            "p_value": extreme_count / permutation_count,
+            "p_value_method": "exact_conditional_permutation",
+            "permutation_count": permutation_count,
+        }
+
+    return {
+        "p_value": spearman_p_value(rho=observed, sample_size=sample_size),
+        "p_value_method": "student_t_approximation",
+        "permutation_count": None,
+    }
 
 def correlation_p_value(
     *,

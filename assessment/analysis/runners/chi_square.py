@@ -19,6 +19,9 @@ def run_chi_square(
         right_question_code=right_question_code,
     )
 
+    if not contingency.get("ok"):
+        return {"method_id": "chi_square", **contingency}
+
     if (
         contingency["row_count"] < 2
         or contingency["column_count"] < 2
@@ -58,6 +61,7 @@ def run_chi_square(
         "degrees_of_freedom": result["degrees_of_freedom"],
         "alpha": alpha,
         "p_value": p_value,
+        "p_value_method": "chi_square_asymptotic",
         "is_statistically_significant": (
             p_value is not None
             and p_value < alpha

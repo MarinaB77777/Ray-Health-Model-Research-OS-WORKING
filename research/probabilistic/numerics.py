@@ -14,6 +14,8 @@ def quantile(values: list[float], probability: float) -> float:
     if not 0.0 <= probability <= 1.0:
         raise NumericalError("QUANTILE_PROBABILITY_OUT_OF_RANGE")
     ordered = sorted(float(value) for value in values)
+    if any(not isfinite(value) for value in ordered):
+        raise NumericalError("NUMERIC_VALUES_MUST_BE_FINITE")
     position = probability * (len(ordered) - 1)
     lower = int(position)
     upper = min(lower + 1, len(ordered) - 1)
@@ -24,14 +26,18 @@ def quantile(values: list[float], probability: float) -> float:
 def mean(values: list[float]) -> float:
     if not values:
         raise NumericalError("MEAN_REQUIRES_VALUES")
-    return sum(values) / len(values)
+    numeric = [float(value) for value in values]
+    if any(not isfinite(value) for value in numeric):
+        raise NumericalError("NUMERIC_VALUES_MUST_BE_FINITE")
+    return sum(numeric) / len(numeric)
 
 
 def sample_variance(values: list[float]) -> float:
     if len(values) < 2:
         raise NumericalError("VARIANCE_REQUIRES_TWO_VALUES")
-    center = mean(values)
-    return sum((value - center) ** 2 for value in values) / (len(values) - 1)
+    numeric = [float(value) for value in values]
+    center = mean(numeric)
+    return sum((value - center) ** 2 for value in numeric) / (len(numeric) - 1)
 
 
 def pearson(x: list[float], y: list[float]) -> float:

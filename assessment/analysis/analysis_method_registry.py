@@ -82,7 +82,7 @@ METHODS = [
     },
     {
         "method_id": "independent_t_test",
-        "title": "Independent samples t-test",
+        "title": "Welch independent samples t-test",
         "category": "standard",
         "purpose": "compare_numeric_outcome_between_two_independent_groups",
         "scale_patterns": [
@@ -94,14 +94,14 @@ METHODS = [
             "two_groups",
             "independent_observations",
             "minimum_group_size",
-            "approximately_normal_outcome_within_groups_or_sufficient_sample_size",
+            "normality_diagnostic_within_groups",
             "variance_assumption_checked",
             "no_extreme_outliers",
         ],
     },
     {
         "method_id": "one_way_anova",
-        "title": "One-way ANOVA",
+        "title": "Welch one-way ANOVA",
         "category": "standard",
         "purpose": "compare_numeric_outcome_between_three_or_more_independent_groups",
         "scale_patterns": [
@@ -114,7 +114,7 @@ METHODS = [
             "independent_observations",
             "minimum_group_size",
             "group_balance",
-            "approximately_normal_outcome_within_groups_or_sufficient_sample_size",
+            "normality_diagnostic_within_groups",
             "variance_assumption_checked",
             "no_extreme_outliers",
         ],

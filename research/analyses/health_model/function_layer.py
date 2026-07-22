@@ -1,3 +1,5 @@
+import math
+
 from research.analyses.health_model.function_registry import get_function
 
 FUNCTION_LAYER_SCHEMA_VERSION = "function-layer-2"
@@ -6,7 +8,10 @@ FUNCTION_LAYER_SCHEMA_VERSION = "function-layer-2"
 def _clip_0_5(value):
     if value is None:
         return None
-    return max(0, min(5, float(value)))
+    numeric = float(value)
+    if not math.isfinite(numeric):
+        return None
+    return max(0, min(5, numeric))
 
 
 def _function_strength(source_scores: list[dict]) -> float | None:

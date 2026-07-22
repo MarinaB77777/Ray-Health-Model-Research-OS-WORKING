@@ -55,6 +55,7 @@ from assessment.analysis.checks.variance import check_variance_assumption
 from assessment.analysis.statistics.parametric_groups import (
     collect_independent_groups,
 )
+from assessment.analysis.statistics.contingency import collect_contingency_table
 from assessment.measurement.scale_registry import (
     scale_matches_requirement,
 )
@@ -275,10 +276,19 @@ def check_pair_analysis(
             continue
 
         if condition == "sufficient_expected_cell_counts":
-            checks.append(check_expected_cell_counts(
-                left_values=left_values,
-                right_values=right_values,
-            ))
+            contingency = collect_contingency_table(
+                answer_records=answer_records,
+                left_question_code=left_question_code,
+                right_question_code=right_question_code,
+            )
+            if not contingency.get("ok"):
+                checks.append({
+                    "check_id": "expected_cell_counts",
+                    "status": "failed",
+                    "details": contingency,
+                })
+            else:
+                checks.append(check_expected_cell_counts(table=contingency["table"]))
             continue
 
         if condition == "two_by_two_table":
@@ -330,7 +340,7 @@ def check_pair_analysis(
                 ]))
             continue
 
-        if condition == "approximately_normal_outcome_within_groups_or_sufficient_sample_size":
+        if condition == "normality_diagnostic_within_groups":
             grouped = independent_groups()
             if not grouped.get("ok"):
                 checks.append({"check_id": condition, "status": "failed", "details": grouped})
@@ -344,9 +354,13 @@ def check_pair_analysis(
                 checks.append({"check_id": condition, "status": "failed", "details": grouped})
             else:
                 variance_check = check_variance_assumption(groups=grouped["groups"])
-                if method_id == "independent_t_test" and variance_check.get("status") == "failed":
+                if method_id in {"independent_t_test", "one_way_anova"} and variance_check.get("status") == "failed":
                     variance_check["status"] = "warning"
-                    variance_check["details"]["selected_variant"] = "welch_unequal_variance"
+                    variance_check["details"]["selected_variant"] = (
+                        "welch_unequal_variance"
+                        if method_id == "independent_t_test"
+                        else "welch_heteroscedastic"
+                    )
                 checks.append(variance_check)
             continue
 

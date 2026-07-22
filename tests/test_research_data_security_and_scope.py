@@ -2,6 +2,10 @@ import ast
 import unittest
 from pathlib import Path
 
+from research.analyses.health_model.model_parameter_pair_dataset import (
+    build_model_parameter_pair_dataset,
+)
+
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -63,6 +67,42 @@ class DataPreparationScopeTests(unittest.TestCase):
         end = source.index("function renderSelectedParameterSummary", start)
         implementation = source[start:end]
         self.assertIn("await refreshModelParameterDatasetPreview()", implementation)
+
+    def test_parameter_dataset_preserves_research_study_provenance(self):
+        records = []
+        for code, value in (("left", 1.0), ("right", 2.0)):
+            records.append({
+                "model_id": "health_model_v6_1",
+                "study_id": "study-a",
+                "study_ids": ["study-a"],
+                "parameter_code": code,
+                "parameter_value": value,
+                "parameter_value_type": "number",
+                "scale_type": "ratio",
+                "calculation_status": "calculated",
+                "calculation_run_id": "run-1",
+                "participant_id": "participant-1",
+                "observation_time": "2026-07-22T12:00:00+00:00",
+            })
+
+        dataset = build_model_parameter_pair_dataset(
+            parameter_records=records,
+            model_id="health_model_v6_1",
+            left_parameter_code="left",
+            right_parameter_code="right",
+            analysis_scope="CROSS_PARTICIPANT",
+        )
+
+        self.assertTrue(dataset["ok"])
+        self.assertEqual(dataset["study_id"], "study-a")
+        self.assertEqual(
+            {record["study_id"] for record in dataset["compatible_answer_records"]},
+            {"study-a"},
+        )
+        self.assertNotEqual(
+            dataset["compatible_answer_records"][0]["study_id"],
+            dataset["model_id"],
+        )
 
 
 if __name__ == "__main__":

@@ -193,7 +193,7 @@ pre{white-space:pre-wrap;background:#0f172a;color:#e5e7eb;padding:12px;border-ra
             <option value="all" data-i18n="allRecords">Все результаты</option>
             <option value="not_ready" data-i18n="notReady">Не готовые</option>
           </select>
-          <select id="studyFilter" onchange="renderRecords()">
+          <select id="studyFilter" onchange="handleStudyFilterChange()">
             <option value="" data-i18n="allStudies">Все исследования</option>
           </select>
         </div>
@@ -312,9 +312,16 @@ let questionnaireMultivariableOptions = null;
 let questionnaireMultivariableScope = "cross_participant";
 let questionnaireDatasetRequestVersion = 0;
 let questionnaireAnalysisRequestVersion = 0;
+let preparedDatasetPreview = null;
 const dataExplorerParams = new URLSearchParams(location.search);
 const requestedResearchProjectId = dataExplorerParams.get("project_id") || "";
+const requestedStudyId = dataExplorerParams.get("study_id") || "";
 const questionnaireResearchProjectId = requestedResearchProjectId || "health_model_pilot";
+
+function selectedStudyId(){
+  const select=document.getElementById("studyFilter");
+  return select ? select.value : requestedStudyId;
+}
 
 function questionnaireScopeFromGlobal(){
   if(globalAnalysisScope === "trajectory") return "within_participant";
@@ -346,6 +353,8 @@ function renderAnalysisScopeControls(){
     ? modelParameterPairParticipants.map(item=>item.participant_reference).filter(Boolean)
     : selectedDataSource === "questionnaire"
       ? (selectedQuestionnaireSample?.participant_references || [])
+      : selectedDataSource === "sensor" || selectedRecordFull?.record_source === "data_transformation_run"
+        ? (selectedRecordFull?.prepared_observations || []).map(record => record.subject_link_id || record.payload?.participant_reference || record.payload?.participant_id).filter(Boolean)
       : [];
   const selected = selectedDataSource === "model_parameter"
     ? modelParameterParticipantReference
@@ -374,6 +383,9 @@ async function handleGlobalAnalysisScopeChange(scope){
     renderQuestionnaireSelection();
     if(questionnaireVariableMode === "single" && scope === "sample") await loadSelectedQuestionnaireDataset();
   }
+  if(selectedRecordFull?.record_source === "data_transformation_run"){
+    await loadPreparedDatasetProjection();
+  }
 }
 
 async function handleGlobalParticipantChange(reference){
@@ -388,6 +400,11 @@ async function handleGlobalParticipantChange(reference){
     questionnaireAnalysisRequestVersion += 1;
     renderQuestionnaireSelection();
     if(questionnaireVariableMode === "single" && reference) await loadSelectedQuestionnaireDataset();
+    return;
+  }
+  if(selectedDataSource === "sensor" || selectedRecordFull?.record_source === "data_transformation_run"){
+    questionnaireParticipantReference=reference;
+    await loadPreparedDatasetProjection();
   }
 }
 
@@ -413,9 +430,7 @@ async function loadResearchRecords(){
     return;
   }
 
-  allRecords=(data.records || []).filter(record =>
-    !requestedResearchProjectId || record.study_id === requestedResearchProjectId
-  );
+  allRecords=data.records || [];
   recordsByStudy={};
 
   allRecords.forEach(record=>{
@@ -424,8 +439,8 @@ async function loadResearchRecords(){
     recordsByStudy[studyId].push(record);
   });
 
-  renderRecords();
   renderStudyFilter();
+  renderRecords();
   renderPreparationBanner();
   setStatus("Готово");
   const requestedSource = new URLSearchParams(location.search).get("source");
@@ -436,6 +451,11 @@ async function loadResearchRecords(){
 
     async function selectDataSource(source, event){
       selectedDataSource = source;
+      selectedRecordFull = null;
+      preparedDatasetPreview = null;
+      questionnaireParticipantReference = "";
+      hide("recordBox");
+      hide("preparedBox");
       renderAnalysisScopeControls();
 
       document.querySelectorAll(".source-tab").forEach(btn => {
@@ -506,8 +526,10 @@ async function loadResearchRecords(){
       setStatus(t("loading"));
       try{
         const response = await fetch(
-          "/research/questionnaire-samples?project_id=" +
-          encodeURIComponent(questionnaireResearchProjectId)
+          "/research/questionnaire-samples?" + new URLSearchParams({
+            project_id: questionnaireResearchProjectId,
+            ...(selectedStudyId() ? {study_id:selectedStudyId()} : {})
+          }).toString()
         );
         const data = await response.json();
         if(!response.ok || !data.ok){
@@ -534,6 +556,9 @@ async function loadResearchRecords(){
         document.getElementById("recordSearchInput")?.value || ""
       ).trim().toLowerCase();
       const questionnaires = questionnaireSampleCatalog.questionnaires || [];
+      const studyScopeWarning = questionnaireSampleCatalog.study_scope_required
+        ? `<div class="info-box" style="border-color:#f59e0b"><b>${escapeHtml(lang === "ru" ? "Выберите одно исследование" : lang === "es" ? "Elige un estudio" : "Select one study")}</b><p class="small">${escapeHtml(lang === "ru" ? "Результаты разных исследований не объединяются автоматически в одну выборку." : lang === "es" ? "Los resultados de distintos estudios no se combinan automáticamente en una sola muestra." : "Results from different studies are not pooled into one sample automatically.")}</p></div>`
+        : "";
       const content = questionnaires.map(bank => {
         const questions = (bank.questions || []).filter(question => {
           if(!search) return true;
@@ -573,6 +598,7 @@ async function loadResearchRecords(){
         `;
       }).join("");
       box.innerHTML = `
+        ${studyScopeWarning}
         <div class="info-box"><b>${escapeHtml(t("surveyCollections"))}</b><br><span class="small">${escapeHtml(t("chooseDataHint"))}</span></div>
         ${content || `<p class="small">${escapeHtml(t("noResults"))}</p>`}
       `;
@@ -722,7 +748,7 @@ async function loadResearchRecords(){
       if(!box) return;
       const requestVersion=++questionnaireAnalysisRequestVersion;
       box.innerHTML=`<p class="small">${escapeHtml(t("loading"))}</p>`;
-      const payload={project_id:questionnaireResearchProjectId,questionnaire_id:selectedQuestionnaireSample.questionnaire_id,question_uuids:selectedQuestionnaireAnalysisQuestionUuids,analysis_scope:questionnaireMultivariableScope,participant_reference:questionnaireMultivariableScope === "within_participant" ? questionnaireParticipantReference : null};
+      const payload={project_id:questionnaireResearchProjectId,study_id:selectedStudyId() || null,questionnaire_id:selectedQuestionnaireSample.questionnaire_id,question_uuids:selectedQuestionnaireAnalysisQuestionUuids,analysis_scope:questionnaireMultivariableScope,participant_reference:questionnaireMultivariableScope === "within_participant" ? questionnaireParticipantReference : null};
       try{
         const response=await fetch("/research/questionnaire-analysis/options",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
         const data=await response.json();
@@ -771,7 +797,7 @@ async function loadResearchRecords(){
       const box=document.getElementById("questionnaireMultivariableResultBox");
       const requestVersion=++questionnaireAnalysisRequestVersion;
       box.innerHTML=`<p class="small">${escapeHtml(t("loading"))}</p>`;
-      const payload={project_id:questionnaireResearchProjectId,questionnaire_id:selectedQuestionnaireSample.questionnaire_id,question_uuids:selectedQuestionnaireAnalysisQuestionUuids,analysis_scope:questionnaireMultivariableScope,participant_reference:questionnaireMultivariableScope === "within_participant" ? questionnaireParticipantReference : null,pair_methods:pairMethods};
+      const payload={project_id:questionnaireResearchProjectId,study_id:selectedStudyId() || null,questionnaire_id:selectedQuestionnaireSample.questionnaire_id,question_uuids:selectedQuestionnaireAnalysisQuestionUuids,analysis_scope:questionnaireMultivariableScope,participant_reference:questionnaireMultivariableScope === "within_participant" ? questionnaireParticipantReference : null,pair_methods:pairMethods};
       try{
         const response=await fetch("/research/questionnaire-analysis/run",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
         const result=await response.json();
@@ -803,6 +829,7 @@ async function loadResearchRecords(){
         question_uuid: question.question_uuid,
         scope: questionnaireDatasetScope
       });
+      if(selectedStudyId()) query.set("study_id",selectedStudyId());
       if(questionnaireDatasetScope === "within_participant"){
         query.set("participant_reference", questionnaireParticipantReference);
       }
@@ -999,11 +1026,11 @@ async function loadResearchRecords(){
 
       try {
         const response = await fetch(
-          "/research/model-parameter-measurements" +
-          "?model_id=" +
-          encodeURIComponent(
-            selectedCalculationModelId
-          )
+          "/research/model-parameter-measurements?" +
+          new URLSearchParams({
+            model_id:selectedCalculationModelId,
+            ...(selectedStudyId() ? {study_id:selectedStudyId()} : {})
+          }).toString()
         );
 
         const data = await response.json();
@@ -1570,6 +1597,7 @@ async function loadResearchRecords(){
           right_parameter_code:
             selectedRightParameterCode,
         });
+        if(selectedStudyId()) query.set("study_id",selectedStudyId());
 
         const response = await fetch(
           "/research/model-parameters/pair-options?" +
@@ -1897,6 +1925,8 @@ async function loadResearchRecords(){
         model_id:
           selectedCalculationModelId,
 
+        study_id: selectedStudyId() || null,
+
         left_parameter_code:
           selectedLeftParameterCode,
 
@@ -2220,6 +2250,8 @@ async function loadResearchRecords(){
       const requestBody = {
         model_id:
           selectedCalculationModelId,
+
+        study_id: selectedStudyId() || null,
 
         left_parameter_code:
           selectedLeftParameterCode,
@@ -2574,6 +2606,7 @@ async function loadResearchRecords(){
         left_parameter_code: selectedLeftParameterCode,
         right_parameter_code: selectedRightParameterCode,
       });
+      if(selectedStudyId()) query.set("study_id",selectedStudyId());
 
       try{
         const response = await fetch("/research/model-parameters/pair-participants?" + query.toString());
@@ -2701,6 +2734,7 @@ async function loadResearchRecords(){
 
       return {
         model_id: selectedCalculationModelId,
+        study_id: selectedStudyId() || null,
 
         left_parameter_code: leftCode,
 
@@ -3330,7 +3364,8 @@ async function loadResearchRecords(){
       }
 
       const requestBody = {
-        study_id: "health_model",
+        model_id: selectedCalculationModelId,
+        study_id: selectedStudyId() || null,
 
         left_parameter_code:
           analysis.left?.parameter_code,
@@ -3688,13 +3723,36 @@ async function loadResearchRecords(){
       const select = document.getElementById("studyFilter");
       if(!select) return;
 
-      const studyIds = Object.keys(recordsByStudy).sort();
+      const previous = select.value || requestedStudyId;
+      const studyIds = [...new Set(allRecords.flatMap(record => [record.study_id, ...(record.study_ids || [])]).filter(Boolean))].sort();
 
       select.innerHTML =
         `<option value="">${escapeHtml(t("allStudies"))}</option>` +
         studyIds.map(studyId => `
           <option value="${escapeHtml(studyId)}">${escapeHtml(studyId)}</option>
         `).join("");
+      if(previous && studyIds.includes(previous)) select.value=previous;
+    }
+
+    async function handleStudyFilterChange(){
+      selectedRecordFull=null;
+      preparedDatasetPreview=null;
+      questionnaireParticipantReference="";
+      hide("recordBox");hide("preparedBox");hide("methodBox");
+      if(selectedDataSource === "questionnaire"){
+        await loadQuestionnaireSampleCatalog();
+        return;
+      }
+      if(selectedDataSource === "model_parameter"){
+        await loadModelParameterCatalog();
+        return;
+      }
+      renderRecords();
+      document.getElementById("analysisList").innerHTML=`<p class="small">${escapeHtml(t("chooseData"))}</p>`;
+    }
+
+    function recordBelongsToStudy(record, studyId){
+      return !studyId || record.study_id === studyId || (record.study_ids || []).includes(studyId);
     }
     
     function renderPreparationBanner(){
@@ -3771,7 +3829,7 @@ async function loadResearchRecords(){
           return false;
         }
 
-        if(studyFilter && record.study_id !== studyFilter){
+        if(!recordBelongsToStudy(record,studyFilter)){
           return false;
         }
 
@@ -3885,8 +3943,23 @@ async function selectRecord(recordId){
   renderRecord();
   renderPrepared();
 
-  await loadAnalysisCatalog(selectedRecordFull.study_id);
-  renderAnalyses();
+  if(selectedRecordFull.record_source === "data_transformation_run"){
+    analysisCatalog=null;
+    renderAnalysisScopeControls();
+    await loadPreparedDatasetProjection();
+    document.getElementById("fullJson").innerText=JSON.stringify({
+      record:selectedRecordFull,
+      prepared_dataset_projection:preparedDatasetPreview
+    },null,2);
+    setStatus("Подготовленный набор выбран");
+    return;
+  }
+
+  // The typed questionnaire builder is the only route that applies the
+  // selected analysis scope. The legacy record preview must not run a
+  // study-wide analysis that silently ignores that scope.
+  analysisCatalog=null;
+  document.getElementById("analysisList").innerHTML=`<div class="info-box">${escapeHtml(lang === "ru" ? "Запись открыта для проверки. Для формирования научного набора выберите тип «Результаты опросов»: там применяются исследование, уровень анализа, единица наблюдения и правила повторных измерений." : lang === "es" ? "El registro está abierto para revisión. Selecciona «Resultados de encuestas» para formar un conjunto científico con estudio, nivel de análisis, unidad de observación y reglas de mediciones repetidas." : "The record is open for review. Select Questionnaire results to form a scientific dataset with study, analysis scope, observation unit, and repeated-measure rules.")}</div>`;
 
   document.getElementById("fullJson").innerText=JSON.stringify({
     record:selectedRecordFull,
@@ -3895,6 +3968,49 @@ async function selectRecord(recordId){
   }, null, 2);
 
   setStatus("Запись выбрана");
+}
+
+async function loadPreparedDatasetProjection(){
+  if(!selectedRecordFull || selectedRecordFull.record_source !== "data_transformation_run") return;
+  const box=document.getElementById("analysisList");
+  const query=new URLSearchParams({
+    analysis_scope:globalAnalysisScope,
+    repeated_measure_policy:modelParameterRepeatedPolicy
+  });
+  if(selectedStudyId()) query.set("study_id",selectedStudyId());
+  if(globalAnalysisScope === "trajectory" && questionnaireParticipantReference){
+    query.set("participant_reference",questionnaireParticipantReference);
+  }
+  box.innerHTML=`<p class="small">${escapeHtml(t("loading"))}</p>`;
+  try{
+    const response=await fetch(`/research/prepared-data/${encodeURIComponent(selectedRecordFull.record_id)}/dataset?${query}`);
+    preparedDatasetPreview=await response.json();
+    renderPreparedDatasetProjection();
+  }catch(error){
+    preparedDatasetPreview={ok:false,status:"dataset_projection_request_failed",error:String(error)};
+    renderPreparedDatasetProjection();
+  }
+}
+
+function renderPreparedDatasetProjection(){
+  const box=document.getElementById("analysisList");
+  const data=preparedDatasetPreview || {};
+  if(!data.ok){
+    const messages={
+      participant_reference_required:lang === "ru" ? "Выберите участника для индивидуальной траектории." : lang === "es" ? "Elige un participante para la trayectoria individual." : "Choose a participant for the individual trajectory.",
+      grouping_contract_required:lang === "ru" ? "Сравнение групп заблокировано: нужен зарегистрированный признак группы и подтверждённая независимость групп. Сенсорный сигнал сам по себе не задаёт группу." : lang === "es" ? "La comparación de grupos está bloqueada: se requiere una variable de grupo registrada y la independencia confirmada." : "Group comparison is blocked: a registered grouping variable and confirmed group independence are required.",
+      study_scope_required:lang === "ru" ? "Набор содержит данные разных исследований. Сначала выберите одно исследование; автоматическое объединение запрещено." : lang === "es" ? "El conjunto contiene varios estudios. Elige uno; no se permite combinarlos automáticamente." : "The dataset contains multiple studies. Select one; implicit pooling is not allowed."
+    };
+    box.innerHTML=`<div class="info-box" style="border-color:#f59e0b"><b>${escapeHtml(messages[data.status] || data.status || "not_ready")}</b>${data.reason ? `<p>${escapeHtml(data.reason)}</p>` : ""}</div>`;
+    return;
+  }
+  const observations=data.observations || [];
+  box.innerHTML=`
+    <div class="info-box"><b>${escapeHtml(t("analysisScope"))}:</b> ${escapeHtml(globalAnalysisScope === "trajectory" ? t("individualTrajectory") : t("sampleAnalysis"))}<br><span class="small">${escapeHtml(t("observationUnit"))}: ${escapeHtml(data.observation_unit || "—")} · ${escapeHtml(t("observations"))}: ${observations.length}</span></div>
+    ${observations.length ? `<div style="overflow:auto;max-height:520px"><table style="width:100%;border-collapse:collapse"><thead><tr><th>${escapeHtml(t("participant"))}</th><th>${escapeHtml(t("time"))} UTC</th><th>${escapeHtml(t("result"))}</th></tr></thead><tbody>${observations.map(item=>`<tr><td>${escapeHtml(item.participant_reference || "—")}</td><td>${escapeHtml(item.observation_time || "—")}</td><td>${escapeHtml(item.value ?? "—")}</td></tr>`).join("")}</tbody></table></div>` : `<p class="small">${escapeHtml(t("noResults"))}</p>`}
+    ${(data.excluded_observations || []).length ? `<div class="info-box" style="border-color:#f59e0b">${escapeHtml(t("unavailableRecords"))}: ${(data.excluded_observations || []).length}</div>` : ""}
+  `;
+  document.getElementById("fullJson").innerText=JSON.stringify({record:selectedRecordFull,prepared_dataset_projection:data},null,2);
 }
 
 function renderRecord(){

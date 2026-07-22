@@ -10,6 +10,7 @@ def collect_contingency_table(
     right_question_code: str,
 ) -> dict:
     by_subject = {}
+    duplicate_values = []
 
     for record in answer_records:
         subject_id = subject_id_from_record(record)
@@ -21,7 +22,21 @@ def collect_contingency_table(
         if question_code not in {left_question_code, right_question_code}:
             continue
 
-        by_subject.setdefault(subject_id, {})[question_code] = record.get("answer_value")
+        subject = by_subject.setdefault(subject_id, {})
+        if question_code in subject:
+            duplicate_values.append({
+                "subject_id": str(subject_id),
+                "question_code": question_code,
+            })
+            continue
+        subject[question_code] = record.get("answer_value")
+
+    if duplicate_values:
+        return {
+            "ok": False,
+            "status": "repeated_observations_require_explicit_selection",
+            "duplicates": duplicate_values,
+        }
 
     paired_values = []
     left_values = []
@@ -68,6 +83,7 @@ def collect_contingency_table(
         table[row_index[left_key]][column_index[right_key]] += 1
 
     return {
+        "ok": True,
         "row_categories": row_categories,
         "column_categories": column_categories,
         "table": table,

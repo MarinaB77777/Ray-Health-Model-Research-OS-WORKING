@@ -1,3 +1,5 @@
+import math
+
 from research.analyses.health_model.mechanism_registry import list_mechanisms
 
 MECHANISM_LAYER_SCHEMA_VERSION = "mechanism-layer-2"
@@ -6,7 +8,10 @@ MECHANISM_LAYER_SCHEMA_VERSION = "mechanism-layer-2"
 def _clip_0_5(value):
     if value is None:
         return None
-    return max(0, min(5, float(value)))
+    numeric = float(value)
+    if not math.isfinite(numeric):
+        return None
+    return max(0, min(5, numeric))
 
 
 def _mean(values):
@@ -29,7 +34,7 @@ def _status_for_score(score, threshold: float = 2.5) -> str:
     if score > 0:
         return "SUSPECTED"
 
-    return "NOT_ENOUGH_DATA"
+    return "NOT_SUPPORTED"
 
 
 def _function_strength(functions: dict, function_id: str):
@@ -71,10 +76,7 @@ def _mechanism_score(
         return None
 
     if len(required_scores) < minimum_required:
-        if not required_scores:
-            return None
-
-        return round(_mean(required_scores) * 0.6, 3)
+        return None
 
     base_score = _mean(required_scores)
 
@@ -146,6 +148,7 @@ def build_mechanism_layer(function_layer: dict) -> dict:
             "matched_required_count": len(matched_required),
             "matched_supporting_count": len(matched_supporting),
             "minimum_required": minimum_required,
+            "minimum_required_satisfied": len(matched_required) >= minimum_required,
             "first_measurement_allowed_statuses": (
                 mechanism.get("first_measurement_allowed_statuses", [])
             ),

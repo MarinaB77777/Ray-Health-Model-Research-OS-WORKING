@@ -206,6 +206,7 @@ class ModelCalculationPersistentStore:
         self,
         *,
         model_id: str | None = None,
+        study_id: str | None = None,
         parameter_id: str | None = None,
         parameter_code: str | None = None,
         calculation_run_id: str | None = None,
@@ -246,6 +247,15 @@ class ModelCalculationPersistentStore:
                     == ModelCalculationStatus.INVALIDATED
                 )
             ):
+                continue
+
+            run_study_ids = sorted({
+                str(reference.study_id)
+                for reference in run.input_references
+                if reference.study_id
+            })
+
+            if study_id is not None and study_id not in run_study_ids:
                 continue
 
             for record in (
@@ -289,6 +299,25 @@ class ModelCalculationPersistentStore:
 
                 records.append({
                     **record,
+                    # A model is not a study. Preserve the study provenance
+                    # carried by the calculation inputs instead of exposing
+                    # the old technical label "model_calculation" as though
+                    # it were a research study.
+                    "study_id": (
+                        run_study_ids[0]
+                        if len(run_study_ids) == 1
+                        else None
+                    ),
+                    "study_ids": run_study_ids,
+                    "study_scope_status": (
+                        "single_study"
+                        if len(run_study_ids) == 1
+                        else (
+                            "multiple_studies"
+                            if run_study_ids
+                            else "study_unknown"
+                        )
+                    ),
                     "calculation_run_id": (
                         run.calculation_run_id
                     ),

@@ -77,13 +77,14 @@ class ProjectWorkspaceTests(unittest.TestCase):
             project = update_project(project["id"], "account-1", {"research_question": ""})
             self.assertEqual(project["research_question"], "")
 
-    def test_catalog_is_multilingual_and_external_ai_is_not_imagined(self):
+    def test_catalog_is_multilingual_and_review_opens_real_constructor(self):
         catalog = block_catalog("ru", ["humanities_qualitative"])
         self.assertGreaterEqual(len(catalog["blocks"]), 16)
         introduction = next(item for item in catalog["blocks"] if item["code"] == "introduction")
-        review = next(item for item in introduction["actions"] if item["kind"] == "ray_external")
-        self.assertFalse(review["available"])
-        self.assertEqual(review["unavailable_reason"], "EXTERNAL_SCIENTIFIC_AI_NOT_CONNECTED_UNTIL_POST_PILOT")
+        review = next(item for item in introduction["actions"] if item["code"] == "request_scientific_review")
+        self.assertTrue(review["available"])
+        self.assertEqual(review["kind"], "route")
+        self.assertEqual(review["route"], "/evidence-review")
         sources = next(item for item in catalog["blocks"] if item["code"] == "sources_corpus")
         signals = next(item for item in catalog["blocks"] if item["code"] == "signal_processing")
         self.assertTrue(sources["recommended"])

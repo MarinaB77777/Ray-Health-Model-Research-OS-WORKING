@@ -13,6 +13,7 @@ def _collect_contingency_table_2x2(
     right_question_code: str,
 ) -> dict | None:
     by_subject = {}
+    duplicate_values = []
 
     for record in answer_records:
         subject_id = subject_id_from_record(record)
@@ -24,7 +25,21 @@ def _collect_contingency_table_2x2(
         if question_code not in {left_question_code, right_question_code}:
             continue
 
-        by_subject.setdefault(subject_id, {})[question_code] = record.get("answer_value")
+        subject = by_subject.setdefault(subject_id, {})
+        if question_code in subject:
+            duplicate_values.append({
+                "subject_id": str(subject_id),
+                "question_code": question_code,
+            })
+            continue
+        subject[question_code] = record.get("answer_value")
+
+    if duplicate_values:
+        return {
+            "ok": False,
+            "status": "repeated_observations_require_explicit_selection",
+            "duplicates": duplicate_values,
+        }
 
     observed_left_values = []
     observed_right_values = []
@@ -109,6 +124,8 @@ def run_fisher_exact(
             "status": "two_by_two_table_required",
             "method_id": "fisher_exact",
         }
+    if contingency.get("ok") is False:
+        return {"method_id": "fisher_exact", **contingency}
 
     result = fisher_exact_two_sided_p_value(
         a=contingency["a"],
@@ -135,6 +152,7 @@ def run_fisher_exact(
         "degrees_of_freedom": None,
         "alpha": alpha,
         "p_value": p_value,
+        "p_value_method": "exact_conditional_hypergeometric",
         "is_statistically_significant": (
             p_value is not None and p_value < alpha
         ),

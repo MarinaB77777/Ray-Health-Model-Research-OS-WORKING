@@ -133,6 +133,12 @@ def brown_forsythe_test(*, groups: dict[str, list[float]]) -> dict:
 
 
 def independent_samples_t_test(*, groups: dict[str, list[float]]) -> dict:
+    """Welch's independent-samples t-test.
+
+    Equal variances are not inferred from a non-significant preliminary test.
+    Brown-Forsythe is retained as a reported diagnostic, while the inferential
+    result uses the Welch-Satterthwaite standard error and degrees of freedom.
+    """
     if len(groups) != 2:
         return {"ok": False, "status": "exactly_two_groups_required"}
     names = sorted(groups)
@@ -144,28 +150,15 @@ def independent_samples_t_test(*, groups: dict[str, list[float]]) -> dict:
     mean_1, mean_2 = mean(first), mean(second)
     variance_1, variance_2 = sample_variance(first), sample_variance(second)
     variance_check = brown_forsythe_test(groups={names[0]: first, names[1]: second})
-    equal_variance_supported = bool(
-        variance_check.get("ok") and variance_check.get("p_value", 0.0) >= 0.05
-    )
-
     n1, n2 = len(first), len(second)
-    if equal_variance_supported:
-        degrees_of_freedom = float(n1 + n2 - 2)
-        pooled_variance = (
-            (n1 - 1) * variance_1 + (n2 - 1) * variance_2
-        ) / degrees_of_freedom
-        standard_error = math.sqrt(pooled_variance * (1.0 / n1 + 1.0 / n2))
-        variant = "student_equal_variance"
-    else:
-        term_1 = variance_1 / n1
-        term_2 = variance_2 / n2
-        standard_error = math.sqrt(term_1 + term_2)
-        denominator = term_1 * term_1 / (n1 - 1) + term_2 * term_2 / (n2 - 1)
-        if denominator <= 0:
-            return {"ok": False, "status": "degrees_of_freedom_undefined"}
-        degrees_of_freedom = (term_1 + term_2) ** 2 / denominator
-        pooled_variance = None
-        variant = "welch_unequal_variance"
+    term_1 = variance_1 / n1
+    term_2 = variance_2 / n2
+    standard_error = math.sqrt(term_1 + term_2)
+    denominator = term_1 * term_1 / (n1 - 1) + term_2 * term_2 / (n2 - 1)
+    if denominator <= 0:
+        return {"ok": False, "status": "degrees_of_freedom_undefined"}
+    degrees_of_freedom = (term_1 + term_2) ** 2 / denominator
+    variant = "welch_unequal_variance"
 
     if standard_error == 0:
         return {"ok": False, "status": "zero_standard_error"}
@@ -174,9 +167,8 @@ def independent_samples_t_test(*, groups: dict[str, list[float]]) -> dict:
         t_statistic=t_statistic,
         degrees_of_freedom=degrees_of_freedom,
     )
-    pooled_sd = None
-    if pooled_variance is not None and pooled_variance > 0:
-        pooled_sd = math.sqrt(pooled_variance)
+    average_variance = (variance_1 + variance_2) / 2.0
+    unpooled_sd = math.sqrt(average_variance) if average_variance > 0 else None
 
     return {
         "ok": True,
@@ -191,9 +183,65 @@ def independent_samples_t_test(*, groups: dict[str, list[float]]) -> dict:
         "test_statistic": t_statistic,
         "degrees_of_freedom": degrees_of_freedom,
         "p_value": p_value,
-        "cohens_d": (mean_1 - mean_2) / pooled_sd if pooled_sd else None,
+        "cohens_d_unpooled": (
+            (mean_1 - mean_2) / unpooled_sd if unpooled_sd else None
+        ),
         "variance_homogeneity_check": variance_check,
         "p_value_distribution": "student_t",
+    }
+
+
+def welch_one_way_anova(*, groups: dict[str, list[float]]) -> dict:
+    """Welch's heteroscedastic one-way ANOVA with an F reference law."""
+    if len(groups) < 3:
+        return {"ok": False, "status": "three_or_more_groups_required"}
+    numeric = {name: [float(value) for value in values] for name, values in groups.items()}
+    if any(len(values) < 2 for values in numeric.values()):
+        return {"ok": False, "status": "at_least_two_values_per_group_required"}
+
+    sizes = {name: len(values) for name, values in numeric.items()}
+    means = {name: mean(values) for name, values in numeric.items()}
+    variances = {name: sample_variance(values) for name, values in numeric.items()}
+    if any(value <= 0 for value in variances.values()):
+        return {"ok": False, "status": "positive_within_group_variance_required"}
+
+    weights = {name: sizes[name] / variances[name] for name in numeric}
+    weight_total = sum(weights.values())
+    weighted_mean = sum(weights[name] * means[name] for name in numeric) / weight_total
+    group_count = len(numeric)
+    numerator_df = float(group_count - 1)
+    numerator = sum(
+        weights[name] * (means[name] - weighted_mean) ** 2
+        for name in numeric
+    ) / numerator_df
+    correction_sum = sum(
+        (1.0 - weights[name] / weight_total) ** 2 / (sizes[name] - 1)
+        for name in numeric
+    )
+    correction = 1.0 + (
+        2.0 * (group_count - 2) / (group_count ** 2 - 1.0)
+    ) * correction_sum
+    denominator_df = (group_count ** 2 - 1.0) / (3.0 * correction_sum)
+    f_statistic = numerator / correction
+    p_value = f_distribution_survival_function(
+        f_statistic=f_statistic,
+        numerator_degrees_of_freedom=numerator_df,
+        denominator_degrees_of_freedom=denominator_df,
+    )
+    return {
+        "ok": True,
+        "status": "completed",
+        "variant": "welch_heteroscedastic",
+        "test_statistic": f_statistic,
+        "p_value": p_value,
+        "numerator_degrees_of_freedom": numerator_df,
+        "denominator_degrees_of_freedom": denominator_df,
+        "group_sizes": sizes,
+        "group_means": means,
+        "group_variances": variances,
+        "weighted_grand_mean": weighted_mean,
+        "welch_correction": correction,
+        "p_value_distribution": "f",
     }
 
 

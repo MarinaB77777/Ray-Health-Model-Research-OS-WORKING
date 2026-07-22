@@ -421,8 +421,13 @@ class RaySettingsRegistry:
         if target == SettingsStatus.ACTIVE:
             item["approved_by"] = actor_id
             item["activated_at"] = item["updated_at"]
-            for candidate in state["revisions"].get(settings_id, []):
-                candidate["current"] = candidate is item
+            for revisions in state["revisions"].values():
+                for candidate in revisions:
+                    if (
+                        candidate["layer"] == item["layer"]
+                        and candidate["scope_id"] == item["scope_id"]
+                    ):
+                        candidate["current"] = candidate is item
         self._validate_serialized(item)
         self._append_event(
             state,

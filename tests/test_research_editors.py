@@ -8,7 +8,12 @@ from assessment.questionnaire_components import validate_question_measurement_co
 from pilot_session.persistent_store import PilotSessionPersistentStore
 from pilot_session.schemas import ParticipantSession
 from research.editors.data_lifecycle import assess_empty_session_purge, purge_empty_session
-from research.editors.data_pipeline import profile_records, transform_records
+from research.editors.data_pipeline import (
+    apply_transformation,
+    build_transformation_run_dataset,
+    profile_records,
+    transform_records,
+)
 from research.editors.question_registry import (
     active_question_overlays,
     delete_question_draft,
@@ -180,6 +185,21 @@ class QuestionEditorRegistryTests(unittest.TestCase):
 
 
 class DataTransformationTests(unittest.TestCase):
+    def _save_sensor_run(self, records):
+        saved = apply_transformation(
+            source_type="sensor_observation",
+            records=records,
+            operations=[],
+            context={
+                "clock_source": "device_clock",
+                "synchronization_reference": "sync-1",
+            },
+            actor_id="researcher",
+            reason="scientific scope test",
+            recipe_name="scope-test",
+        )
+        return saved["run"]["run_id"]
+
     def test_question_recode_reverse_and_utc_binding(self):
         result = transform_records(
             source_type="question_answer",
@@ -239,6 +259,50 @@ class DataTransformationTests(unittest.TestCase):
         self.assertEqual([item["value"] for item in result["records"]], [-1.0, 0.0, 1.0])
         self.assertIn("LINEAR_INTERPOLATION_APPLIED", {flag["code"] for flag in result["records"][1]["quality_flags"]})
         self.assertEqual(records[1]["value"], None)
+
+    def test_sensor_sample_never_treats_repeated_observations_as_independent(self):
+        with tempfile.TemporaryDirectory() as tmp, working_directory(tmp):
+            run_id = self._save_sensor_run([
+                {"record_id": "a", "study_id": "study-a", "subject_link_id": "p1", "value": 1, "observation_time": "2026-07-17T12:00:00+00:00"},
+                {"record_id": "b", "study_id": "study-a", "subject_link_id": "p1", "value": 2, "observation_time": "2026-07-17T12:01:00+00:00"},
+            ])
+            rejected = build_transformation_run_dataset(
+                run_id=run_id, analysis_scope="sample", repeated_measure_policy="reject_repeated", study_id="study-a",
+            )
+            self.assertEqual(rejected["selected_observation_count"], 0)
+            self.assertEqual(len(rejected["excluded_observations"]), 2)
+            latest = build_transformation_run_dataset(
+                run_id=run_id, analysis_scope="sample", repeated_measure_policy="latest", study_id="study-a",
+            )
+            self.assertEqual(latest["selected_observation_count"], 1)
+            self.assertEqual(latest["observations"][0]["value"], 2.0)
+
+    def test_sensor_trajectory_is_one_participant_ordered_on_utc(self):
+        with tempfile.TemporaryDirectory() as tmp, working_directory(tmp):
+            run_id = self._save_sensor_run([
+                {"study_id": "study-a", "subject_link_id": "p1", "value": 2, "observation_time": "2026-07-17T12:01:00+00:00"},
+                {"study_id": "study-a", "subject_link_id": "p2", "value": 9, "observation_time": "2026-07-17T12:00:30+00:00"},
+                {"study_id": "study-a", "subject_link_id": "p1", "value": 1, "observation_time": "2026-07-17T12:00:00+00:00"},
+            ])
+            dataset = build_transformation_run_dataset(
+                run_id=run_id, analysis_scope="trajectory", participant_reference="p1", study_id="study-a",
+            )
+            self.assertTrue(dataset["ok"])
+            self.assertEqual([item["value"] for item in dataset["observations"]], [1.0, 2.0])
+            self.assertEqual({item["participant_reference"] for item in dataset["observations"]}, {"p1"})
+
+    def test_sensor_groups_and_cross_study_pooling_require_explicit_contracts(self):
+        with tempfile.TemporaryDirectory() as tmp, working_directory(tmp):
+            run_id = self._save_sensor_run([
+                {"study_id": "study-a", "subject_link_id": "p1", "value": 1, "observation_time": "2026-07-17T12:00:00+00:00"},
+                {"study_id": "study-b", "subject_link_id": "p2", "value": 2, "observation_time": "2026-07-17T12:00:00+00:00"},
+            ])
+            pooled = build_transformation_run_dataset(run_id=run_id, analysis_scope="sample")
+            self.assertEqual(pooled["status"], "study_scope_required")
+            grouped = build_transformation_run_dataset(
+                run_id=run_id, analysis_scope="groups", study_id="study-a",
+            )
+            self.assertEqual(grouped["status"], "grouping_contract_required")
 
 
 class EmptySessionDeletionTests(unittest.TestCase):

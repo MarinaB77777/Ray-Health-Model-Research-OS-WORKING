@@ -9,7 +9,7 @@ CHECK_REGISTRY = {
     "numeric_data": "check_numeric_data",
     "linear_relationship_plausible": "check_linear_relationship_plausible",
     "no_extreme_outliers": "check_extreme_outliers_iqr",
-    "approximately_normal_outcome_within_groups_or_sufficient_sample_size": "check_approximately_normal_or_sufficient_sample",
+    "normality_diagnostic_within_groups": "check_group_normality",
     "independent_observations": "check_independent_observations",
     "two_groups": "check_two_groups",
     "three_or_more_groups": "check_three_or_more_groups",

@@ -519,3 +519,194 @@ def apply_transformation(
 def list_recipes(source_type: str | None = None) -> list[dict]:
     recipes = _read_list(RECIPE_STORE_PATH)
     return [item for item in recipes if not source_type or item.get("source_type") == source_type]
+
+
+def list_transformation_runs(
+    *,
+    source_type: str | None = None,
+    study_id: str | None = None,
+) -> list[dict]:
+    """Return applied, immutable transformation runs in a research scope."""
+    runs = _read_list(RUN_STORE_PATH)
+    selected = []
+    for run in runs:
+        result = run.get("result") or {}
+        if source_type and result.get("source_type") != source_type:
+            continue
+        study_ids = sorted({
+            str(record.get("study_id"))
+            for record in result.get("records", [])
+            if record.get("study_id")
+        })
+        if study_id and study_id not in study_ids:
+            continue
+        selected.append({
+            **deepcopy(run),
+            "study_id": study_ids[0] if len(study_ids) == 1 else None,
+            "study_ids": study_ids,
+            "study_scope_status": (
+                "single_study" if len(study_ids) == 1
+                else "multiple_studies" if study_ids
+                else "study_unknown"
+            ),
+        })
+    return sorted(
+        selected,
+        key=lambda item: (str(item.get("applied_at") or ""), str(item.get("run_id") or "")),
+        reverse=True,
+    )
+
+
+def get_transformation_run(run_id: str) -> dict | None:
+    return next(
+        (run for run in list_transformation_runs() if run.get("run_id") == run_id),
+        None,
+    )
+
+
+def _prepared_participant_reference(record: dict) -> str | None:
+    payload = record.get("payload") or {}
+    for value in (
+        record.get("subject_link_id"),
+        payload.get("participant_reference"),
+        payload.get("participant_id"),
+    ):
+        if value:
+            return str(value)
+    return None
+
+
+def _prepared_observation_time(record: dict) -> str | None:
+    reference = record.get("time_reference") or {}
+    value = reference.get("observation_time")
+    if not value:
+        return None
+    try:
+        parsed = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+    except (TypeError, ValueError):
+        return None
+    if parsed.tzinfo is None:
+        return None
+    return parsed.astimezone(UTC).isoformat()
+
+
+def build_transformation_run_dataset(
+    *,
+    run_id: str,
+    analysis_scope: str,
+    repeated_measure_policy: str = "reject_repeated",
+    participant_reference: str | None = None,
+    study_id: str | None = None,
+) -> dict:
+    """Project prepared observations without inventing independence or groups."""
+    run = get_transformation_run(run_id)
+    if run is None:
+        return {"ok": False, "status": "transformation_run_not_found", "run_id": run_id}
+
+    scope = str(analysis_scope or "").strip().lower()
+    if scope not in {"sample", "trajectory", "groups"}:
+        return {"ok": False, "status": "unsupported_analysis_scope", "analysis_scope": scope}
+    if repeated_measure_policy not in {"reject_repeated", "latest", "earliest"}:
+        return {"ok": False, "status": "unsupported_repeated_measure_policy"}
+
+    result = run.get("result") or {}
+    candidates = []
+    excluded = []
+    for record in result.get("records", []):
+        reason = None
+        if record.get("quality_status") != "usable":
+            reason = "quality_status_not_usable"
+        elif study_id and record.get("study_id") != study_id:
+            reason = "different_study"
+        participant = _prepared_participant_reference(record)
+        observation_time = _prepared_observation_time(record)
+        projected = {
+            **deepcopy(record),
+            "participant_reference": participant,
+            "observation_time": observation_time,
+        }
+        if reason:
+            excluded.append({**projected, "exclusion_reason_code": reason})
+        else:
+            candidates.append(projected)
+
+    study_ids = sorted({str(item.get("study_id")) for item in candidates if item.get("study_id")})
+    if not study_id and len(study_ids) > 1:
+        return {
+            "ok": False,
+            "status": "study_scope_required",
+            "study_ids": study_ids,
+            "reason": "Prepared observations from different studies must not be pooled implicitly.",
+        }
+
+    if scope == "groups":
+        return {
+            "ok": False,
+            "status": "grouping_contract_required",
+            "analysis_scope": scope,
+            "reason": "A registered grouping variable and an independence contract are required before group comparison.",
+            "candidate_observation_count": len(candidates),
+        }
+
+    if scope == "trajectory":
+        if not participant_reference:
+            return {"ok": False, "status": "participant_reference_required", "analysis_scope": scope}
+        observations = []
+        for item in candidates:
+            if item.get("participant_reference") != participant_reference:
+                excluded.append({**item, "exclusion_reason_code": "different_participant"})
+            elif not item.get("observation_time"):
+                excluded.append({**item, "exclusion_reason_code": "utc_observation_time_missing"})
+            else:
+                observations.append(item)
+        observations.sort(key=lambda item: (item["observation_time"], str(item.get("record_id") or "")))
+        return {
+            "ok": True,
+            "status": "ready",
+            "analysis_scope": scope,
+            "observation_unit": "participant_observation_at_utc_time",
+            "participant_reference": participant_reference,
+            "observations": observations,
+            "excluded_observations": excluded,
+            "selected_observation_count": len(observations),
+        }
+
+    by_participant: dict[str, list[dict]] = {}
+    for item in candidates:
+        participant = item.get("participant_reference")
+        if not participant:
+            excluded.append({**item, "exclusion_reason_code": "participant_reference_missing"})
+            continue
+        by_participant.setdefault(participant, []).append(item)
+
+    observations = []
+    for participant, items in by_participant.items():
+        if len(items) == 1:
+            observations.append(items[0])
+            continue
+        if repeated_measure_policy == "reject_repeated":
+            excluded.extend({**item, "exclusion_reason_code": "participant_has_repeated_observations"} for item in items)
+            continue
+        if any(not item.get("observation_time") for item in items):
+            excluded.extend({**item, "exclusion_reason_code": "utc_observation_time_missing"} for item in items)
+            continue
+        ordered = sorted(items, key=lambda item: (item["observation_time"], str(item.get("record_id") or "")))
+        chosen = ordered[-1] if repeated_measure_policy == "latest" else ordered[0]
+        observations.append(chosen)
+        excluded.extend(
+            {**item, "exclusion_reason_code": f"not_{repeated_measure_policy}_observation"}
+            for item in ordered if item is not chosen
+        )
+
+    return {
+        "ok": True,
+        "status": "ready",
+        "analysis_scope": scope,
+        "observation_unit": "participant",
+        "repeated_measure_policy": repeated_measure_policy,
+        "study_id": study_id or (study_ids[0] if len(study_ids) == 1 else None),
+        "observations": observations,
+        "excluded_observations": excluded,
+        "selected_observation_count": len(observations),
+        "participant_count": len(by_participant),
+    }

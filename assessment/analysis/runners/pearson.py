@@ -7,8 +7,9 @@ def _paired_numeric_values(
     answer_records: list[dict],
     left_question_code: str,
     right_question_code: str,
-) -> tuple[list[float], list[float]]:
+) -> dict:
     by_subject = {}
+    duplicate_values = []
 
     for record in answer_records:
         subject_id = (
@@ -26,7 +27,21 @@ def _paired_numeric_values(
         if question_code not in {left_question_code, right_question_code}:
             continue
 
-        by_subject.setdefault(subject_id, {})[question_code] = record.get("answer_value")
+        subject = by_subject.setdefault(subject_id, {})
+        if question_code in subject:
+            duplicate_values.append({
+                "subject_id": str(subject_id),
+                "question_code": question_code,
+            })
+            continue
+        subject[question_code] = record.get("answer_value")
+
+    if duplicate_values:
+        return {
+            "ok": False,
+            "status": "repeated_observations_require_explicit_selection",
+            "duplicates": duplicate_values,
+        }
 
     left_values = []
     right_values = []
@@ -39,12 +54,16 @@ def _paired_numeric_values(
             continue
 
         try:
-            left_values.append(float(left))
-            right_values.append(float(right))
+            numeric_left = float(left)
+            numeric_right = float(right)
         except (TypeError, ValueError):
             continue
+        if not math.isfinite(numeric_left) or not math.isfinite(numeric_right):
+            continue
+        left_values.append(numeric_left)
+        right_values.append(numeric_right)
 
-    return left_values, right_values
+    return {"ok": True, "left_values": left_values, "right_values": right_values}
 
 
 def _pearson_correlation(
@@ -80,11 +99,15 @@ def run_pearson_correlation(
     right_question_code: str,
     answer_records: list[dict],
 ) -> dict:
-    left_values, right_values = _paired_numeric_values(
+    paired = _paired_numeric_values(
         answer_records=answer_records,
         left_question_code=left_question_code,
         right_question_code=right_question_code,
     )
+    if not paired.get("ok"):
+        return {"method_id": "pearson_correlation", **paired}
+    left_values = paired["left_values"]
+    right_values = paired["right_values"]
 
     sample_size = len(left_values)
 
@@ -131,6 +154,12 @@ def run_pearson_correlation(
         "degrees_of_freedom": sample_size - 2,
         "alpha": alpha,
         "p_value": p_value,
+        "p_value_method": "student_t_under_bivariate_normal_model",
+        "inferential_assumptions": [
+            "independent paired observations",
+            "linear relationship",
+            "bivariate normal sampling model for exact t inference",
+        ],
         "is_statistically_significant": (
             p_value is not None and p_value < alpha
         ),

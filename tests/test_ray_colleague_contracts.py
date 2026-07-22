@@ -158,6 +158,36 @@ class RayServiceTests(unittest.TestCase):
             )
             self.assertTrue(response["clarification_questions"])
 
+    def test_participant_message_is_never_forwarded_to_external_ai(self) -> None:
+        class ExternalGatewaySpy:
+            def __init__(self) -> None:
+                self.calls = []
+
+            def ask(self, **payload):
+                self.calls.append(payload)
+                raise AssertionError(
+                    "participant message reached the external AI gateway"
+                )
+
+        gateway = ExternalGatewaySpy()
+        service = RayColleagueService(
+            self.temp_dir.name,
+            external_ai_gateway=gateway,
+        )
+
+        response = service.respond(
+            role=RayRole.PARTICIPANT_GUIDE,
+            owner_id="participant-1",
+            session_id="session-1",
+            page_id="pilot",
+            language="ru",
+            message="Мой ответ относится к исследовательской сессии",
+        )
+
+        self.assertEqual([], gateway.calls)
+        self.assertEqual([], response["external_information"])
+        self.assertEqual("participant_guide", response["role"])
+
     def test_device_help_can_start_before_a_device_is_selected(self) -> None:
         response = self.service.respond(
             role=RayRole.RESEARCH_COLLEAGUE,

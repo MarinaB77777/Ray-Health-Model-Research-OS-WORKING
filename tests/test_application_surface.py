@@ -32,6 +32,10 @@ PROTECTED_PAGES = {
 PROTECTED_API_ROUTES = {
     ("GET", "/ray-colleague/contract"),
     ("POST", "/ray-colleague/researcher/respond"),
+    ("POST", "/ray-colleague/researcher/memory"),
+    ("GET", "/ray-colleague/researcher/memory/{researcher_id}"),
+    ("DELETE", "/ray-colleague/researcher/memory/{record_id}"),
+    ("POST", "/ray-colleague/researcher/actions/{action_id}/confirm"),
     ("POST", "/ray-colleague/participant/respond"),
     ("POST", "/ray-colleague/feedback"),
     ("GET", "/research/scientific-results/catalog"),
@@ -360,6 +364,32 @@ class ApplicationSurfaceContractTests(unittest.TestCase):
         )
         source = ast.get_source_segment(source_text, function)
         self.assertIn("_researcher_session(request, require_csrf=True)", source)
+
+    def test_researcher_ray_memory_and_actions_use_authenticated_owner(self) -> None:
+        source_text = MAIN.read_text(encoding="utf-8")
+        tree = ast.parse(source_text, filename=str(MAIN))
+        functions = {
+            node.name: ast.get_source_segment(source_text, node)
+            for node in tree.body
+            if isinstance(node, ast.FunctionDef)
+        }
+        write_functions = (
+            "create_ray_researcher_memory",
+            "delete_ray_researcher_memory",
+            "confirm_ray_researcher_action",
+        )
+        for name in write_functions:
+            with self.subTest(name=name):
+                source = functions[name]
+                self.assertIn(
+                    "_researcher_session(request, require_csrf=True)",
+                    source,
+                )
+                self.assertIn('context["account"]["account_id"]', source)
+                self.assertNotIn("owner_id=data.owner_id", source)
+        list_source = functions["list_ray_researcher_memory"]
+        self.assertIn("_researcher_session(request)", list_source)
+        self.assertIn('context["account"]["account_id"]', list_source)
 
     def test_account_opens_the_separate_modular_project_workspace(self) -> None:
         account = (STATIC / "researcher_account.html").read_text(encoding="utf-8")

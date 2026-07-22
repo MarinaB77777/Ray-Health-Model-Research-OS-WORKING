@@ -42,11 +42,11 @@ def check_group_normality(*, groups: dict[str, list[float]], alpha: float = 0.05
                 continue
             if math.isfinite(numeric):
                 values.append(numeric)
-        if len(values) < 8:
+        if len(values) < 20:
             limited_power.append(name)
             results[name] = {
                 "n": len(values),
-                "status": "insufficient_for_jarque_bera_diagnostic",
+                "status": "insufficient_for_asymptotic_jarque_bera_diagnostic",
             }
             continue
         diagnostic = _jarque_bera(values)
@@ -58,12 +58,12 @@ def check_group_normality(*, groups: dict[str, list[float]], alpha: float = 0.05
         status = "failed"
     elif not results:
         status = "blocked"
-    elif limited_power:
-        status = "warning"
     else:
-        status = "passed"
+        # Failure to reject a normality diagnostic never proves normality.
+        # The result remains a warning/caveat for parametric inference.
+        status = "warning"
     return {
-        "check_id": "approximately_normal_outcome_within_groups_or_sufficient_sample_size",
+        "check_id": "normality_diagnostic_within_groups",
         "status": status,
         "details": {
             "diagnostic": "Jarque-Bera within each group",
@@ -73,7 +73,7 @@ def check_group_normality(*, groups: dict[str, list[float]], alpha: float = 0.05
             "limited_power_group_names": limited_power,
             "note": (
                 "A non-significant diagnostic does not prove normality. "
-                "Groups with fewer than eight observations are reported as limited evidence, not treated as normal."
+                "Jarque-Bera is an asymptotic diagnostic; groups with fewer than twenty observations are reported as limited evidence, not treated as normal."
             ),
         },
     }

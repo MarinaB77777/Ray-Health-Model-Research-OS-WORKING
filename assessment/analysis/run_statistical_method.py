@@ -6,6 +6,8 @@ from assessment.analysis.runners.kruskal_wallis import (
 )
 from assessment.analysis.runners.fisher_exact import run_fisher_exact
 from assessment.analysis.runners.chi_square import run_chi_square
+from assessment.analysis.runners.independent_t import run_independent_t_test
+from assessment.analysis.runners.one_way_anova import run_one_way_anova
 
 RUNNER_MAP = {
     "spearman_correlation": run_spearman_correlation,
@@ -14,6 +16,8 @@ RUNNER_MAP = {
     "kruskal_wallis": run_kruskal_wallis,
     "fisher_exact": run_fisher_exact,
     "chi_square": run_chi_square,
+    "independent_t_test": run_independent_t_test,
+    "one_way_anova": run_one_way_anova,
 }
 
 

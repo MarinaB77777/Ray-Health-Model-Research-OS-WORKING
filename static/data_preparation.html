@@ -92,6 +92,9 @@ pre{white-space:pre-wrap;background:#0f172a;color:#e5e7eb;padding:12px;border-ra
 @media(max-width:900px){.pair-grid{grid-template-columns:1fr!important}}
 .pair-btn{border:1px solid #cbd5e1;background:#f8fafc;border-radius:12px;padding:12px;cursor:pointer;text-align:left;font-size:15px}
 .pair-btn:hover,.pair-btn.active{background:#e0ecff;border-color:#1d4ed8}
+.scope-grid{display:grid;grid-template-columns:minmax(220px,1fr) minmax(260px,2fr);gap:14px;align-items:start}
+.scope-options{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+@media(max-width:900px){.scope-grid,.scope-options{grid-template-columns:1fr}}
 .hidden{display:none}
 </style>
 </head>
@@ -100,7 +103,7 @@ pre{white-space:pre-wrap;background:#0f172a;color:#e5e7eb;padding:12px;border-ra
 <div class="page">
   <header class="topbar">
     <h2 data-i18n="appTitle">Исследовательские данные</h2>
-    <button class="navbtn" onclick="location.href='/research-workspace'" data-i18n="workspace">🏠 Рабочая среда</button>
+    <button class="navbtn" onclick="returnFromDataExplorer()" data-i18n="workspace">🏠 Рабочая среда</button>
     <button class="navbtn" onclick="loadResearchRecords()" data-i18n="refresh">🔄 Обновить</button>
     <button class="navbtn" onclick="scrollToBox('recordsBox')" data-i18n="datasets">📄 Наборы данных</button>
     <button class="navbtn" onclick="scrollToBox('preparedBox')" data-i18n="preparedOutput">🟦 Подготовленные данные</button>
@@ -114,6 +117,35 @@ pre{white-space:pre-wrap;background:#0f172a;color:#e5e7eb;padding:12px;border-ra
       <div class="card">
         <h1 data-i18n="dataTitle">Данные исследования</h1>
         <p class="small" data-i18n="dataHint">Выберите источник уже собранных или рассчитанных данных. Подключение банков вопросов выполняется в рабочей среде, а здесь анализируются результаты.</p>
+      </div>
+
+      <div class="card" id="analysisScopeBox">
+        <h2 data-i18n="analysisScope">Уровень анализа</h2>
+        <p class="small" data-i18n="analysisScopeHint">Сначала задайте структуру наблюдений. Тип данных выбирается отдельно ниже.</p>
+        <div class="scope-options">
+          <button type="button" class="pair-btn" data-analysis-scope="sample" onclick="handleGlobalAnalysisScopeChange('sample')">
+            <b data-i18n="sampleAnalysis">Анализ выборки</b><br><span class="small" data-i18n="sampleAnalysisHint">Одна независимая единица на участника или другой зарегистрированный объект.</span>
+          </button>
+          <button type="button" class="pair-btn" data-analysis-scope="trajectory" onclick="handleGlobalAnalysisScopeChange('trajectory')">
+            <b data-i18n="individualTrajectory">Индивидуальная траектория</b><br><span class="small" data-i18n="individualTrajectoryHint">Последовательные измерения одной единицы по общей оси UTC.</span>
+          </button>
+          <button type="button" class="pair-btn" data-analysis-scope="groups" onclick="handleGlobalAnalysisScopeChange('groups')">
+            <b data-i18n="groupComparison">Сравнение групп</b><br><span class="small" data-i18n="groupComparisonHint">Явная группирующая переменная и независимые группы.</span>
+          </button>
+        </div>
+        <div id="analysisScopeRepeatedBox" class="kv">
+          <b data-i18n="repeatedMeasurements">Повторные измерения</b>
+          <span><select id="modelParameterRepeatedPolicy" onchange="handleModelParameterRepeatedPolicyChange()">
+            <option value="reject_repeated" data-i18n="rejectRepeated">Не смешивать повторные измерения</option>
+            <option value="latest" data-i18n="useLatest">Использовать последнее измерение</option>
+            <option value="earliest" data-i18n="useEarliest">Использовать первое измерение</option>
+          </select></span>
+        </div>
+        <div id="analysisScopeParticipantBox" class="kv hidden">
+          <b data-i18n="participant">Участник</b>
+          <span><select id="analysisScopeParticipantSelect" onchange="handleGlobalParticipantChange(this.value)"><option value="" data-i18n="chooseParticipant">Выберите участника</option></select></span>
+        </div>
+        <div id="analysisScopeGroupHint" class="info-box hidden" data-i18n="groupingVariableRequired">Одна выбранная переменная должна иметь зарегистрированную группирующую шкалу. Методы будут доступны только для фактически независимых групп.</div>
       </div>
 
       <div class="card" id="recordsBox">
@@ -208,13 +240,20 @@ pre{white-space:pre-wrap;background:#0f172a;color:#e5e7eb;padding:12px;border-ra
 <script>
 let lang = localStorage.getItem("healthModelLanguage") || "ru";
 const UI = {
-  ru:{appTitle:"Исследовательские данные",workspace:"🏠 Рабочая среда",refresh:"🔄 Обновить",datasets:"📄 Наборы данных",preparedOutput:"🟦 Подготовленные данные",analysis:"🧪 Анализ",dataTitle:"Данные исследования",dataHint:"Выберите источник уже собранных или рассчитанных данных. Подключение банков вопросов выполняется в рабочей среде, а здесь анализируются результаты.",chooseData:"Выберите результаты",chooseDataHint:"Здесь выбираются модели, результаты опросов и результаты измерений, а не банки вопросов.",allData:"🌐 Все данные",modelParameters:"🧮 Параметры модели",surveyResults:"📋 Результаты опросов",sensorResults:"🎥 Сенсорные данные",files:"📄 Файлы",measurements:"🧪 Другие измерения",readyOnly:"Только готовые",allRecords:"Все результаты",notReady:"Не готовые",statisticalWorkspace:"Статистическое исследование",loading:"Загрузка…",ready:"Готово",surveyCollections:"Наборы результатов опросов",questionsWithData:"Ответов-переменных с данными",observations:"наблюдений",participants:"Участников",timePoints:"временных точек",noResults:"Для этого набора пока нет валидных результатов.",selectResponse:"Выберите результат ответа слева.",responseScale:"Шкала ответа",researchDataForm:"Форма исследовательских данных",crossParticipant:"Межучастниковый срез",crossParticipantHint:"По одному последнему валидному ответу каждого участника. Время отдельных ответов может различаться и показывается явно.",withinParticipant:"Один участник во времени",withinParticipantHint:"Все валидные ответы выбранного участника в порядке UTC.",multiResponse:"Сравнить 2–3 ответа",multiResponseHint:"Сформировать общий набор значений ответов и применить только совместимые статистические методы.",participant:"Участник",chooseParticipant:"Выберите участника",datasetLoading:"Загружаю выбранные ответы…",response:"Ответ",session:"Сессия",observationUnit:"Единица наблюдения",time:"время",sampleSize:"Размер выборки",selectVariables:"Выберите две или три переменные-ответа",variablesHint:"Анализируются значения ответов, а вопросы используются только как определения переменных и их шкал.",buildDataset:"Сформировать аналитический набор",compatibleMethods:"Совместимые методы для каждой пары",chooseMethod:"Выберите метод",validateRun:"Проверить применимость и выполнить анализ",holmHint:"Для трёх переменных выполняются три заранее заданных попарных анализа с поправкой Холма на множественные проверки.",result:"Результат статистического анализа",rawP:"Исходное p-значение",adjustedP:"p-значение с поправкой Холма",decision:"Решение",methodBlocked:"Расчёт остановлен проверкой научной применимости.",noCompatibleMethods:"Для сочетания этих шкал нет реализованного совместимого метода.",model:"Модель",calculatedParameters:"Рассчитанные параметры",unavailableRecords:"Недоступные результаты",datasetFormation:"Формирование набора данных",analysisScope:"Схема анализа",acrossParticipants:"Между участниками",withinOneParticipant:"Внутри одного участника",repeatedMeasurements:"Повторные измерения",rejectRepeated:"Не смешивать повторные измерения",useLatest:"Использовать последнее измерение",useEarliest:"Использовать первое измерение",parameter1:"Параметр 1",parameter2:"Параметр 2",selectParameter:"Выберите параметр",runAnalysis:"Выполнить статистический анализ"},
+  ru:{appTitle:"Исследовательские данные",workspace:"🏠 Рабочая среда",refresh:"🔄 Обновить",datasets:"📄 Наборы данных",preparedOutput:"🟦 Подготовленные данные",analysis:"🧪 Анализ",dataTitle:"Данные исследования",dataHint:"Выберите источник уже собранных или рассчитанных данных. Подключение банков вопросов выполняется в рабочей среде, а здесь анализируются результаты.",chooseData:"Выберите результаты",chooseDataHint:"Здесь выбираются модели, результаты опросов и результаты измерений, а не банки вопросов.",allData:"🌐 Все данные",modelParameters:"🧮 Параметры модели",surveyResults:"📋 Результаты опросов",sensorResults:"🎥 Сенсорные данные",files:"📄 Файлы",measurements:"🧪 Другие измерения",readyOnly:"Только готовые",allRecords:"Все результаты",notReady:"Не готовые",statisticalWorkspace:"Статистическое исследование",loading:"Загрузка…",ready:"Готово",surveyCollections:"Наборы результатов опросов",questionsWithData:"Ответов-переменных с данными",observations:"наблюдений",participants:"Участников",timePoints:"временных точек",noResults:"Для этого набора пока нет валидных результатов.",selectResponse:"Выберите результат ответа слева.",responseScale:"Шкала ответа",researchDataForm:"Форма исследовательских данных",crossParticipant:"Анализ выборки",crossParticipantHint:"По одному последнему валидному ответу каждого участника. Время отдельных ответов может различаться и показывается явно.",withinParticipant:"Один участник во времени",withinParticipantHint:"Все валидные ответы выбранного участника в порядке UTC.",multiResponse:"Сравнить 2–3 ответа",multiResponseHint:"Сформировать общий набор значений ответов и применить только совместимые статистические методы.",participant:"Участник",chooseParticipant:"Выберите участника",datasetLoading:"Загружаю выбранные ответы…",response:"Ответ",session:"Сессия",observationUnit:"Единица наблюдения",time:"время",sampleSize:"Размер выборки",selectVariables:"Выберите две или три переменные-ответа",variablesHint:"Анализируются значения ответов, а вопросы используются только как определения переменных и их шкал.",buildDataset:"Сформировать аналитический набор",compatibleMethods:"Совместимые методы для каждой пары",chooseMethod:"Выберите метод",validateRun:"Проверить применимость и выполнить анализ",holmHint:"Для трёх переменных выполняются три заранее заданных попарных анализа с поправкой Холма на множественные проверки.",result:"Результат статистического анализа",rawP:"Исходное p-значение",adjustedP:"p-значение с поправкой Холма",decision:"Решение",methodBlocked:"Расчёт остановлен проверкой научной применимости.",noCompatibleMethods:"Для сочетания этих шкал нет реализованного совместимого метода.",model:"Модель",calculatedParameters:"Рассчитанные параметры",unavailableRecords:"Недоступные результаты",datasetFormation:"Формирование набора данных",analysisScope:"Схема анализа",acrossParticipants:"Анализ выборки",withinOneParticipant:"Внутри одного участника",repeatedMeasurements:"Повторные измерения",rejectRepeated:"Не смешивать повторные измерения",useLatest:"Использовать последнее измерение",useEarliest:"Использовать первое измерение",parameter1:"Параметр 1",parameter2:"Параметр 2",selectParameter:"Выберите параметр",runAnalysis:"Выполнить статистический анализ"},
   en:{appTitle:"Research Data Explorer",workspace:"🏠 Workspace",refresh:"🔄 Refresh",datasets:"📄 Datasets",preparedOutput:"🟦 Prepared data",analysis:"🧪 Analysis",dataTitle:"Research data",dataHint:"Choose already collected or calculated data. Question banks are connected in the workspace; this page analyses results.",chooseData:"Choose results",chooseDataHint:"Choose models, survey results, and measurement results here—not question banks.",allData:"🌐 All data",modelParameters:"🧮 Model parameters",surveyResults:"📋 Survey results",sensorResults:"🎥 Sensor data",files:"📄 Files",measurements:"🧪 Other measurements",readyOnly:"Ready only",allRecords:"All results",notReady:"Not ready",statisticalWorkspace:"Statistical research",loading:"Loading…",ready:"Ready",surveyCollections:"Survey result sets",questionsWithData:"Response variables with data",observations:"observations",participants:"Participants",timePoints:"time points",noResults:"No valid results are available for this set yet.",selectResponse:"Select a response result on the left.",responseScale:"Response scale",researchDataForm:"Research dataset form",crossParticipant:"Cross-participant slice",crossParticipantHint:"One latest valid response per participant. Response times may differ and remain explicit.",withinParticipant:"One participant over time",withinParticipantHint:"All valid responses for the selected participant in UTC order.",multiResponse:"Compare 2–3 responses",multiResponseHint:"Build a joint response-value dataset and apply only compatible statistical methods.",participant:"Participant",chooseParticipant:"Choose a participant",datasetLoading:"Loading selected responses…",response:"Response",session:"Session",observationUnit:"Observation unit",time:"time",sampleSize:"Sample size",selectVariables:"Select two or three response variables",variablesHint:"Response values are analysed; questions only define variables and their scales.",buildDataset:"Build analytical dataset",compatibleMethods:"Compatible methods for each pair",chooseMethod:"Choose a method",validateRun:"Validate applicability and run analysis",holmHint:"For three variables, three pre-specified pairwise analyses are run with Holm family-wise error correction.",result:"Statistical analysis result",rawP:"Raw p-value",adjustedP:"Holm-adjusted p-value",decision:"Decision",methodBlocked:"The scientific applicability check blocked the calculation.",noCompatibleMethods:"No implemented method is compatible with these scales.",model:"Model",calculatedParameters:"Calculated parameters",unavailableRecords:"Unavailable results",datasetFormation:"Dataset formation",analysisScope:"Analysis scope",acrossParticipants:"Across participants",withinOneParticipant:"Within one participant",repeatedMeasurements:"Repeated measurements",rejectRepeated:"Reject repeated participants",useLatest:"Use latest measurement",useEarliest:"Use earliest measurement",parameter1:"Parameter 1",parameter2:"Parameter 2",selectParameter:"Select parameter",runAnalysis:"Run statistical analysis"},
   es:{appTitle:"Explorador de datos de investigación",workspace:"🏠 Espacio de trabajo",refresh:"🔄 Actualizar",datasets:"📄 Conjuntos de datos",preparedOutput:"🟦 Datos preparados",analysis:"🧪 Análisis",dataTitle:"Datos de investigación",dataHint:"Elige datos ya recopilados o calculados. Los bancos de preguntas se conectan en el espacio de trabajo; aquí se analizan resultados.",chooseData:"Elegir resultados",chooseDataHint:"Aquí se eligen modelos, resultados de encuestas y mediciones, no bancos de preguntas.",allData:"🌐 Todos los datos",modelParameters:"🧮 Parámetros del modelo",surveyResults:"📋 Resultados de encuestas",sensorResults:"🎥 Datos de sensores",files:"📄 Archivos",measurements:"🧪 Otras mediciones",readyOnly:"Solo preparados",allRecords:"Todos los resultados",notReady:"No preparados",statisticalWorkspace:"Investigación estadística",loading:"Cargando…",ready:"Listo",surveyCollections:"Conjuntos de resultados de encuestas",questionsWithData:"Variables de respuesta con datos",observations:"observaciones",participants:"Participantes",timePoints:"puntos temporales",noResults:"Todavía no hay resultados válidos para este conjunto.",selectResponse:"Elige un resultado de respuesta a la izquierda.",responseScale:"Escala de respuesta",researchDataForm:"Forma del conjunto de investigación",crossParticipant:"Corte entre participantes",crossParticipantHint:"Una última respuesta válida por participante. Los tiempos pueden diferir y se muestran explícitamente.",withinParticipant:"Un participante en el tiempo",withinParticipantHint:"Todas las respuestas válidas del participante en orden UTC.",multiResponse:"Comparar 2–3 respuestas",multiResponseHint:"Crear un conjunto conjunto de valores y aplicar solo métodos estadísticos compatibles.",participant:"Participante",chooseParticipant:"Elige un participante",datasetLoading:"Cargando respuestas seleccionadas…",response:"Respuesta",session:"Sesión",observationUnit:"Unidad de observación",time:"tiempo",sampleSize:"Tamaño de muestra",selectVariables:"Elige dos o tres variables de respuesta",variablesHint:"Se analizan los valores de respuesta; las preguntas solo definen las variables y sus escalas.",buildDataset:"Crear conjunto analítico",compatibleMethods:"Métodos compatibles para cada par",chooseMethod:"Elige un método",validateRun:"Validar aplicabilidad y ejecutar",holmHint:"Con tres variables se ejecutan tres análisis por pares preespecificados con corrección de Holm.",result:"Resultado del análisis estadístico",rawP:"Valor p original",adjustedP:"Valor p ajustado por Holm",decision:"Decisión",methodBlocked:"La comprobación científica bloqueó el cálculo.",noCompatibleMethods:"No hay un método implementado compatible con estas escalas.",model:"Modelo",calculatedParameters:"Parámetros calculados",unavailableRecords:"Resultados no disponibles",datasetFormation:"Formación del conjunto",analysisScope:"Esquema de análisis",acrossParticipants:"Entre participantes",withinOneParticipant:"Dentro de un participante",repeatedMeasurements:"Mediciones repetidas",rejectRepeated:"No mezclar mediciones repetidas",useLatest:"Usar la última medición",useEarliest:"Usar la primera medición",parameter1:"Parámetro 1",parameter2:"Parámetro 2",selectParameter:"Elige un parámetro",runAnalysis:"Ejecutar análisis estadístico"}
 };
 Object.assign(UI.ru,{searchResults:"Поиск по результатам…",allStudies:"Все исследования",preparationRequired:"⚠ Требуется подготовка",openPreparation:"Открыть подготовку",selectedResult:"Выбранный результат",deleteResult:"Удалить результат",preparedDomainOutput:"🟦 Подготовленные доменные данные",technicalData:"Технические данные",selectedMethod:"Выбранный метод",technicalObject:"Технический объект",jsonHidden:"Полный JSON скрыт, чтобы не мешать работе.",showJson:"Показать / скрыть JSON",recordsNeedPreparation:n=>`${n} результат(ов) требуют подготовки перед исследованием.`});
 Object.assign(UI.en,{searchResults:"Search results…",allStudies:"All studies",preparationRequired:"⚠ Preparation required",openPreparation:"Open preparation",selectedResult:"Selected result",deleteResult:"Delete result",preparedDomainOutput:"🟦 Prepared domain data",technicalData:"Technical data",selectedMethod:"Selected method",technicalObject:"Technical object",jsonHidden:"Full JSON is hidden to keep the workspace readable.",showJson:"Show / hide JSON",recordsNeedPreparation:n=>`${n} result(s) require preparation before research.`});
 Object.assign(UI.es,{searchResults:"Buscar resultados…",allStudies:"Todos los estudios",preparationRequired:"⚠ Se requiere preparación",openPreparation:"Abrir preparación",selectedResult:"Resultado seleccionado",deleteResult:"Eliminar resultado",preparedDomainOutput:"🟦 Datos de dominio preparados",technicalData:"Datos técnicos",selectedMethod:"Método seleccionado",technicalObject:"Objeto técnico",jsonHidden:"El JSON completo está oculto para mantener el espacio legible.",showJson:"Mostrar / ocultar JSON",recordsNeedPreparation:n=>`${n} resultado(s) requieren preparación antes de la investigación.`});
+Object.assign(UI.ru,{analysisScope:"Уровень анализа",analysisScopeHint:"Сначала задайте структуру наблюдений. Тип данных выбирается отдельно ниже.",sampleAnalysis:"Анализ выборки",sampleAnalysisHint:"Одна независимая единица на участника или другой зарегистрированный объект.",individualTrajectory:"Индивидуальная траектория",individualTrajectoryHint:"Последовательные измерения одной единицы по общей оси UTC.",groupComparison:"Сравнение групп",groupComparisonHint:"Явная группирующая переменная и независимые группы.",groupingVariableRequired:"Одна выбранная переменная должна иметь зарегистрированную группирующую шкалу. Методы будут доступны только для фактически независимых групп.",singleResponse:"Одна переменная-ответ",singleResponseHint:"Просмотр распределения или временной последовательности одной переменной.",multiVariableAnalysis:"Анализ 2–3 переменных",multiVariableAnalysisHint:"Совместный набор переменных с проверкой совместимости каждого метода."});
+Object.assign(UI.en,{analysisScope:"Analysis scope",analysisScopeHint:"Define the observation structure first. Choose the data type separately below.",sampleAnalysis:"Sample analysis",sampleAnalysisHint:"One independent unit per participant or other registered object.",individualTrajectory:"Individual trajectory",individualTrajectoryHint:"Sequential measurements of one unit on the shared UTC axis.",groupComparison:"Group comparison",groupComparisonHint:"An explicit grouping variable and independent groups.",groupingVariableRequired:"One selected variable must have a registered grouping scale. Methods are enabled only for genuinely independent groups.",singleResponse:"Single response variable",singleResponseHint:"Inspect the distribution or time sequence of one variable.",multiVariableAnalysis:"Analyse 2–3 variables",multiVariableAnalysisHint:"Build a joint dataset and validate every method against its structure."});
+Object.assign(UI.es,{analysisScope:"Alcance del análisis",analysisScopeHint:"Primero define la estructura de las observaciones. Elige el tipo de datos por separado abajo.",sampleAnalysis:"Análisis de la muestra",sampleAnalysisHint:"Una unidad independiente por participante u otro objeto registrado.",individualTrajectory:"Trayectoria individual",individualTrajectoryHint:"Mediciones secuenciales de una unidad en el eje UTC común.",groupComparison:"Comparación de grupos",groupComparisonHint:"Una variable de agrupación explícita y grupos independientes.",groupingVariableRequired:"Una variable seleccionada debe tener una escala de agrupación registrada. Los métodos solo se habilitan para grupos realmente independientes.",singleResponse:"Una variable de respuesta",singleResponseHint:"Examinar la distribución o secuencia temporal de una variable.",multiVariableAnalysis:"Analizar 2–3 variables",multiVariableAnalysisHint:"Crear un conjunto conjunto y validar cada método según su estructura."});
+UI.en.crossParticipant=UI.en.sampleAnalysis;
+UI.en.acrossParticipants=UI.en.sampleAnalysis;
+UI.es.crossParticipant=UI.es.sampleAnalysis;
+UI.es.acrossParticipants=UI.es.sampleAnalysis;
 const DYNAMIC_UI={
   loadingModels:{ru:"Загрузка моделей расчёта…",en:"Loading calculation models...",es:"Cargando modelos de cálculo…"},loadingParameters:{ru:"Загрузка доступных параметров…",en:"Loading available parameters...",es:"Cargando parámetros disponibles…"},modelUnavailable:{ru:"Анализ параметров модели недоступен.",en:"Model parameter analysis is unavailable.",es:"El análisis de parámetros no está disponible."},noActiveModels:{ru:"Нет активных моделей расчёта.",en:"No active calculation models are available.",es:"No hay modelos de cálculo activos."},selectTwo:{ru:"Выберите два разных параметра.",en:"Select two different parameters to continue.",es:"Elige dos parámetros diferentes."},selectedPair:{ru:"Выбранная пара параметров",en:"Selected Parameter Pair",es:"Par de parámetros seleccionado"},preliminaryMethod:{ru:"Предварительный выбор метода",en:"Preliminary Method Selection",es:"Selección preliminar del método"},candidateMethod:{ru:"Кандидатный метод",en:"Candidate method",es:"Método candidato"},scalePair:{ru:"Сочетание шкал",en:"Scale pair",es:"Combinación de escalas"},pairedObservations:{ru:"Парных наблюдений",en:"Paired observations",es:"Observaciones emparejadas"},methodApplicable:{ru:"Метод применим",en:"Method is applicable",es:"El método es aplicable"},methodNotApplicable:{ru:"Метод сейчас неприменим",en:"Method is not currently applicable",es:"El método no es aplicable actualmente"},blockingChecks:{ru:"Блокирующие проверки",en:"Blocking checks",es:"Comprobaciones bloqueantes"},analysisCompleted:{ru:"Анализ завершён",en:"Analysis completed",es:"Análisis completado"},testStatistic:{ru:"Статистика критерия",en:"Test statistic",es:"Estadístico de prueba"},degreesFreedom:{ru:"Степени свободы",en:"Degrees of freedom",es:"Grados de libertad"},pValue:{ru:"P-значение",en:"P-value",es:"Valor p"},significance:{ru:"Уровень значимости α",en:"Significance level α",es:"Nivel de significación α"},technicalObject:{ru:"Технический объект",en:"Technical object",es:"Objeto técnico"},showJson:{ru:"Показать / скрыть JSON",en:"Show / hide JSON",es:"Mostrar / ocultar JSON"},selectedRecord:{ru:"Выбранный результат",en:"Selected result",es:"Resultado seleccionado"},deleteRecord:{ru:"Удалить запись",en:"Delete record",es:"Eliminar registro"}
 };
@@ -227,7 +266,7 @@ Object.entries(UI).forEach(([,values])=>Object.entries(values).forEach(([key,val
 function t(key){return UI[lang]?.[key] ?? UI.en[key] ?? key}
 function translateRenderedInterface(root=document.body){const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);const nodes=[];while(walker.nextNode())nodes.push(walker.currentNode);for(const node of nodes){const raw=node.nodeValue||"",normalized=raw.trim(),key=DYNAMIC_LOOKUP.get(normalized);if(!key)continue;const value=DYNAMIC_UI[key]?.[lang] ?? UI[lang]?.[key];if(value&&value!==normalized)node.nodeValue=raw.replace(normalized,value)}}
 function applyLanguage(){document.documentElement.lang=lang;document.getElementById("languageSelect").value=lang;document.querySelectorAll("[data-i18n]").forEach(node=>{const key=node.dataset.i18n;if(UI[lang]?.[key])node.textContent=UI[lang][key]});document.querySelectorAll("[data-i18n-placeholder]").forEach(node=>{const key=node.dataset.i18nPlaceholder;if(UI[lang]?.[key])node.placeholder=UI[lang][key]});translateRenderedInterface();}
-function changeLanguage(value){lang=["ru","en","es"].includes(value)?value:"ru";localStorage.setItem("healthModelLanguage",lang);applyLanguage();renderPreparationBanner();setStatus(t("ready"));}
+function changeLanguage(value){lang=["ru","en","es"].includes(value)?value:"ru";localStorage.setItem("healthModelLanguage",lang);applyLanguage();renderAnalysisScopeControls();renderPreparationBanner();setStatus(t("ready"));}
 UI.ru.crossParticipantHint="По одному последнему валидному наблюдению каждого участника; точное UTC-время сохраняется и показывается.";
 UI.en.crossParticipantHint="One latest valid observation per participant; its exact UTC time is retained and shown.";
 UI.es.crossParticipantHint="Una última observación válida por participante; su hora UTC exacta se conserva y se muestra.";
@@ -251,23 +290,111 @@ let selectedLeftParameterCode = "";
 let selectedRightParameterCode = "";
 let modelParameterDependencyCatalog = null;
 let selectedModelParameterAnalysis = null;
-document.addEventListener("DOMContentLoaded",()=>{applyLanguage();new MutationObserver(mutations=>{for(const mutation of mutations)for(const node of mutation.addedNodes)if(node.nodeType===Node.ELEMENT_NODE)translateRenderedInterface(node)}).observe(document.body,{childList:true,subtree:true});loadResearchRecords()});
+document.addEventListener("DOMContentLoaded",()=>{applyLanguage();renderAnalysisScopeControls();new MutationObserver(mutations=>{for(const mutation of mutations)for(const node of mutation.addedNodes)if(node.nodeType===Node.ELEMENT_NODE)translateRenderedInterface(node)}).observe(document.body,{childList:true,subtree:true});loadResearchRecords()});
 let modelParameterAnalysisCheckResult = null;
 let modelParameterPairParticipants = [];
 let modelParameterAnalysisScope = "CROSS_PARTICIPANT";
+let globalAnalysisScope = "sample";
 let modelParameterRepeatedPolicy = "reject_repeated";
 let modelParameterParticipantReference = "";
 let modelParameterDatasetPreview = null;
 let modelParameterDatasetPreviewLoading = false;
+let modelParameterPairRequestVersion = 0;
+let modelParameterDatasetRequestVersion = 0;
 let questionnaireSampleCatalog = null;
 let selectedQuestionnaireSample = null;
 let questionnaireDatasetScope = "cross_participant";
+let questionnaireVariableMode = "single";
 let questionnaireParticipantReference = "";
 let selectedQuestionnaireDataset = null;
 let selectedQuestionnaireAnalysisQuestionUuids = [];
 let questionnaireMultivariableOptions = null;
 let questionnaireMultivariableScope = "cross_participant";
-const questionnaireResearchProjectId = "health_model_pilot";
+let questionnaireDatasetRequestVersion = 0;
+let questionnaireAnalysisRequestVersion = 0;
+const dataExplorerParams = new URLSearchParams(location.search);
+const requestedResearchProjectId = dataExplorerParams.get("project_id") || "";
+const questionnaireResearchProjectId = requestedResearchProjectId || "health_model_pilot";
+
+function questionnaireScopeFromGlobal(){
+  if(globalAnalysisScope === "trajectory") return "within_participant";
+  if(globalAnalysisScope === "groups") return "group_comparison";
+  return "cross_participant";
+}
+
+function modelScopeFromGlobal(){
+  if(globalAnalysisScope === "trajectory") return "WITHIN_PARTICIPANT";
+  if(globalAnalysisScope === "groups") return "GROUP_COMPARISON";
+  return "CROSS_PARTICIPANT";
+}
+
+function renderAnalysisScopeControls(){
+  document.querySelectorAll("[data-analysis-scope]").forEach(button => {
+    button.classList.toggle("active", button.dataset.analysisScope === globalAnalysisScope);
+  });
+  const repeatedBox=document.getElementById("analysisScopeRepeatedBox");
+  const participantBox=document.getElementById("analysisScopeParticipantBox");
+  const groupHint=document.getElementById("analysisScopeGroupHint");
+  repeatedBox?.classList.toggle("hidden", globalAnalysisScope === "trajectory");
+  participantBox?.classList.toggle("hidden", globalAnalysisScope !== "trajectory");
+  groupHint?.classList.toggle("hidden", globalAnalysisScope !== "groups");
+  const policy=document.getElementById("modelParameterRepeatedPolicy");
+  if(policy) policy.value=modelParameterRepeatedPolicy;
+  const participantSelect=document.getElementById("analysisScopeParticipantSelect");
+  if(!participantSelect) return;
+  const references = selectedDataSource === "model_parameter"
+    ? modelParameterPairParticipants.map(item=>item.participant_reference).filter(Boolean)
+    : selectedDataSource === "questionnaire"
+      ? (selectedQuestionnaireSample?.participant_references || [])
+      : [];
+  const selected = selectedDataSource === "model_parameter"
+    ? modelParameterParticipantReference
+    : questionnaireParticipantReference;
+  participantSelect.innerHTML=`<option value="">${escapeHtml(t("chooseParticipant"))}</option>${[...new Set(references)].sort().map(reference=>`<option value="${escapeHtml(reference)}" ${reference === selected ? "selected" : ""}>${escapeHtml(reference)}</option>`).join("")}`;
+}
+
+async function handleGlobalAnalysisScopeChange(scope){
+  if(!["sample","trajectory","groups"].includes(scope)) return;
+  globalAnalysisScope=scope;
+  modelParameterAnalysisScope=modelScopeFromGlobal();
+  questionnaireDatasetScope=questionnaireScopeFromGlobal();
+  questionnaireMultivariableScope=questionnaireScopeFromGlobal();
+  modelParameterParticipantReference="";
+  questionnaireParticipantReference="";
+  modelParameterDatasetRequestVersion += 1;
+  questionnaireDatasetRequestVersion += 1;
+  questionnaireAnalysisRequestVersion += 1;
+  if(scope === "groups") questionnaireVariableMode="multivariable";
+  renderAnalysisScopeControls();
+  if(selectedDataSource === "model_parameter" && selectedLeftParameterCode && selectedRightParameterCode){
+    if(scope === "trajectory") await loadModelParameterPairParticipants();
+    await refreshModelParameterDatasetPreview();
+  }
+  if(selectedDataSource === "questionnaire" && selectedQuestionnaireSample){
+    renderQuestionnaireSelection();
+    if(questionnaireVariableMode === "single" && scope === "sample") await loadSelectedQuestionnaireDataset();
+  }
+}
+
+async function handleGlobalParticipantChange(reference){
+  if(selectedDataSource === "model_parameter"){
+    modelParameterParticipantReference=reference;
+    await handleModelParameterParticipantChange();
+    return;
+  }
+  if(selectedDataSource === "questionnaire"){
+    questionnaireParticipantReference=reference;
+    questionnaireDatasetRequestVersion += 1;
+    questionnaireAnalysisRequestVersion += 1;
+    renderQuestionnaireSelection();
+    if(questionnaireVariableMode === "single" && reference) await loadSelectedQuestionnaireDataset();
+  }
+}
+
+function returnFromDataExplorer(){
+  const requested = dataExplorerParams.get("return_to") || "/researcher-account";
+  location.href = requested.startsWith("/") && !requested.startsWith("//") ? requested : "/researcher-account";
+}
 
 function setStatus(text){document.getElementById("statusText").innerText=text;}
 
@@ -286,7 +413,9 @@ async function loadResearchRecords(){
     return;
   }
 
-  allRecords=data.records || [];
+  allRecords=(data.records || []).filter(record =>
+    !requestedResearchProjectId || record.study_id === requestedResearchProjectId
+  );
   recordsByStudy={};
 
   allRecords.forEach(record=>{
@@ -307,6 +436,7 @@ async function loadResearchRecords(){
 
     async function selectDataSource(source, event){
       selectedDataSource = source;
+      renderAnalysisScopeControls();
 
       document.querySelectorAll(".source-tab").forEach(btn => {
         btn.classList.remove("active");
@@ -327,6 +457,8 @@ async function loadResearchRecords(){
       analysisCheckResult = null;
       statisticalRunResult = null;
       selectedModelParameterAnalysis = null;
+      modelParameterPairRequestVersion += 1;
+      modelParameterDatasetRequestVersion += 1;
 
       if(source === "model_parameter"){
         await loadModelParameterCatalog();
@@ -426,7 +558,7 @@ async function loadResearchRecords(){
               selectedQuestionnaireSample?.question_uuid === question.question_uuid &&
               selectedQuestionnaireSample?.questionnaire_id === bank.questionnaire_id
                 ? "active" : ""
-            }" onclick="selectQuestionnaireSample('${bank.questionnaire_id}','${question.question_uuid}')">
+            }" data-questionnaire-id="${escapeHtml(bank.questionnaire_id)}" data-question-uuid="${escapeHtml(question.question_uuid)}" onclick="selectQuestionnaireSample(this.dataset.questionnaireId,this.dataset.questionUuid)">
               <b>${escapeHtml(question.question_code || question.question_uuid)}</b>
               <span class="badge">${escapeHtml(question.scale_type || "scale unbound")}</span><br>
               <span>${escapeHtml(question.prompt || question.question_code || question.question_uuid)}</span><br>
@@ -460,11 +592,15 @@ async function loadResearchRecords(){
         ...question,
         questionnaire_id: questionnaireId
       };
-      questionnaireDatasetScope = "cross_participant";
+      questionnaireDatasetScope = questionnaireScopeFromGlobal();
+      questionnaireMultivariableScope = questionnaireScopeFromGlobal();
       questionnaireParticipantReference = "";
       selectedQuestionnaireDataset = null;
       selectedQuestionnaireAnalysisQuestionUuids = [String(question.question_uuid)];
       questionnaireMultivariableOptions = null;
+      questionnaireDatasetRequestVersion += 1;
+      questionnaireAnalysisRequestVersion += 1;
+      renderAnalysisScopeControls();
       renderQuestionnaireSampleList();
       renderQuestionnaireSelection();
       await loadSelectedQuestionnaireDataset();
@@ -485,42 +621,39 @@ async function loadResearchRecords(){
         <div class="kv"><b>${escapeHtml(t("participants"))}</b><span>${question.unique_participant_count ?? 0}</span></div>
         <div class="kv"><b>${escapeHtml(t("timePoints"))}</b><span>${question.observation_count ?? 0}</span></div>
         <h3>${escapeHtml(t("researchDataForm"))}</h3>
-        <div class="pair-grid" style="grid-template-columns:repeat(3,1fr)">
-          <button class="pair-btn ${questionnaireDatasetScope === "cross_participant" ? "active" : ""}" onclick="setQuestionnaireDatasetScope('cross_participant')">
-            <b>${escapeHtml(t("crossParticipant"))}</b><br><span class="small">${escapeHtml(t("crossParticipantHint"))}</span>
+        <div class="pair-grid">
+          <button class="pair-btn ${questionnaireVariableMode === "single" ? "active" : ""}" onclick="setQuestionnaireVariableMode('single')" ${globalAnalysisScope === "groups" ? "disabled" : ""}>
+            <b>${escapeHtml(t("singleResponse"))}</b><br><span class="small">${escapeHtml(t("singleResponseHint"))}</span>
           </button>
-          <button class="pair-btn ${questionnaireDatasetScope === "within_participant" ? "active" : ""}" onclick="setQuestionnaireDatasetScope('within_participant')">
-            <b>${escapeHtml(t("withinParticipant"))}</b><br><span class="small">${escapeHtml(t("withinParticipantHint"))}</span>
-          </button>
-          <button class="pair-btn ${questionnaireDatasetScope === "multivariable" ? "active" : ""}" onclick="setQuestionnaireDatasetScope('multivariable')">
-            <b>${escapeHtml(t("multiResponse"))}</b><br><span class="small">${escapeHtml(t("multiResponseHint"))}</span>
+          <button class="pair-btn ${questionnaireVariableMode === "multivariable" ? "active" : ""}" onclick="setQuestionnaireVariableMode('multivariable')">
+            <b>${escapeHtml(t("multiVariableAnalysis"))}</b><br><span class="small">${escapeHtml(t("multiVariableAnalysisHint"))}</span>
           </button>
         </div>
-        <div id="questionnaireParticipantChooser" class="${questionnaireDatasetScope === "within_participant" ? "" : "hidden"}">
-          <label><b>${escapeHtml(t("participant"))}</b></label>
-          <select style="width:100%;padding:10px;margin:8px 0" onchange="selectQuestionnaireParticipant(this.value)">
-            <option value="">${escapeHtml(t("chooseParticipant"))}</option>
-            ${participants.map(reference => `
-              <option value="${escapeHtml(reference)}" ${reference === questionnaireParticipantReference ? "selected" : ""}>${escapeHtml(reference)}</option>
-            `).join("")}
-          </select>
-        </div>
-        <div id="questionnaireDatasetBox">${questionnaireDatasetScope === "multivariable" ? renderQuestionnaireMultivariableChooser() : `<p class="small">${escapeHtml(t("datasetLoading"))}</p>`}</div>
+        <div id="questionnaireDatasetBox">${questionnaireVariableMode === "multivariable"
+          ? renderQuestionnaireMultivariableChooser()
+          : questionnaireDatasetScope === "within_participant" && !questionnaireParticipantReference
+            ? `<div class="info-box">${escapeHtml(t("chooseParticipant"))}</div>`
+            : `<p class="small">${escapeHtml(t("datasetLoading"))}</p>`}</div>
       `;
+      renderAnalysisScopeControls();
     }
 
-    async function setQuestionnaireDatasetScope(scope){
-      questionnaireDatasetScope = scope;
+    async function setQuestionnaireVariableMode(mode){
+      if(!["single","multivariable"].includes(mode)) return;
+      if(globalAnalysisScope === "groups" && mode === "single") return;
+      questionnaireVariableMode = mode;
       selectedQuestionnaireDataset = null;
       questionnaireMultivariableOptions = null;
-      if(scope === "cross_participant") questionnaireParticipantReference = "";
+      questionnaireDatasetRequestVersion += 1;
+      questionnaireAnalysisRequestVersion += 1;
       renderQuestionnaireSelection();
-      if(scope === "cross_participant") await loadSelectedQuestionnaireDataset();
+      if(mode === "single" && questionnaireDatasetScope === "cross_participant") await loadSelectedQuestionnaireDataset();
     }
 
     async function selectQuestionnaireParticipant(reference){
       questionnaireParticipantReference = reference;
       selectedQuestionnaireDataset = null;
+      questionnaireDatasetRequestVersion += 1;
       if(reference) await loadSelectedQuestionnaireDataset();
     }
 
@@ -538,13 +671,7 @@ async function loadResearchRecords(){
           <b>${escapeHtml(t("selectVariables"))}</b><br>
           <span class="small">${escapeHtml(t("variablesHint"))}</span>
         </div>
-        <div class="kv"><b>${escapeHtml(t("analysisScope"))}</b><span>
-          <select onchange="setQuestionnaireMultivariableScope(this.value)">
-            <option value="cross_participant" ${questionnaireMultivariableScope === "cross_participant" ? "selected" : ""}>${escapeHtml(t("crossParticipant"))}</option>
-            <option value="within_participant" ${questionnaireMultivariableScope === "within_participant" ? "selected" : ""}>${escapeHtml(t("withinParticipant"))}</option>
-          </select>
-        </span></div>
-        ${questionnaireMultivariableScope === "within_participant" ? `<div class="kv"><b>${escapeHtml(t("participant"))}</b><span><select onchange="setQuestionnaireMultivariableParticipant(this.value)"><option value="">${escapeHtml(t("chooseParticipant"))}</option>${participantReferences.map(reference=>`<option value="${escapeHtml(reference)}" ${reference === questionnaireParticipantReference ? "selected" : ""}>${escapeHtml(reference)}</option>`).join("")}</select></span></div>` : ""}
+        <div class="info-box"><b>${escapeHtml(t("analysisScope"))}:</b> ${escapeHtml(globalAnalysisScope === "trajectory" ? t("individualTrajectory") : globalAnalysisScope === "groups" ? t("groupComparison") : t("sampleAnalysis"))}</div>
         <div class="method-card">
           ${questions.map(question=>{
             const uuid=String(question.question_uuid || "");
@@ -560,6 +687,7 @@ async function loadResearchRecords(){
     function setQuestionnaireMultivariableScope(scope){
       questionnaireMultivariableScope=scope;
       questionnaireMultivariableOptions=null;
+      questionnaireAnalysisRequestVersion += 1;
       if(scope === "cross_participant") questionnaireParticipantReference="";
       renderQuestionnaireSelection();
     }
@@ -567,6 +695,7 @@ async function loadResearchRecords(){
     function setQuestionnaireMultivariableParticipant(reference){
       questionnaireParticipantReference=reference;
       questionnaireMultivariableOptions=null;
+      questionnaireAnalysisRequestVersion += 1;
     }
 
     function toggleQuestionnaireAnalysisVariable(questionUuid,checked){
@@ -579,6 +708,7 @@ async function loadResearchRecords(){
       if(checked) current.add(String(questionUuid)); else current.delete(String(questionUuid));
       selectedQuestionnaireAnalysisQuestionUuids=[...current];
       questionnaireMultivariableOptions=null;
+      questionnaireAnalysisRequestVersion += 1;
       renderQuestionnaireSelection();
     }
 
@@ -590,16 +720,19 @@ async function loadResearchRecords(){
       }
       const box=document.getElementById("questionnaireMultivariableOptionsBox");
       if(!box) return;
+      const requestVersion=++questionnaireAnalysisRequestVersion;
       box.innerHTML=`<p class="small">${escapeHtml(t("loading"))}</p>`;
       const payload={project_id:questionnaireResearchProjectId,questionnaire_id:selectedQuestionnaireSample.questionnaire_id,question_uuids:selectedQuestionnaireAnalysisQuestionUuids,analysis_scope:questionnaireMultivariableScope,participant_reference:questionnaireMultivariableScope === "within_participant" ? questionnaireParticipantReference : null};
       try{
         const response=await fetch("/research/questionnaire-analysis/options",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
         const data=await response.json();
+        if(requestVersion !== questionnaireAnalysisRequestVersion) return;
         questionnaireMultivariableOptions=data;
         renderQuestionnaireMultivariableOptions();
         document.getElementById("fullJson").innerText=JSON.stringify(data,null,2);
         setStatus(data.ok ? t("ready") : data.status || "not_ready");
       }catch(error){
+        if(requestVersion !== questionnaireAnalysisRequestVersion) return;
         box.innerHTML=`<div class="info-box" style="border-color:#dc2626">${escapeHtml(String(error))}</div>`;
         setStatus(String(error));
       }
@@ -636,11 +769,13 @@ async function loadResearchRecords(){
         return;
       }
       const box=document.getElementById("questionnaireMultivariableResultBox");
+      const requestVersion=++questionnaireAnalysisRequestVersion;
       box.innerHTML=`<p class="small">${escapeHtml(t("loading"))}</p>`;
       const payload={project_id:questionnaireResearchProjectId,questionnaire_id:selectedQuestionnaireSample.questionnaire_id,question_uuids:selectedQuestionnaireAnalysisQuestionUuids,analysis_scope:questionnaireMultivariableScope,participant_reference:questionnaireMultivariableScope === "within_participant" ? questionnaireParticipantReference : null,pair_methods:pairMethods};
       try{
         const response=await fetch("/research/questionnaire-analysis/run",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
         const result=await response.json();
+        if(requestVersion !== questionnaireAnalysisRequestVersion) return;
         if(!response.ok || !result.ok){
           box.innerHTML=`<div class="info-box" style="border-color:#f59e0b"><b>${escapeHtml(t("methodBlocked"))}</b><pre>${escapeHtml(JSON.stringify(result.blocking_checks || result,null,2))}</pre></div>`;
         }else{
@@ -648,7 +783,7 @@ async function loadResearchRecords(){
         }
         document.getElementById("fullJson").innerText=JSON.stringify(result,null,2);
         setStatus(result.status || (result.ok ? t("ready") : "blocked"));
-      }catch(error){box.innerHTML=`<div class="info-box" style="border-color:#dc2626">${escapeHtml(String(error))}</div>`;setStatus(String(error));}
+      }catch(error){if(requestVersion !== questionnaireAnalysisRequestVersion) return;box.innerHTML=`<div class="info-box" style="border-color:#dc2626">${escapeHtml(String(error))}</div>`;setStatus(String(error));}
     }
 
     async function loadSelectedQuestionnaireDataset(){
@@ -659,6 +794,7 @@ async function loadResearchRecords(){
       }
       const box = document.getElementById("questionnaireDatasetBox");
       if(!box) return;
+      const requestVersion = ++questionnaireDatasetRequestVersion;
       box.innerHTML = `<p class="small">Загружаю выбранные ответы…</p>`;
       setStatus("Загрузка выбранного набора данных…");
       const query = new URLSearchParams({
@@ -673,6 +809,7 @@ async function loadResearchRecords(){
       try{
         const response = await fetch("/research/questionnaire-dataset?" + query.toString());
         const data = await response.json();
+        if(requestVersion !== questionnaireDatasetRequestVersion) return;
         if(!response.ok || !data.ok){
           throw new Error(JSON.stringify(data.detail || data));
         }
@@ -681,6 +818,7 @@ async function loadResearchRecords(){
         document.getElementById("fullJson").innerText = JSON.stringify(data, null, 2);
         setStatus(`Загружено наблюдений: ${data.selected_observation_count ?? 0}`);
       }catch(error){
+        if(requestVersion !== questionnaireDatasetRequestVersion) return;
         box.innerHTML = `<div class="info-box" style="border-color:#dc2626">Ошибка загрузки выбранных данных: ${escapeHtml(error.message)}</div>`;
         setStatus("Ошибка загрузки выбранных данных");
       }
@@ -753,6 +891,8 @@ async function loadResearchRecords(){
       selectedMethod = null;
       analysisCheckResult = null;
       statisticalRunResult = null;
+      modelParameterPairRequestVersion += 1;
+      modelParameterDatasetRequestVersion += 1;
 
       try {
         const modelsResponse = await fetch(
@@ -1147,95 +1287,20 @@ async function loadResearchRecords(){
 
         <h3>${escapeHtml(t("calculatedParameters"))}</h3>
         ${visibleParameters.length ? visibleParameters.map(parameter=>`
-          <div class="record-btn" style="cursor:default">
+          <button type="button" class="record-btn ${
+            parameter.parameter_code === selectedLeftParameterCode ||
+            parameter.parameter_code === selectedRightParameterCode
+              ? "active" : ""
+          }" data-parameter-code="${escapeHtml(parameter.parameter_code || "")}" onclick="selectModelParameterFromCatalog(this.dataset.parameterCode)">
             <b>${escapeHtml(parameter.title?.[lang] || parameter.title?.en || parameter.title?.ru || parameter.parameter_code)}</b>
             <span class="badge">${escapeHtml(parameter.scale_type || "scale unbound")}</span><br>
             <span class="small">${escapeHtml(parameter.parameter_code || "—")} · ${escapeHtml(t("observations"))}: ${escapeHtml(parameter.measurement_count ?? parameter.measurements?.length ?? 0)}</span>
-          </div>
+            ${parameter.parameter_code === selectedLeftParameterCode ? `<br><span class="badge">${escapeHtml(t("parameter1"))}</span>` : ""}
+            ${parameter.parameter_code === selectedRightParameterCode ? `<br><span class="badge">${escapeHtml(t("parameter2"))}</span>` : ""}
+          </button>
         `).join("") : `<p class="small">${escapeHtml(t("noResults"))}</p>`}
 
         <h3>${escapeHtml(t("datasetFormation"))}</h3>
-
-        <div class="kv">
-          <b>${escapeHtml(t("analysisScope"))}</b>
-
-          <span>
-            <select
-              id="modelParameterAnalysisScope"
-              onchange="handleModelParameterScopeChange()"
-            >
-              <option value="CROSS_PARTICIPANT">
-                ${escapeHtml(t("acrossParticipants"))}
-              </option>
-
-              <option value="WITHIN_PARTICIPANT">
-                ${escapeHtml(t("withinOneParticipant"))}
-              </option>
-            </select>
-          </span>
-        </div>
-
-        <div id="crossParticipantPolicyBox">
-          <div class="kv">
-            <b>${escapeHtml(t("repeatedMeasurements"))}</b>
-
-            <span>
-              <select
-                id="modelParameterRepeatedPolicy"
-                onchange="handleModelParameterRepeatedPolicyChange()"
-              >
-                <option value="reject_repeated">
-                  ${escapeHtml(t("rejectRepeated"))}
-                </option>
-
-                <option value="latest">
-                  ${escapeHtml(t("useLatest"))}
-                </option>
-
-                <option value="earliest">
-                  ${escapeHtml(t("useEarliest"))}
-                </option>
-              </select>
-            </span>
-          </div>
-        </div>
-
-        <div
-          id="withinParticipantSelectionBox"
-          class="hidden"
-        >
-          <div class="kv">
-            <b>${escapeHtml(t("participant"))}</b>
-
-            <span>
-              <select
-                id="modelParameterParticipantSelect"
-                onchange="handleModelParameterParticipantChange()"
-              >
-                <option value="">
-                  ${escapeHtml(t("chooseParticipant"))}
-                </option>
-
-                ${availableModelParticipants
-                  .map(participant => `
-                    <option
-                      value="${escapeHtml(
-                        participant
-                          .participant_reference
-                      )}"
-                    >
-                      ${escapeHtml(
-                        participant
-                          .participant_reference
-                      )}
-                    </option>
-                  `)
-                  .join("")}
-              </select>
-            </span>
-          </div>
-        </div>
-
         <div id="sampleFormationSummary">
           <div class="info-box">
             Select two parameters on the right
@@ -1244,24 +1309,26 @@ async function loadResearchRecords(){
         </div>
       `;
 
-      const scopeSelect =
-        document.getElementById(
-          "modelParameterAnalysisScope"
-        );
+      renderAnalysisScopeControls();
+    }
 
-      const policySelect =
-        document.getElementById(
-          "modelParameterRepeatedPolicy"
-        );
+    async function selectModelParameterFromCatalog(parameterCode){
+      if(!modelParameterCatalog.some(parameter => parameter.parameter_code === parameterCode)) return;
 
-      if(scopeSelect){
-        scopeSelect.value =
-          modelParameterAnalysisScope;
+      if(!selectedLeftParameterCode || selectedRightParameterCode || selectedLeftParameterCode === parameterCode){
+        selectedLeftParameterCode = parameterCode;
+        selectedRightParameterCode = "";
+      } else {
+        selectedRightParameterCode = parameterCode;
       }
 
-      if(policySelect){
-        policySelect.value =
-          modelParameterRepeatedPolicy;
+      modelParameterDatasetPreview = null;
+      modelParameterPairParticipants = [];
+      renderModelSourceConfiguration();
+      renderModelParameterAnalysisWorkspace();
+
+      if(selectedRightParameterCode){
+        await updateSelectedModelParameterPair({useCurrentSelection:true});
       }
     }
     
@@ -1272,8 +1339,7 @@ async function loadResearchRecords(){
         )?.value || "";
 
       modelParameterParticipantReference = "";
-      modelParameterAnalysisScope =
-        "CROSS_PARTICIPANT";
+      modelParameterAnalysisScope = modelScopeFromGlobal();
 
       modelParameterRepeatedPolicy =
         "reject_repeated";
@@ -1308,7 +1374,7 @@ async function loadResearchRecords(){
         return;
       }
 
-      const parameterOptions =
+      const parameterOptions = selectedCode =>
         modelParameterCatalog
           .slice()
           .sort((left, right) =>
@@ -1331,6 +1397,7 @@ async function loadResearchRecords(){
                 value="${escapeHtml(
                   parameter.parameter_code || ""
                 )}"
+                ${parameter.parameter_code === selectedCode ? "selected" : ""}
               >
                 ${escapeHtml(title)}
                 — ${escapeHtml(
@@ -1362,7 +1429,7 @@ async function loadResearchRecords(){
                 ${escapeHtml(t("selectParameter"))}
               </option>
 
-              ${parameterOptions}
+              ${parameterOptions(selectedLeftParameterCode)}
             </select>
           </span>
         </div>
@@ -1379,7 +1446,7 @@ async function loadResearchRecords(){
                 ${escapeHtml(t("selectParameter"))}
               </option>
 
-              ${parameterOptions}
+              ${parameterOptions(selectedRightParameterCode)}
             </select>
           </span>
         </div>
@@ -1394,16 +1461,24 @@ async function loadResearchRecords(){
     }
     
 
-    async function updateSelectedModelParameterPair(){
-      selectedLeftParameterCode =
-        document.getElementById(
-          "analysisParameter1"
-        )?.value || "";
+    async function updateSelectedModelParameterPair({useCurrentSelection=false} = {}){
+      if(!useCurrentSelection){
+        selectedLeftParameterCode =
+          document.getElementById(
+            "analysisParameter1"
+          )?.value || "";
 
-      selectedRightParameterCode =
-        document.getElementById(
-          "analysisParameter2"
-        )?.value || "";
+        selectedRightParameterCode =
+          document.getElementById(
+            "analysisParameter2"
+          )?.value || "";
+      }
+
+      const requestVersion = ++modelParameterPairRequestVersion;
+      modelParameterDatasetRequestVersion += 1;
+      modelParameterDatasetPreview = null;
+      modelParameterPairParticipants = [];
+      renderModelSourceConfiguration();
 
       const box = document.getElementById(
         "selectedModelParameterPairBox"
@@ -1502,6 +1577,8 @@ async function loadResearchRecords(){
         );
 
         const data = await response.json();
+
+        if(requestVersion !== modelParameterPairRequestVersion) return;
 
         if(!response.ok || !data.ok){
           box.innerHTML = `
@@ -1657,7 +1734,13 @@ async function loadResearchRecords(){
             : "No methods match the selected scales"
         );
 
+        if(modelParameterAnalysisScope === "WITHIN_PARTICIPANT"){
+          await loadModelParameterPairParticipants();
+        }
+        await refreshModelParameterDatasetPreview();
+
       } catch(error){
+        if(requestVersion !== modelParameterPairRequestVersion) return;
         box.innerHTML = `
           <div class="method-card">
             <h3>Selected Parameter Pair</h3>
@@ -1827,8 +1910,8 @@ async function loadResearchRecords(){
           modelParameterAnalysisScope,
 
         repeated_measure_policy:
-          modelParameterAnalysisScope ===
-            "CROSS_PARTICIPANT"
+          modelParameterAnalysisScope !==
+            "WITHIN_PARTICIPANT"
             ? modelParameterRepeatedPolicy
             : "reject_repeated",
 
@@ -2151,8 +2234,8 @@ async function loadResearchRecords(){
           modelParameterAnalysisScope,
 
         repeated_measure_policy:
-          modelParameterAnalysisScope ===
-            "CROSS_PARTICIPANT"
+          modelParameterAnalysisScope !==
+            "WITHIN_PARTICIPANT"
             ? modelParameterRepeatedPolicy
             : "reject_repeated",
 
@@ -2477,9 +2560,39 @@ async function loadResearchRecords(){
       `;
     }
 
+    async function loadModelParameterPairParticipants(){
+      if(!selectedLeftParameterCode || !selectedRightParameterCode){
+        modelParameterPairParticipants = [];
+        modelParameterParticipantReference = "";
+        renderModelParameterParticipantOptions();
+        return;
+      }
+
+      const requestVersion = modelParameterPairRequestVersion;
+      const query = new URLSearchParams({
+        model_id: selectedCalculationModelId,
+        left_parameter_code: selectedLeftParameterCode,
+        right_parameter_code: selectedRightParameterCode,
+      });
+
+      try{
+        const response = await fetch("/research/model-parameters/pair-participants?" + query.toString());
+        const data = await response.json();
+        if(requestVersion !== modelParameterPairRequestVersion) return;
+        if(!response.ok || !data.ok) throw new Error(JSON.stringify(data.detail || data));
+        modelParameterPairParticipants = data.participants || [];
+      }catch(error){
+        if(requestVersion !== modelParameterPairRequestVersion) return;
+        modelParameterPairParticipants = [];
+        modelParameterParticipantReference = "";
+        setStatus(lang === "ru" ? `Не удалось загрузить участников пары: ${error}` : lang === "es" ? `No se pudieron cargar los participantes del par: ${error}` : `Could not load pair participants: ${error}`);
+      }
+      renderModelParameterParticipantOptions();
+    }
+
     function renderModelParameterParticipantOptions(){
       const select = document.getElementById(
-        "modelParameterParticipantSelect"
+        "analysisScopeParticipantSelect"
       );
 
       if(!select){
@@ -2494,7 +2607,6 @@ async function loadResearchRecords(){
         `;
 
         modelParameterParticipantReference = "";
-        refreshModelParameterDatasetPreview();
         return;
       }
 
@@ -2514,8 +2626,8 @@ async function loadResearchRecords(){
                 participant.participant_reference || "unknown"
               )}
               · ${escapeHtml(
-                participant.paired_session_count ?? 0
-              )} paired session(s)
+                participant.paired_observation_count ?? 0
+              )} ${escapeHtml(lang === "ru" ? "парных наблюдений" : lang === "es" ? "observaciones emparejadas" : "paired observations")}
             </option>
           `
         ).join("")}
@@ -2535,43 +2647,8 @@ async function loadResearchRecords(){
         modelParameterParticipantReference = "";
         select.value = "";
       }
-
-    refreshModelParameterDatasetPreview();
     }
 
-
-    async function handleModelParameterScopeChange(){
-      modelParameterAnalysisScope =
-        document.getElementById(
-          "modelParameterAnalysisScope"
-        )?.value || "CROSS_PARTICIPANT";
-
-      const crossBox = document.getElementById(
-        "crossParticipantPolicyBox"
-      );
-
-      const withinBox = document.getElementById(
-        "withinParticipantSelectionBox"
-      );
-
-      if(
-        modelParameterAnalysisScope ===
-        "WITHIN_PARTICIPANT"
-      ){
-        crossBox?.classList.add("hidden");
-        withinBox?.classList.remove("hidden");
-
-        await loadModelParameterPairParticipants();
-      } else {
-        crossBox?.classList.remove("hidden");
-        withinBox?.classList.add("hidden");
-
-        modelParameterParticipantReference = "";
-      }
-
-      clearModelParameterValidationResult();
-      await refreshModelParameterDatasetPreview();
-    }
 
     async function handleModelParameterRepeatedPolicyChange(){
       modelParameterRepeatedPolicy =
@@ -2586,7 +2663,7 @@ async function loadResearchRecords(){
     async function handleModelParameterParticipantChange(){
       modelParameterParticipantReference =
         document.getElementById(
-          "modelParameterParticipantSelect"
+          "analysisScopeParticipantSelect"
         )?.value || "";
 
       clearModelParameterValidationResult();
@@ -2633,8 +2710,8 @@ async function loadResearchRecords(){
           modelParameterAnalysisScope,
 
         repeated_measure_policy:
-          modelParameterAnalysisScope ===
-            "CROSS_PARTICIPANT"
+          modelParameterAnalysisScope !==
+            "WITHIN_PARTICIPANT"
             ? modelParameterRepeatedPolicy
             : "reject_repeated",
 
@@ -2668,6 +2745,7 @@ async function loadResearchRecords(){
       }
 
       modelParameterDatasetPreviewLoading = true;
+      const requestVersion = ++modelParameterDatasetRequestVersion;
       renderSampleFormationSummary();
 
       try {
@@ -2684,6 +2762,8 @@ async function loadResearchRecords(){
 
         const data = await response.json();
 
+        if(requestVersion !== modelParameterDatasetRequestVersion) return;
+
         modelParameterDatasetPreview = data;
 
         if(!response.ok){
@@ -2694,12 +2774,14 @@ async function loadResearchRecords(){
           };
         }
       } catch(error){
+        if(requestVersion !== modelParameterDatasetRequestVersion) return;
         modelParameterDatasetPreview = {
           ok: false,
           status: "dataset_preview_request_failed",
           error: String(error),
         };
       } finally {
+        if(requestVersion !== modelParameterDatasetRequestVersion) return;
         modelParameterDatasetPreviewLoading = false;
         renderSampleFormationSummary();
         updateSelectedModelParameterMethodDatasetSummary();
@@ -3001,8 +3083,8 @@ async function loadResearchRecords(){
           </div>
 
           ${
-            modelParameterAnalysisScope ===
-            "CROSS_PARTICIPANT"
+            modelParameterAnalysisScope !==
+            "WITHIN_PARTICIPANT"
               ? `
                   <div class="kv">
                     <b>Repeated observations</b>
@@ -3263,8 +3345,8 @@ async function loadResearchRecords(){
           modelParameterAnalysisScope,
 
         repeated_measure_policy:
-          modelParameterAnalysisScope ===
-            "CROSS_PARTICIPANT"
+          modelParameterAnalysisScope !==
+            "WITHIN_PARTICIPANT"
             ? modelParameterRepeatedPolicy
             : "reject_repeated",
 

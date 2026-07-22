@@ -47,6 +47,14 @@ from assessment.analysis.checks.outliers import (
 from assessment.analysis.checks.constant_variable import (
     check_not_constant_variable,
 )
+from assessment.analysis.checks.group_balance import check_group_balance
+from assessment.analysis.checks.group_size import check_minimum_group_size
+from assessment.analysis.checks.normality import check_group_normality
+from assessment.analysis.checks.numeric_data import check_numeric_data
+from assessment.analysis.checks.variance import check_variance_assumption
+from assessment.analysis.statistics.parametric_groups import (
+    collect_independent_groups,
+)
 from assessment.measurement.scale_registry import (
     scale_matches_requirement,
 )
@@ -144,6 +152,18 @@ def check_pair_analysis(
 
     left_scale = left_meta.get("scale_type")
     right_scale = right_meta.get("scale_type")
+
+    grouped_dataset = None
+
+    def independent_groups() -> dict:
+        nonlocal grouped_dataset
+        if grouped_dataset is None:
+            grouped_dataset = collect_independent_groups(
+                answer_records=answer_records,
+                left_question_code=left_question_code,
+                right_question_code=right_question_code,
+            )
+        return grouped_dataset
 
     checks = []
 
@@ -281,6 +301,63 @@ def check_pair_analysis(
             )
             continue
 
+        if condition == "minimum_group_size":
+            grouped = independent_groups()
+            if not grouped.get("ok"):
+                checks.append({
+                    "check_id": condition,
+                    "status": "failed",
+                    "details": grouped,
+                })
+            else:
+                checks.append(check_minimum_group_size(
+                    group_values=[
+                        name
+                        for name, values in grouped["groups"].items()
+                        for _ in values
+                    ],
+                    minimum_per_group=2,
+                ))
+            continue
+
+        if condition == "group_balance":
+            grouped = independent_groups()
+            if not grouped.get("ok"):
+                checks.append({"check_id": condition, "status": "failed", "details": grouped})
+            else:
+                checks.append(check_group_balance(group_values=[
+                    name for name, values in grouped["groups"].items() for _ in values
+                ]))
+            continue
+
+        if condition == "approximately_normal_outcome_within_groups_or_sufficient_sample_size":
+            grouped = independent_groups()
+            if not grouped.get("ok"):
+                checks.append({"check_id": condition, "status": "failed", "details": grouped})
+            else:
+                checks.append(check_group_normality(groups=grouped["groups"]))
+            continue
+
+        if condition == "variance_assumption_checked":
+            grouped = independent_groups()
+            if not grouped.get("ok"):
+                checks.append({"check_id": condition, "status": "failed", "details": grouped})
+            else:
+                variance_check = check_variance_assumption(groups=grouped["groups"])
+                if method_id == "independent_t_test" and variance_check.get("status") == "failed":
+                    variance_check["status"] = "warning"
+                    variance_check["details"]["selected_variant"] = "welch_unequal_variance"
+                checks.append(variance_check)
+            continue
+
+        if condition == "numeric_data":
+            grouping_is_left = scale_matches_requirement(left_scale, "grouping")
+            checks.append(check_numeric_data(
+                values=right_values if grouping_is_left else left_values,
+                variable_name=right_question_code if grouping_is_left else left_question_code,
+            ))
+            continue
+
         if condition == "linear_relationship_plausible":
             checks.append(check_linear_relationship_plausible(
                 left_values=left_values,
@@ -289,6 +366,16 @@ def check_pair_analysis(
             continue
 
         if condition == "no_extreme_outliers":
+            if scale_matches_requirement(left_scale, "grouping"):
+                right_check = check_extreme_outliers_iqr(values=right_values)
+                right_check["details"]["variable_side"] = "right"
+                checks.append(right_check)
+                continue
+            if scale_matches_requirement(right_scale, "grouping"):
+                left_check = check_extreme_outliers_iqr(values=left_values)
+                left_check["details"]["variable_side"] = "left"
+                checks.append(left_check)
+                continue
             left_check = check_extreme_outliers_iqr(values=left_values)
             left_check["details"]["variable_side"] = "left"
             right_check = check_extreme_outliers_iqr(values=right_values)

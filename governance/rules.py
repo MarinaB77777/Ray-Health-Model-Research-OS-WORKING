@@ -1059,6 +1059,48 @@ def collect_findings(
 
     if action.requires_external_communication:
 
+        if (
+            action.external_target_type
+            == ExternalTargetType.EXTERNAL_AI
+            and context.external_communication_allowed
+            and all(
+                context.sensitive_domain_config.get(domain_id) is not None
+                and context.sensitive_domain_config[domain_id].external_ai_allowed
+                for domain_id in action.affected_sensitive_domains
+            )
+        ):
+            findings.append(
+                GovernanceFinding(
+                    decision_status=GovernanceDecisionStatus.RESTRICTED,
+                    reason_codes=[
+                        R.PUBLIC_FILTER_REQUIRED,
+                    ],
+                    visibility_level=(
+                        GovernanceVisibilityLevel.EXTERNAL_MINIMAL
+                    ),
+                    target_audience=(
+                        GovernanceTargetAudience.EXTERNAL_AI
+                    ),
+                    allowed_external_targets=[
+                        "external_ai_sanitized_request"
+                    ],
+                    blocked_external_targets=[
+                        "external_ai_raw_internal"
+                    ],
+                    restrictions=[
+                        "external_minimal_payload_only",
+                        "external_response_is_not_internal_truth",
+                        "external_response_memory_write_forbidden",
+                    ],
+                    policy_source="external_communication_policy",
+                    policy_version=(
+                        context.privacy_policy_version
+                        or "unknown"
+                    ),
+                    rule_hit="external_ai_separate_outbound_channel",
+                )
+            )
+
         if not context.external_communication_allowed:
 
             findings.append(

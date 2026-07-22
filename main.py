@@ -1,6 +1,7 @@
 import uuid
 import json
 import shutil
+import os
 from copy import deepcopy
 from collections import defaultdict
 from datetime import UTC, datetime
@@ -8,7 +9,7 @@ from itertools import combinations
 from pathlib import Path
 from typing import Any
 import importlib.util
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, SecretStr
 from pilot_session.interview import (
     build_ray_next_question,
     build_ray_chat_response,
@@ -270,6 +271,7 @@ from external_core import (
     ExternalCoreService,
     SettingsStatus,
 )
+from external_ai import ConnectionScope, ExternalAIError, ExternalAIGateway
 from pprint import pformat
 from pathlib import Path
 
@@ -308,10 +310,30 @@ session_start_flow = PilotSessionStartFlow(
 
 intro_sessions = {}
 result_service = ResultService()
-ray_colleague_service = RayColleagueService("data")
 external_core_service = ExternalCoreService("data")
 researcher_account_service = ResearcherAccountService()
 configure_object_store(application_data_directory() / "research_objects.json")
+
+
+def _external_ai_effective_settings(
+    role: str,
+    account_id: str | None,
+) -> dict[str, Any]:
+    del account_id
+    return external_core_service.effective(
+        role=role,
+        domain_id=ExternalCoreService.DOMAIN_SCOPE_ID,
+    )
+
+
+external_ai_gateway = ExternalAIGateway(
+    application_data_directory(),
+    settings_provider=_external_ai_effective_settings,
+)
+ray_colleague_service = RayColleagueService(
+    "data",
+    external_ai_gateway=external_ai_gateway,
+)
 
 class RayChatInput(BaseModel):
     message: str
@@ -375,7 +397,27 @@ class RayActionConfirmationInput(BaseModel):
 
 
 class ExternalCoreTransitionInput(BaseModel):
-    actor_id: str
+    actor_id: str | None = None
+
+
+class ExternalAIModelDiscoveryInput(BaseModel):
+    provider_id: str
+    credential: SecretStr
+
+
+class ExternalAIConnectionInput(BaseModel):
+    scope: str = "account"
+    provider_id: str
+    model: str
+    credential: SecretStr
+
+
+class ExternalAIPolicyInput(BaseModel):
+    scope: str = "account"
+    profile_id: str
+    enabled: bool = True
+    never_send_categories: list[str] = Field(default_factory=list)
+    never_send_terms: list[str] = Field(default_factory=list)
 
 
 class ExternalCoreSettingsDraftInput(BaseModel):
@@ -1065,6 +1107,25 @@ def _researcher_session(
         _raise_researcher_account_http(exc)
 
 
+def _platform_external_ai_admin(account_id: str) -> bool:
+    configured = {
+        item.strip()
+        for item in os.environ.get(
+            "RAY_PLATFORM_ADMIN_ACCOUNT_IDS",
+            "",
+        ).split(",")
+        if item.strip()
+    }
+    return account_id in configured
+
+
+def _raise_external_ai_http(exc: ExternalAIError) -> None:
+    raise HTTPException(
+        status_code=exc.status_code,
+        detail={"error": exc.code},
+    ) from exc
+
+
 @app.get("/researcher/auth/contract")
 def researcher_auth_contract():
     return {"ok": True, "contract": researcher_account_service.contract()}
@@ -1237,22 +1298,31 @@ def get_ray_colleague_contract():
 
 
 @app.get("/external-core/contract")
-def get_external_core_contract():
-    return {"ok": True, "contract": external_core_service.contract()}
+def get_external_core_contract(request: Request):
+    context = _researcher_session(request)
+    contract = external_core_service.contract()
+    connection = external_ai_gateway.registry.effective_connection(
+        context["account"]["account_id"]
+    )
+    contract["external_ai_provider_registered"] = connection is not None
+    return {"ok": True, "contract": contract}
 
 
 @app.get("/external-core/settings")
-def list_external_core_settings():
+def list_external_core_settings(request: Request):
+    _researcher_session(request)
     return {"ok": True, "revisions": external_core_service.list_settings()}
 
 
 @app.get("/external-core/settings/effective")
 def get_effective_external_core_settings(
+    request: Request,
     role: str,
     domain_id: str | None = None,
     project_id: str | None = None,
     session_id: str | None = None,
 ):
+    _researcher_session(request)
     try:
         return {
             "ok": True,
@@ -1270,11 +1340,14 @@ def get_effective_external_core_settings(
 @app.post("/external-core/settings/drafts")
 def create_external_core_settings_draft(
     data: ExternalCoreSettingsDraftInput,
+    request: Request,
 ):
+    context = _researcher_session(request, require_csrf=True)
     try:
         payload = data.model_dump(exclude_none=True) if hasattr(
             data, "model_dump"
         ) else data.dict(exclude_none=True)
+        payload["created_by"] = context["account"]["account_id"]
         return {
             "ok": True,
             "revision": external_core_service.create_draft(payload),
@@ -1291,13 +1364,15 @@ def transition_external_core_settings(
     revision: int,
     target: str,
     data: ExternalCoreTransitionInput,
+    request: Request,
 ):
+    context = _researcher_session(request, require_csrf=True)
     try:
         item = external_core_service.settings.transition(
             settings_id,
             revision,
             SettingsStatus(target),
-            actor_id=data.actor_id,
+            actor_id=context["account"]["account_id"],
         )
         return {"ok": True, "revision": item}
     except (ValueError, PermissionError, KeyError) as exc:
@@ -1308,13 +1383,14 @@ def transition_external_core_settings(
 def delete_external_core_settings_draft(
     settings_id: str,
     revision: int,
-    actor_id: str,
+    request: Request,
 ):
+    context = _researcher_session(request, require_csrf=True)
     try:
         external_core_service.settings.delete_draft(
             settings_id,
             revision,
-            actor_id=actor_id,
+            actor_id=context["account"]["account_id"],
         )
         return {"ok": True, "status": "draft_deleted"}
     except (ValueError, PermissionError, KeyError) as exc:
@@ -1322,7 +1398,8 @@ def delete_external_core_settings_draft(
 
 
 @app.get("/external-core/domains")
-def list_external_core_domains():
+def list_external_core_domains(request: Request):
+    _researcher_session(request)
     return {"ok": True, "domains": external_core_service.domains.list_all()}
 
 
@@ -1331,12 +1408,14 @@ def transition_external_core_domain(
     domain_id: str,
     target: str,
     data: ExternalCoreTransitionInput,
+    request: Request,
 ):
+    context = _researcher_session(request, require_csrf=True)
     try:
         item = external_core_service.domains.transition(
             domain_id,
             DomainLifecycle(target),
-            actor_id=data.actor_id,
+            actor_id=context["account"]["account_id"],
         )
         return {"ok": True, "domain": item}
     except (ValueError, PermissionError, KeyError) as exc:
@@ -1346,11 +1425,13 @@ def transition_external_core_domain(
 @app.post("/ray-colleague/researcher/respond")
 def ray_colleague_researcher_respond(
     data: RayColleagueResearcherInput,
+    request: Request,
 ):
+    context = _researcher_session(request, require_csrf=True)
     try:
         response = ray_colleague_service.respond(
             role=RayRole.RESEARCH_COLLEAGUE,
-            owner_id=data.researcher_id,
+            owner_id=context["account"]["account_id"],
             page_id=data.page_id,
             language=data.lang,
             message=data.message,
@@ -1365,11 +1446,136 @@ def ray_colleague_researcher_respond(
         _raise_ray_colleague_http(exc)
 
 
+@app.get("/external-ai/contract")
+def get_external_ai_contract(request: Request):
+    context = _researcher_session(request)
+    account_id = context["account"]["account_id"]
+    return {
+        "ok": True,
+        "contract": external_ai_gateway.contract(
+            account_id=account_id,
+            can_manage_platform=_platform_external_ai_admin(account_id),
+        ),
+    }
+
+
+@app.post("/external-ai/providers/models")
+def discover_external_ai_models(
+    data: ExternalAIModelDiscoveryInput,
+    request: Request,
+):
+    _researcher_session(request, require_csrf=True)
+    try:
+        return {
+            "ok": True,
+            "models": external_ai_gateway.list_models(
+                data.provider_id,
+                data.credential.get_secret_value(),
+            ),
+        }
+    except ExternalAIError as exc:
+        _raise_external_ai_http(exc)
+
+
+@app.get("/external-ai/connections")
+def list_external_ai_connections(request: Request):
+    context = _researcher_session(request)
+    return {
+        "ok": True,
+        **external_ai_gateway.list_connections(
+            context["account"]["account_id"]
+        ),
+    }
+
+
+@app.post("/external-ai/connections")
+def create_external_ai_connection(
+    data: ExternalAIConnectionInput,
+    request: Request,
+):
+    context = _researcher_session(request, require_csrf=True)
+    account_id = context["account"]["account_id"]
+    try:
+        connection = external_ai_gateway.connect(
+            actor_account_id=account_id,
+            scope=ConnectionScope(data.scope),
+            provider_id=data.provider_id,
+            model=data.model,
+            credential=data.credential.get_secret_value(),
+            can_manage_platform=_platform_external_ai_admin(account_id),
+        )
+        return {"ok": True, "connection": connection}
+    except ValueError as exc:
+        _raise_external_ai_http(
+            ExternalAIError(str(exc), status_code=422)
+        )
+    except ExternalAIError as exc:
+        _raise_external_ai_http(exc)
+
+
+@app.delete("/external-ai/connections/{connection_id}")
+def delete_external_ai_connection(
+    connection_id: str,
+    request: Request,
+):
+    context = _researcher_session(request, require_csrf=True)
+    account_id = context["account"]["account_id"]
+    try:
+        external_ai_gateway.delete_connection(
+            connection_id,
+            actor_account_id=account_id,
+            can_manage_platform=_platform_external_ai_admin(account_id),
+        )
+        return {"ok": True, "status": "connection_deleted"}
+    except ExternalAIError as exc:
+        _raise_external_ai_http(exc)
+
+
+@app.get("/external-ai/policies")
+def get_external_ai_policies(request: Request):
+    context = _researcher_session(request)
+    return {
+        "ok": True,
+        **external_ai_gateway.get_policies(
+            context["account"]["account_id"]
+        ),
+    }
+
+
+@app.put("/external-ai/policies")
+def update_external_ai_policy(
+    data: ExternalAIPolicyInput,
+    request: Request,
+):
+    context = _researcher_session(request, require_csrf=True)
+    account_id = context["account"]["account_id"]
+    try:
+        policy = external_ai_gateway.save_policy(
+            actor_account_id=account_id,
+            scope=ConnectionScope(data.scope),
+            profile_id=data.profile_id,
+            enabled=data.enabled,
+            never_send_categories=data.never_send_categories,
+            never_send_terms=data.never_send_terms,
+            can_manage_platform=_platform_external_ai_admin(account_id),
+        )
+        return {"ok": True, "policy": policy}
+    except ValueError as exc:
+        _raise_external_ai_http(
+            ExternalAIError(str(exc), status_code=422)
+        )
+    except ExternalAIError as exc:
+        _raise_external_ai_http(exc)
+
+
 @app.post("/ray-colleague/participant/respond")
 def ray_colleague_participant_respond(
     data: RayColleagueParticipantInput,
 ):
     try:
+        session = pilot_service.get_session(data.session_id)
+        if session.participant_id != data.participant_id:
+            raise PermissionError("PARTICIPANT_SESSION_OWNERSHIP_MISMATCH")
         response = ray_colleague_service.respond(
             role=RayRole.PARTICIPANT_GUIDE,
             owner_id=data.participant_id,
@@ -1382,6 +1588,11 @@ def ray_colleague_participant_respond(
             selection=data.selection,
         )
         return {"ok": True, "response": response}
+    except PilotSessionError as exc:
+        raise HTTPException(
+            status_code=exc.status_code,
+            detail=exc.to_dict()["error"],
+        ) from exc
     except (ValueError, PermissionError, KeyError) as exc:
         _raise_ray_colleague_http(exc)
 
@@ -2571,9 +2782,11 @@ def serialize_pilot_session_for_research(session):
 
 @app.get("/research/answers/summary")
 def summarize_research_answers(
+    request: Request,
     question_code: str,
     study_id: str | None = None,
 ):
+    _researcher_session(request)
     values = []
 
     for research_record in list_research_records(study_id=study_id):
@@ -2610,9 +2823,11 @@ def summarize_research_answers(
 
 @app.get("/research/answers")
 def list_research_answers(
+    request: Request,
     question_code: str | None = None,
     study_id: str | None = None,
 ):
+    _researcher_session(request)
     records = []
 
     for research_record in list_research_records(study_id=study_id):
@@ -2649,7 +2864,8 @@ def list_research_answers(
     }
 
 @app.get("/research/participant-data/records")
-def list_participant_data_records(study_id: str | None = None):
+def list_participant_data_records(request: Request, study_id: str | None = None):
+    _researcher_session(request)
     research_records = list_research_records(study_id=study_id)
 
     research_items = [
@@ -2703,7 +2919,8 @@ def list_participant_data_records(study_id: str | None = None):
 
 
 @app.get("/research/participant-data/records/{record_id}")
-def get_participant_data_record(record_id: str):
+def get_participant_data_record(record_id: str, request: Request):
+    _researcher_session(request)
     records = list_research_records()
 
     for record in records:
@@ -3059,6 +3276,7 @@ def _scientific_record_matches(
 
 @app.get("/research/scientific-results/catalog")
 def scientific_results_catalog(
+    request: Request,
     study_id: str | None = None,
     participant_reference: str | None = None,
     model_id: str | None = None,
@@ -3069,6 +3287,7 @@ def scientific_results_catalog(
     offset: int = 0,
     limit: int = 500,
 ):
+    _researcher_session(request)
     safe_offset = max(0, offset)
     safe_limit = min(max(1, limit), 2000)
     views = [
@@ -3952,10 +4171,19 @@ def save_assessment_questions(assessment_id: str, payload: QuestionBankSavePaylo
     }
 
 @app.get("/research/entities")
-def list_research_entities_api(entity_type: str | None = None, language: str = "ru"):
+def list_research_entities_api(
+    request: Request,
+    entity_type: str | None = None,
+    language: str = "ru",
+):
+    context = _researcher_session(request)
     return {
         "ok": True,
-        "entities": list_entities(entity_type=entity_type, language=language),
+        "entities": list_entities(
+            entity_type=entity_type,
+            language=language,
+            owner=context["account"]["account_id"],
+        ),
     }
 
 
@@ -5454,6 +5682,7 @@ def get_questionnaire_measurements(
 
 @app.get("/research/questionnaire-samples")
 def get_questionnaire_sample_summaries(
+    request: Request,
     project_id: str = "health_model_pilot",
 ):
     """Lightweight catalogue for the left side of Data Explorer.
@@ -5462,6 +5691,7 @@ def get_questionnaire_sample_summaries(
     deliberately omitted and are loaded after the researcher selects a
     question and an analysis scope.
     """
+    _researcher_session(request)
     catalog = build_questionnaire_measurement_catalog(
         project_id=project_id,
     )
@@ -5580,12 +5810,14 @@ def get_questionnaire_sample_summaries(
 
 @app.get("/research/questionnaire-dataset")
 def get_questionnaire_dataset(
+    request: Request,
     questionnaire_id: str,
     question_uuid: str,
     scope: str = "cross_participant",
     project_id: str = "health_model_pilot",
     participant_reference: str | None = None,
 ):
+    _researcher_session(request)
     normalized_scope = str(scope or "").strip().lower()
     if normalized_scope not in {
         "cross_participant",
@@ -5752,7 +5984,11 @@ def _build_questionnaire_multivariable_dataset(
         }
 
     scope = str(data.analysis_scope or "").strip().lower()
-    if scope not in {"cross_participant", "within_participant"}:
+    if scope not in {
+        "cross_participant",
+        "within_participant",
+        "group_comparison",
+    }:
         return {
             "ok": False,
             "status": "questionnaire_analysis_scope_invalid",
@@ -5820,7 +6056,7 @@ def _build_questionnaire_multivariable_dataset(
     for question in selected_questions:
         observations = (
             question.get("all_measurements", [])
-            if scope == "cross_participant"
+            if scope in {"cross_participant", "group_comparison"}
             else [
                 item
                 for item in question.get("all_measurements", [])
@@ -5830,7 +6066,7 @@ def _build_questionnaire_multivariable_dataset(
         )
         by_unit = {}
         for observation in observations:
-            if scope == "cross_participant":
+            if scope in {"cross_participant", "group_comparison"}:
                 participant_key = observation.get("participant_reference")
                 unit_key = (
                     participant_key,
@@ -5865,7 +6101,7 @@ def _build_questionnaire_multivariable_dataset(
         complete_units,
         key=lambda value: str(value),
     )
-    if scope == "cross_participant":
+    if scope in {"cross_participant", "group_comparison"}:
         latest_complete_unit_by_participant = {}
         for unit_key in complete_units:
             participant_key = unit_key[0]
@@ -5953,8 +6189,12 @@ def _build_questionnaire_multivariable_dataset(
         "analysis_scope": scope,
         "participant_reference": data.participant_reference,
         "observation_unit": (
-            "participant_at_latest_complete_questionnaire_session"
-            if scope == "cross_participant"
+            (
+                "participant_group_at_latest_complete_questionnaire_session"
+                if scope == "group_comparison"
+                else "participant_at_latest_complete_questionnaire_session"
+            )
+            if scope in {"cross_participant", "group_comparison"}
             else "participant_questionnaire_session"
         ),
         "temporal_alignment": (
@@ -5992,6 +6232,10 @@ def _questionnaire_pair_options(dataset: dict) -> list[dict]:
             if (
                 method.get("category") == "standard"
                 and method_id in EXECUTABLE_METHOD_IDS
+                and (
+                    dataset.get("analysis_scope") != "group_comparison"
+                    or str(method.get("purpose") or "").startswith("compare_")
+                )
                 and _statistical_method_matches_scales(
                     method,
                     left.get("scale_type"),
@@ -6032,7 +6276,9 @@ def _holm_adjust(p_values: list[float]) -> list[float]:
 @app.post("/research/questionnaire-analysis/options")
 def questionnaire_multivariable_options(
     data: QuestionnaireMultivariableAnalysisInput,
+    request: Request,
 ):
+    _researcher_session(request)
     dataset = _build_questionnaire_multivariable_dataset(data)
     return {
         "ok": dataset.get("ok", False),
@@ -6058,7 +6304,9 @@ def questionnaire_multivariable_options(
 @app.post("/research/questionnaire-analysis/run")
 def run_questionnaire_multivariable_analysis(
     data: QuestionnaireMultivariableAnalysisInput,
+    request: Request,
 ):
+    _researcher_session(request)
     dataset = _build_questionnaire_multivariable_dataset(data)
     if not dataset.get("ok"):
         return dataset
@@ -6173,8 +6421,10 @@ def run_questionnaire_multivariable_analysis(
 
 @app.get("/research/analysis/catalog")
 def get_research_analysis_catalog(
+    request: Request,
     study_id: str,
 ):
+    _researcher_session(request)
     answer_records = []
 
     for research_record in list_research_records(study_id=study_id):
@@ -6227,8 +6477,10 @@ def list_health_model_research_variables_api():
 
 @app.get("/research/models")
 def list_research_models_api(
+    request: Request,
     include_inactive: bool = False,
 ):
+    _researcher_session(request)
     return {
         "ok": True,
         "models": (
@@ -6950,7 +7202,9 @@ def run_model_calculation_api(
 )
 def get_model_calculation_api(
     calculation_run_id: str,
+    request: Request,
 ):
+    _researcher_session(request)
     run = model_calculation_service.get_run(
         calculation_run_id
     )
@@ -6979,6 +7233,7 @@ def get_model_calculation_api(
 
 @app.get("/research/model-parameters/records")
 def list_model_parameter_records_api(
+    request: Request,
     model_id: str | None = None,
     parameter_id: str | None = None,
     parameter_code: str | None = None,
@@ -6988,6 +7243,7 @@ def list_model_parameter_records_api(
     calculation_status: str | None = None,
     include_invalidated_runs: bool = False,
 ):
+    _researcher_session(request)
     records = (
         model_calculation_store
         .list_parameter_records(
@@ -7035,8 +7291,10 @@ def list_model_parameter_records_api(
 
 @app.get("/research/model-parameter-measurements")
 def list_model_parameter_measurements_api(
+    request: Request,
     model_id: str = "health_model_v6_1",
 ):
+    _researcher_session(request)
     parameter_records = (
         model_calculation_store
         .list_parameter_records(
@@ -7052,8 +7310,10 @@ def list_model_parameter_measurements_api(
 
 @app.get("/research/model-parameters/available")
 def list_available_model_parameters_api(
+    request: Request,
     study_id: str = "health_model",
 ):
+    _researcher_session(request)
     catalog = build_available_model_parameter_catalog(
         research_records=list_research_records(
             study_id=study_id,
@@ -7069,10 +7329,12 @@ def list_available_model_parameters_api(
 
 @app.get("/research/model-parameters/pair-options")
 def get_model_parameter_pair_options_api(
+    request: Request,
     left_parameter_code: str,
     right_parameter_code: str,
     model_id: str = "health_model_v6_1",
 ):
+    _researcher_session(request)
     parameter_records = (
         model_calculation_store
         .list_parameter_records(
@@ -7096,8 +7358,10 @@ def get_model_parameter_pair_options_api(
 
 @app.get("/research/model-parameters/dependencies")
 def list_available_model_parameter_dependencies_api(
+    request: Request,
     study_id: str = "health_model",
 ):
+    _researcher_session(request)
     return build_available_model_parameter_dependencies(
         research_records=list_research_records(
             study_id=study_id,
@@ -7108,10 +7372,12 @@ def list_available_model_parameter_dependencies_api(
 
 @app.get("/research/model-parameters/pair-participants")
 def list_model_parameter_pair_participants_api(
+    request: Request,
     left_parameter_code: str,
     right_parameter_code: str,
     model_id: str = "health_model_v6_1",
 ):
+    _researcher_session(request)
     parameter_records = (
         model_calculation_store
         .list_parameter_records(
@@ -7134,7 +7400,9 @@ def list_model_parameter_pair_participants_api(
 @app.post("/research/analysis/check")
 def check_research_analysis(
     data: AnalysisCheckInput,
+    request: Request,
 ):
+    _researcher_session(request)
     answer_records = collect_answer_records_for_study(
         data.study_id,
     )
@@ -7152,7 +7420,9 @@ def check_research_analysis(
 @app.post("/research/model-parameters/dataset")
 def build_model_parameter_dataset_api(
     data: ModelParameterDatasetInput,
+    request: Request,
 ):
+    _researcher_session(request)
     parameter_records = (
         model_calculation_store
         .list_parameter_records(
@@ -7182,7 +7452,9 @@ def build_model_parameter_dataset_api(
 @app.post("/research/model-parameters/check")
 def check_model_parameter_analysis(
     data: ParameterAnalysisCheckInput,
+    request: Request,
 ):
+    _researcher_session(request)
     parameter_records = (
         model_calculation_store
         .list_parameter_records(
@@ -7219,7 +7491,9 @@ def check_model_parameter_analysis(
 )
 def run_model_parameter_statistical_analysis(
     data: ModelParameterStatisticalRunInput,
+    request: Request,
 ):
+    _researcher_session(request)
     parameter_records = (
         model_calculation_store
         .list_parameter_records(
@@ -7331,7 +7605,9 @@ def run_model_parameter_statistical_analysis(
 @app.post("/research/analysis/statistical/run")
 def run_statistical_analysis(
     data: StatisticalAnalysisRunInput,
+    request: Request,
 ):
+    _researcher_session(request)
     answer_records = collect_answer_records_for_study(
         data.study_id,
     )

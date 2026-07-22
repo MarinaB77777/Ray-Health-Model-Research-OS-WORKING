@@ -15,6 +15,7 @@ MODEL_PARAMETER_PAIR_DATASET_SCHEMA_VERSION = (
 
 ANALYSIS_SCOPE_CROSS_PARTICIPANT = "CROSS_PARTICIPANT"
 ANALYSIS_SCOPE_WITHIN_PARTICIPANT = "WITHIN_PARTICIPANT"
+ANALYSIS_SCOPE_GROUP_COMPARISON = "GROUP_COMPARISON"
 
 REPEATED_POLICY_REJECT = "reject_repeated"
 REPEATED_POLICY_LATEST = "latest"
@@ -132,10 +133,16 @@ def _build_dataset_formation(
         if observation.get("participant_reference")
     }
     if (
-        analysis_scope
-        == ANALYSIS_SCOPE_CROSS_PARTICIPANT
+        analysis_scope in {
+            ANALYSIS_SCOPE_CROSS_PARTICIPANT,
+            ANALYSIS_SCOPE_GROUP_COMPARISON,
+        }
     ):
-        scope_label = "Across participants"
+        scope_label = (
+            "Group comparison"
+            if analysis_scope == ANALYSIS_SCOPE_GROUP_COMPARISON
+            else "Sample analysis"
+        )
         observation_unit_label = "Participant"
     else:
         scope_label = "Within one participant"
@@ -160,8 +167,10 @@ def _build_dataset_formation(
         "analysis_scope_label": scope_label,
         "observation_unit": (
             "participant"
-            if analysis_scope
-            == ANALYSIS_SCOPE_CROSS_PARTICIPANT
+            if analysis_scope in {
+                ANALYSIS_SCOPE_CROSS_PARTICIPANT,
+                ANALYSIS_SCOPE_GROUP_COMPARISON,
+            }
             else "session"
         ),
         "observation_unit_label": (
@@ -1033,8 +1042,10 @@ def _to_compatible_answer_records(
 
     for observation in observations:
         if (
-            analysis_scope
-            == ANALYSIS_SCOPE_CROSS_PARTICIPANT
+            analysis_scope in {
+                ANALYSIS_SCOPE_CROSS_PARTICIPANT,
+                ANALYSIS_SCOPE_GROUP_COMPARISON,
+            }
         ):
             observation_key = observation.get(
                 "participant_key"
@@ -1177,8 +1188,10 @@ def build_model_parameter_pair_dataset(
     )
 
     if (
-        analysis_scope
-        == ANALYSIS_SCOPE_CROSS_PARTICIPANT
+        analysis_scope in {
+            ANALYSIS_SCOPE_CROSS_PARTICIPANT,
+            ANALYSIS_SCOPE_GROUP_COMPARISON,
+        }
     ):
         selection = (
             _select_cross_participant_observations(
@@ -1345,8 +1358,10 @@ def build_model_parameter_pair_dataset(
         "analysis_scope": analysis_scope,
         "observation_unit": (
             "participant"
-            if analysis_scope
-            == ANALYSIS_SCOPE_CROSS_PARTICIPANT
+            if analysis_scope in {
+                ANALYSIS_SCOPE_CROSS_PARTICIPANT,
+                ANALYSIS_SCOPE_GROUP_COMPARISON,
+            }
             else "calculation_run"
         ),
         "repeated_measure_policy": (

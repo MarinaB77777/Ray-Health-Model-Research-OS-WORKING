@@ -17,7 +17,7 @@ class ExternalCoreServiceTests(unittest.TestCase):
             self.assertEqual(1, len(domains))
             self.assertEqual("sandboxed", domains[0]["lifecycle"])
 
-    def test_researcher_effective_settings_include_domain_but_no_external_ai(self) -> None:
+    def test_researcher_effective_settings_include_sandbox_external_ai_gateway(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             service = ExternalCoreService(temp_dir)
             effective = service.effective(
@@ -26,7 +26,7 @@ class ExternalCoreServiceTests(unittest.TestCase):
             )
             self.assertIn("parameter_design", effective["allowed_capabilities"])
             self.assertEqual(
-                "disabled_until_post_pilot",
+                "sandbox",
                 effective["external_ai_mode"],
             )
             self.assertEqual(3, len(effective["applied_revisions"]))

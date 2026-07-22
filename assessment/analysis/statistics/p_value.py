@@ -78,7 +78,7 @@ def regularized_incomplete_beta(a: float, b: float, x: float) -> float:
 def student_t_two_tailed_p_value(
     *,
     t_statistic: float,
-    degrees_of_freedom: int,
+    degrees_of_freedom: float,
 ) -> float:
     if degrees_of_freedom <= 0:
         raise ValueError("degrees_of_freedom must be positive")
@@ -93,6 +93,37 @@ def student_t_two_tailed_p_value(
         0.5,
         x,
     )
+
+
+def f_distribution_survival_function(
+    *,
+    f_statistic: float,
+    numerator_degrees_of_freedom: float,
+    denominator_degrees_of_freedom: float,
+) -> float:
+    """Upper-tail probability for the F distribution.
+
+    The transformation to the regularized incomplete beta function is exact
+    for positive degrees of freedom; no normal approximation is used.
+    """
+    if numerator_degrees_of_freedom <= 0:
+        raise ValueError("numerator_degrees_of_freedom must be positive")
+    if denominator_degrees_of_freedom <= 0:
+        raise ValueError("denominator_degrees_of_freedom must be positive")
+    if f_statistic < 0:
+        raise ValueError("f_statistic must be non-negative")
+    if math.isinf(f_statistic):
+        return 0.0
+
+    dfn = float(numerator_degrees_of_freedom)
+    dfd = float(denominator_degrees_of_freedom)
+    x = dfd / (dfd + dfn * f_statistic)
+    probability = regularized_incomplete_beta(
+        dfd / 2.0,
+        dfn / 2.0,
+        x,
+    )
+    return max(0.0, min(1.0, probability))
 
 
 def spearman_p_value(

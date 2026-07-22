@@ -39,6 +39,12 @@ PROTECTED_API_ROUTES = {
     ("GET", "/research/questionnaire-dataset"),
     ("POST", "/research/questionnaire-analysis/options"),
     ("POST", "/research/questionnaire-analysis/run"),
+    ("GET", "/research/model-parameter-measurements"),
+    ("GET", "/research/model-parameters/pair-options"),
+    ("GET", "/research/model-parameters/pair-participants"),
+    ("POST", "/research/model-parameters/dataset"),
+    ("POST", "/research/model-parameters/check"),
+    ("POST", "/research/model-parameters/statistical/run"),
     ("GET", "/research/constructor/catalog"),
     ("GET", "/research/constructor/questions"),
     ("POST", "/research/constructor/calculation-options"),
@@ -48,6 +54,20 @@ PROTECTED_API_ROUTES = {
     ("GET", "/external-core/settings/effective"),
     ("POST", "/external-core/settings/drafts"),
     ("GET", "/external-core/domains"),
+    ("GET", "/external-ai/contract"),
+    ("POST", "/external-ai/providers/models"),
+    ("GET", "/external-ai/connections"),
+    ("POST", "/external-ai/connections"),
+    ("DELETE", "/external-ai/connections/{connection_id}"),
+    ("GET", "/external-ai/policies"),
+    ("PUT", "/external-ai/policies"),
+    ("GET", "/external-ai/contract"),
+    ("POST", "/external-ai/providers/models"),
+    ("GET", "/external-ai/connections"),
+    ("POST", "/external-ai/connections"),
+    ("DELETE", "/external-ai/connections/{connection_id}"),
+    ("GET", "/external-ai/policies"),
+    ("PUT", "/external-ai/policies"),
     ("GET", "/researcher/auth/contract"),
     ("POST", "/researcher/auth/register"),
     ("POST", "/researcher/auth/login"),
@@ -189,6 +209,28 @@ class ApplicationSurfaceContractTests(unittest.TestCase):
         missing = sorted(PROTECTED_API_ROUTES - self.routes)
         self.assertEqual([], missing)
 
+    def test_ray_settings_exposes_safe_external_ai_controls(self) -> None:
+        content = (STATIC / "ray_settings.html").read_text(encoding="utf-8")
+        for marker in (
+            'id="externalCredential"',
+            'id="filterProfile"',
+            'id="neverSendTerms"',
+            'id="externalTestQuestion"',
+            "/external-ai/providers/models",
+            "/external-ai/connections",
+            "/external-ai/policies",
+        ):
+            self.assertIn(marker, content)
+
+    def test_ray_settings_reports_the_exact_failed_route_and_keeps_partial_results(self) -> None:
+        content = (STATIC / "ray_settings.html").read_text(encoding="utf-8")
+        self.assertIn('new Error(`${url} · ${message}`)', content)
+        self.assertIn("Promise.allSettled", content)
+        self.assertIn('errors.map(error=>error.message).join("\\n")', content)
+        self.assertIn("/researcher/auth/session", content)
+        self.assertIn('options.headers["X-CSRF-Token"]=csrf', content)
+        self.assertNotIn('localStorage.setItem("externalCredential"', content)
+
     def test_editors_are_separate_multilingual_pages(self) -> None:
         for route, filename in EDITOR_PAGES.items():
             with self.subTest(route=route):
@@ -249,12 +291,75 @@ class ApplicationSurfaceContractTests(unittest.TestCase):
         self.assertNotIn("/data-preparation-required", content)
         self.assertIn('statusFilter.value="not_ready"', content)
 
+    def test_data_preparation_selection_drives_questionnaire_and_parameter_workspaces(self) -> None:
+        content = (STATIC / "data_preparation.html").read_text(encoding="utf-8")
+
+        questionnaire_contract = (
+            'data-questionnaire-id=',
+            'selectQuestionnaireSample(this.dataset.questionnaireId,this.dataset.questionUuid)',
+            'question_uuid: question.question_uuid',
+            'scope: questionnaireDatasetScope',
+            'query.set("participant_reference", questionnaireParticipantReference)',
+            '/research/questionnaire-dataset?',
+            '/research/questionnaire-analysis/options',
+            '/research/questionnaire-analysis/run',
+            'questionnaireDatasetRequestVersion',
+            'questionnaireAnalysisRequestVersion',
+        )
+        parameter_contract = (
+            'data-parameter-code=',
+            'selectModelParameterFromCatalog(this.dataset.parameterCode)',
+            '/research/model-parameters/pair-options?',
+            '/research/model-parameters/pair-participants?',
+            '/research/model-parameters/dataset',
+            'analysis_scope:',
+            'repeated_measure_policy:',
+            'participant_reference:',
+            'modelParameterPairRequestVersion',
+            'modelParameterDatasetRequestVersion',
+        )
+
+        for marker in questionnaire_contract + parameter_contract:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, content)
+
+        self.assertNotIn('participant.paired_session_count', content)
+        self.assertIn('participant.paired_observation_count', content)
+
     def test_workspace_opens_real_ray_settings_page(self) -> None:
         workspace = (STATIC / "research_workspace.html").read_text(encoding="utf-8")
         settings = (STATIC / "ray_settings.html").read_text(encoding="utf-8")
         self.assertIn("location.href='/ray-settings'", workspace)
         self.assertIn('onclick="saveDraft()"', settings)
         self.assertIn("/external-core/settings/effective", settings)
+
+    def test_ray_settings_external_ai_controls_have_real_handlers(self) -> None:
+        settings = (STATIC / "ray_settings.html").read_text(encoding="utf-8")
+        for marker in (
+            "function renderExternal()",
+            "async function discoverExternalModels()",
+            "async function connectExternalAI()",
+            "async function saveExternalPolicy()",
+            "async function tryExternalAI()",
+            'api("/external-ai/providers/models"',
+            'api("/external-ai/connections"',
+            'api("/external-ai/policies"',
+            'api("/ray-colleague/researcher/respond"',
+        ):
+            with self.subTest(marker=marker):
+                self.assertIn(marker, settings)
+
+    def test_researcher_ray_request_requires_csrf_before_external_call(self) -> None:
+        source_text = MAIN.read_text(encoding="utf-8")
+        tree = ast.parse(source_text, filename=str(MAIN))
+        function = next(
+            node
+            for node in tree.body
+            if isinstance(node, ast.FunctionDef)
+            and node.name == "ray_colleague_researcher_respond"
+        )
+        source = ast.get_source_segment(source_text, function)
+        self.assertIn("_researcher_session(request, require_csrf=True)", source)
 
     def test_account_opens_the_separate_modular_project_workspace(self) -> None:
         account = (STATIC / "researcher_account.html").read_text(encoding="utf-8")

@@ -110,6 +110,7 @@ class RayResponse:
     clarification_questions: list[str] = field(default_factory=list)
     next_steps: list[str] = field(default_factory=list)
     action_proposals: list[RayActionProposal] = field(default_factory=list)
+    external_information: list[dict[str, Any]] = field(default_factory=list)
     unresolved: list[str] = field(default_factory=list)
     request_id: str = field(default_factory=lambda: str(uuid4()))
     created_at: str = field(default_factory=utc_now_iso)

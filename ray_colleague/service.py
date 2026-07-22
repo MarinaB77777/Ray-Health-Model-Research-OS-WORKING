@@ -3,6 +3,8 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
+from external_ai.service import ExternalAIGateway
+
 from .actions import RayActionStore
 from .audit import RayAuditLog
 from .context import RayContextResolver
@@ -21,7 +23,12 @@ from .memory import MemoryRecord, RayMemoryStore
 class RayColleagueService:
     """Governed, deterministic colleague foundation shared by two isolated roles."""
 
-    def __init__(self, data_dir: str | Path = "data") -> None:
+    def __init__(
+        self,
+        data_dir: str | Path = "data",
+        *,
+        external_ai_gateway: ExternalAIGateway | None = None,
+    ) -> None:
         base = Path(data_dir)
         self.contexts = RayContextResolver()
         self.memory = RayMemoryStore(base / "ray_colleague_memory.json")
@@ -29,6 +36,7 @@ class RayColleagueService:
         self.evidence = EvidenceRegistry(base / "ray_colleague_evidence.json")
         self.actions = RayActionStore(base / "ray_colleague_actions.json")
         self.audit = RayAuditLog(base / "ray_colleague_audit.jsonl")
+        self.external_ai_gateway = external_ai_gateway
 
     def contract(self) -> dict[str, Any]:
         result = self.contexts.contract()
@@ -40,6 +48,7 @@ class RayColleagueService:
                 "evidence_contract": "ray-colleague-evidence-1",
                 "learning_statuses": ["draft", "trial", "active", "rejected"],
                 "action_rule": "proposal_requires_explicit_confirmation",
+                "external_ai_rule": "separate_filtered_artifact_never_automatic_truth_memory_or_authority",
             }
         )
         return result
@@ -91,6 +100,34 @@ class RayColleagueService:
             unresolved=unresolved,
         )
 
+        if clean_message and self.external_ai_gateway is not None:
+            external_result = self.external_ai_gateway.ask(
+                account_id=(
+                    owner_id
+                    if role == RayRole.RESEARCH_COLLEAGUE
+                    else None
+                ),
+                role=role.value,
+                message=clean_message,
+                language=context.language.value,
+            )
+            artifact = external_result.to_dict()
+            response.external_information.append(artifact)
+            if external_result.status == "received" and external_result.content:
+                response.message = (
+                    localized(context.language, "external_information")
+                    + "\n\n"
+                    + external_result.content
+                )
+            elif external_result.status not in {"not_configured"}:
+                response.message = (
+                    response.message
+                    + "\n\n"
+                    + localized(context.language, "external_unavailable")
+                    + f" [{external_result.error_code or external_result.status}]"
+                )
+                response.unresolved.append("external_ai_response")
+
         if requested_action:
             proposal = self._build_action(context, requested_action, clean_message)
             if proposal:
@@ -114,6 +151,11 @@ class RayColleagueService:
                 "unresolved_count": len(unresolved),
                 "proposal_count": len(response.action_proposals),
                 "language": context.language.value,
+                "external_ai_status": (
+                    response.external_information[0]["status"]
+                    if response.external_information
+                    else "not_requested"
+                ),
             },
         )
         return result

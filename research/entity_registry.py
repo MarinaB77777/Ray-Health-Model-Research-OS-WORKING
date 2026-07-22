@@ -192,14 +192,22 @@ def _time_axis(language: str) -> dict[str, Any]:
     }
 
 
-def list_entities(entity_type: str | None = None, language: str = "ru") -> list[dict[str, Any]]:
+def list_entities(
+    entity_type: str | None = None,
+    language: str = "ru",
+    owner: str | None = None,
+) -> list[dict[str, Any]]:
     lang = _language(language)
     entities = [_time_axis(lang)]
     entities.extend(_question_entities(lang))
     entities.extend(_simple_entities(MODEL_PARAMETERS, "model_parameter", "health_model_parameter_catalog", lang))
     entities.extend(_simple_entities(MODEL_MECHANISMS, "mechanism", "health_model_mechanism_catalog", lang))
     entities.extend(_simple_entities(STATISTICAL_METHODS, "statistical_method", "scientific_method_catalog", lang))
-    objects = load_objects()
+    objects = [
+        item
+        for item in load_objects()
+        if owner is None or str(item.get("owner") or "") == owner
+    ]
     for item in objects:
         if str(item.get("object_type") or "") in REGISTERED_OBJECT_TYPES:
             entities.append(_registered_object_entity(item))

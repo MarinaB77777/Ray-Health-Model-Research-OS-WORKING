@@ -140,6 +140,47 @@ class GovernanceCompletionTests(unittest.TestCase):
         )
         self.assertIn("full_action", verdict.governance_blocked_action_scopes)
 
+    def test_allowed_external_ai_still_uses_external_minimal_separate_channel(self) -> None:
+        context = GovernanceContext(
+            trust_level=TrustLevel.BASIC,
+            external_communication_allowed=True,
+            evaluation_time=NOW,
+            privacy_policy_version="external-policy-1",
+            policy_temporal_validity={
+                "external_communication_policy": validity(
+                    "external_communication_policy",
+                    "external-policy-1",
+                )
+            },
+        )
+        verdict = governance_check(
+            ProposedAction(
+                action_id="action-external-ai-allowed",
+                action_type="external_ai_information_request",
+                requires_external_communication=True,
+                external_target_type=ExternalTargetType.EXTERNAL_AI,
+            ),
+            context,
+        )
+        self.assertEqual(
+            GovernanceDecisionStatus.RESTRICTED,
+            verdict.governance_decision_status,
+        )
+        self.assertEqual(
+            GovernanceVisibilityLevel.EXTERNAL_MINIMAL,
+            verdict.governance_visibility_level,
+        )
+        filtered = apply_visibility_scope(
+            {
+                "external_minimal": {
+                    "question": "safe question",
+                    "participant_id": "blocked",
+                }
+            },
+            verdict,
+        )
+        self.assertEqual({"question": "safe question"}, filtered)
+
     def test_expired_external_policy_is_reported(self) -> None:
         verdict = governance_check(
             ProposedAction(

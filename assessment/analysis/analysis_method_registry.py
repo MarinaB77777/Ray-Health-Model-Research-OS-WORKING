@@ -90,10 +90,13 @@ METHODS = [
             {"left": ["parametric_numeric"], "right": ["grouping"]},
         ],
         "required_conditions": [
+            "numeric_data",
             "two_groups",
             "independent_observations",
+            "minimum_group_size",
             "approximately_normal_outcome_within_groups_or_sufficient_sample_size",
             "variance_assumption_checked",
+            "no_extreme_outliers",
         ],
     },
     {
@@ -106,10 +109,14 @@ METHODS = [
             {"left": ["parametric_numeric"], "right": ["grouping"]},
         ],
         "required_conditions": [
+            "numeric_data",
             "three_or_more_groups",
             "independent_observations",
+            "minimum_group_size",
+            "group_balance",
             "approximately_normal_outcome_within_groups_or_sufficient_sample_size",
             "variance_assumption_checked",
+            "no_extreme_outliers",
         ],
     },
 ]
@@ -125,6 +132,8 @@ EXECUTABLE_METHOD_IDS = {
     "pearson_correlation",
     "mann_whitney_u",
     "kruskal_wallis",
+    "independent_t_test",
+    "one_way_anova",
 }
 
 for method in METHODS:

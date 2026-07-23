@@ -2,8 +2,7 @@ import uuid
 import json
 import shutil
 import os
-from api.ai_circuit.gemini_service import ask_gemini_free
-# или просто: from ai_circuit.gemini_service import ask_gemini_free
+from ai_circuit.gemini_service import ask_gemini_free
 from copy import deepcopy
 from collections import defaultdict
 from datetime import UTC, datetime

@@ -2,6 +2,7 @@ import uuid
 import json
 import shutil
 import os
+from ai_circuit.gemini_service import ask_gemini_free
 from copy import deepcopy
 from collections import defaultdict
 from datetime import UTC, datetime
@@ -8743,3 +8744,7 @@ def invalidate_session_from_data_editor(session_id: str, payload: dict):
 @app.get("/research/editors/audit")
 def get_research_editor_audit(object_type: str | None = None, object_id: str | None = None, limit: int = 200):
     return {"ok": True, "events": list_audit_events(object_type=object_type, object_id=object_id, limit=limit)}
+
+@app.get("/api/ai/ask")
+def ask_ai(prompt: str):
+    return {"response": ask_gemini_free(prompt)}

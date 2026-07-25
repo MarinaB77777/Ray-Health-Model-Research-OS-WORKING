@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Research OS | Hub</title>
+    <style>
+        body { font-family: system-ui, -apple-system, sans-serif; background: #0f172a; color: #f8fafc; margin: 0; padding: 0; }
+        .container { max-width: 1100px; margin: 0 auto; padding: 32px 24px; }
+        
+        .app-header { display: flex; justify-content: space-between; align-items: center; background: #1e293b; border-bottom: 1px solid #334155; padding: 12px 24px; }
+        .page-title { color: #f8fafc; font-weight: 700; font-size: 18px; display: flex; align-items: center; gap: 8px; }
+        
+        .header-controls { display: flex; align-items: center; gap: 16px; }
+        
+        .lang-picker { display: flex; gap: 6px; align-items: center; }
+        .lang-btn { background: transparent; border: none; color: #94a3b8; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 600; }
+        .lang-btn.active { background: #38bdf8; color: #0f172a; }
+
+        .hero { margin-bottom: 32px; }
+        h1 { font-size: 26px; color: #38bdf8; margin: 0 0 8px 0; }
+        p.subtitle { color: #94a3b8; font-size: 14px; margin: 0; }
+
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+        
+        .card {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: transform 0.2s, border-color 0.2s;
+            text-decoration: none;
+            color: inherit;
+        }
+        .card:hover {
+            transform: translateY(-2px);
+            border-color: #38bdf8;
+        }
+
+        .card-icon { font-size: 32px; margin-bottom: 12px; }
+        .card-title { font-size: 18px; font-weight: 700; color: #f8fafc; margin-bottom: 8px; }
+        .card-desc { font-size: 13px; color: #94a3b8; line-height: 1.5; margin-bottom: 20px; flex-grow: 1; }
+        
+        .card-link {
+            font-size: 13px;
+            font-weight: 600;
+            color: #38bdf8;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .settings-btn {
+            background: #334155;
+            color: #f8fafc;
+            padding: 6px 12px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 600;
+        }
+        .settings-btn:hover { background: #475569; }
+
+        footer { margin-top: 48px; border-top: 1px solid #334155; padding: 20px 0; text-align: center; font-size: 13px; color: #64748b; }
+    </style>
+</head>
+<body>
+
+<div class="app-header">
+    <span class="page-title">🔬 Research OS</span>
+    <div class="header-controls">
+        <a href="settings.html" class="settings-btn" data-i18n="settings_btn">⚙️ Настройки ИИ</a>
+        
+        <div class="lang-picker">
+            <button class="lang-btn" onclick="setLang('es', event)">🇲🇽 ES</button>
+            <button class="lang-btn" onclick="setLang('en', event)">🇺🇸  EN</button>
+            <button class="lang-btn" onclick="setLang('ru', event)">
+                RU</button>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <div class="hero">
+        <h1 data-i18n="hero_title">Психометрическая Лаборатория & Исследования</h1>
+        <p class="subtitle" data-i18n="hero_sub">Инструменты валидации, кластеризации, перевода и смыслового анализа опросников</p>
+    </div>
+
+    <div class="grid">
+        <!-- 1. Анализатор -->
+        <a href="analyzer.html" class="card">
+            <div>
+                <div class="card-icon">🧠</div>
+                <div class="card-title" data-i18n="tool1_title">Смысловой Анализатор Шкал</div>
+                <div class="card-desc" data-i18n="tool1_desc">
+                    Повопросная валидация: определение методик, квалификация стандартизированности и выделение смыслового интента.
+                </div>
+            </div>
+            <div class="card-link" data-i18n="open_tool">Открыть инструмент →</div>
+        </a>
+
+        <!-- 2. Конвертер анкет -->
+        <a href="importer.html" class="card">
+            <div>
+                <div class="card-icon">🔄</div>
+                <div class="card-title" data-i18n="tool2_title">Конвертер Анкет</div>
+                <div class="card-desc" data-i18n="tool2_desc">
+                    Преобразование файлов опросников (DOCX, PDF, TXT, PY, JS) в унифицированную каноническую структуру JSON.
+                </div>
+            </div>
+            <div class="card-link" data-i18n="open_tool">Открыть инструмент →</div>
+        </a>
+
+        <!-- 3. Переводчик -->
+        <a href="translator.html" class="card">
+            <div>
+                <div class="card-icon">🌐</div>
+                <div class="card-title" data-i18n="tool3_title">Переводчик Опросников</div>
+                <div class="card-desc" data-i18n="tool3_desc">
+                    Адаптивный перевод вопросов на испанский/английский с сохранением психометрического контекста и вариантов ответов.
+                </div>
+            </div>
+            <div class="card-link" data-i18n="open_tool">Открыть инструмент →</div>
+        </a>
+    </div>
+
+    <footer>
+        <p style="margin: 0;" data-i18n="footer_text">
+            ✨ Спроектировано и разработано совместно с <strong>Gemini AI</strong> | <strong>Research OS Pilot</strong>
+        </p>
+    </footer>
+</div>
+
+<script>
+let currentLang = 'ru';
+
+const i18n = {
+    ru: {
+        settings_btn: "⚙️ Настройки ИИ",
+        hero_title: "Психометрическая Лаборатория & Исследования",
+        hero_sub: "Инструменты валидации, кластеризации, перевода и смыслового анализа опросников",
+        tool1_title: "Смысловой Анализатор Шкал",
+        tool1_desc: "Повопросная валидация: определение методик, квалификация стандартизированности и выделение смыслового интента.",
+        tool2_title: "Конвертер Анкет",
+        tool2_desc: "Преобразование файлов опросников (DOCX, PDF, TXT, PY, JS) в унифицированную каноническую структуру JSON.",
+        tool3_title: "Переводчик Опросников",
+        tool3_desc: "Адаптивный перевод вопросов на испанский/английский с сохранением психометрического контекста и вариантов ответов.",
+        open_tool: "Открыть инструмент →",
+        footer_text: "✨ Спроектировано и разработано совместно с <strong>Gemini AI</strong> | <strong>Research OS Pilot</strong>"
+    },
+    es: {
+        settings_btn: "⚙️ Configuración IA",
+        hero_title: "Laboratorio Psicométrico e Investigación",
+        hero_sub: "Herramientas de validación, agrupación, traducción y análisis semántico de cuestionarios",
+        tool1_title: "Analizador Semántico de Escalas",
+        tool1_desc: "Validación pregunta por pregunta: identificación de metodologías, estandarización y extracción de intención.",
+        tool2_title: "Convertidor de Cuestionarios",
+        tool2_desc: "Transformación de archivos de cuestionarios (DOCX, PDF, TXT, PY, JS) en una estructura JSON unificada.",
+        tool3_title: "Traductor de Cuestionarios",
+        tool3_desc: "Traducción adaptativa de preguntas al español/inglés manteniendo el contexto psicométrico y las opciones de respuesta.",
+        open_tool: "Abrir herramienta →",
+        footer_text: "✨ Diseñado y desarrollado en colaboración con <strong>Gemini AI</strong> | <strong>Research OS Pilot</strong>"
+    },
+    en: {
+        settings_btn: "⚙️ AI Settings",
+        hero_title: "Psychometric Lab & Research OS",
+        hero_sub: "Tools for item validation, clustering, translation, and semantic analysis of survey question banks",
+        tool1_title: "Scale Semantic Analyzer",
+        tool1_desc: "Item-level validation: methodology identification, standardization check, and semantic intent extraction.",
+        tool2_title: "Survey Converter",
+        tool2_desc: "Transformation of survey files (DOCX, PDF, TXT, PY, JS) into a unified canonical JSON structure.",
+        tool3_title: "Survey Translator",
+        tool3_desc: "Adaptive question translation to Spanish/English preserving psychometric context and answer choices.",
+        open_tool: "Open tool →",
+        footer_text: "✨ Designed and built in collaboration with <strong>Gemini AI</strong> | <strong>Research OS Pilot</strong>"
+    }
+};
+
+function setLang(lang, e) {
+    currentLang = lang;
+    localStorage.setItem('app_language', lang);
+    
+    document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.min ? btn.classList.remove('active') : btn.classList.remove('active'));
+    if (e && e.target) e.target.classList.add('active');
+
+    const dict = i18n[lang] || i18n.ru;
+    document.querySelectorAll('[data-i18n]').forEach(elem => {
+        const key = elem.getAttribute('data-i18n');
+        if (dict[key]) {
+            elem.innerHTML = dict[key];
+        }
+    });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const savedLang = localStorage.getItem('app_language') || 'ru';
+    const btn = Array.from(document.querySelectorAll('.lang-btn')).find(b => b.innerText.toLowerCase().includes(savedLang));
+    if (btn) btn.click();
+});
+</script>
+
+</body>
+</html>

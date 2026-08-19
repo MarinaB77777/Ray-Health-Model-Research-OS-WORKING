@@ -55,6 +55,17 @@ def test_runtime_completes_only_runtime_step_without_claiming_world_effect():
     assert result.verification_evidence == {}
 
 
+def test_runtime_rejects_governance_verdict_bound_to_other_action():
+    verdict = allowed_verdict(authority_scope_id="different_action")
+
+    result = RuntimeService().process_action(make_action(verdict))
+
+    assert result.success is False
+    assert result.reanalysis_requested is True
+    assert result.status == RuntimeStatus.NEEDS_REANALYSIS
+    assert result.error_code == "GOVERNANCE_VERDICT_SCOPE_MISMATCH"
+
+
 def test_runtime_rejects_expired_governance_verdict():
     issued = datetime.now(timezone.utc) - timedelta(minutes=10)
     verdict = allowed_verdict(

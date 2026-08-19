@@ -99,17 +99,14 @@ class TemporaryMemoryRecord:
     """
 
     id: str = field(default_factory=lambda: str(uuid4()))
-
     record_type: TemporaryMemoryType = TemporaryMemoryType.RUNTIME_COORDINATION
     status: TemporaryMemoryStatus = TemporaryMemoryStatus.ACTIVE
     scope: TemporaryMemoryScope = TemporaryMemoryScope.SESSION
     source: TemporaryMemorySource = TemporaryMemorySource.RUNTIME
-
     session_id: Optional[str] = None
     task_id: Optional[str] = None
     related_action_id: Optional[str] = None
     related_verdict_id: Optional[str] = None
-
     memory_class: str = WORKING_MEMORY_CLASS
     truth_type: MemoryTruthType = MemoryTruthType.OPERATIONAL_STATE
     subject: str = "system"
@@ -117,24 +114,16 @@ class TemporaryMemoryRecord:
     provenance_refs: tuple[str, ...] = ()
     freshness: MemoryFreshness = MemoryFreshness.CURRENT
     confidence: Optional[float] = None
-
-    # Operational payload only. Raw Inner Core content is forbidden.
     payload: dict[str, Any] = field(default_factory=dict)
-
     payload_summary: Optional[str] = None
     retention_reason: Optional[str] = None
-    # Legacy field retained for serialization/API compatibility. True is rejected:
-    # Working Memory cannot self-promote into another memory class or Heart.
     promotion_allowed: bool = False
     sensitivity_level: TemporaryMemorySensitivity = TemporaryMemorySensitivity.MEDIUM
-
     priority: int = 0
     tags: list[str] = field(default_factory=list)
-
     created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     expires_at: Optional[datetime] = None
-
     deletion_reason: Optional[str] = None
 
     def validate(self) -> None:
@@ -162,11 +151,7 @@ class TemporaryMemoryRecord:
                 cls._assert_no_raw_inner_core(item)
 
     def is_expired(self, now: Optional[datetime] = None) -> bool:
-        if self.status in {
-            TemporaryMemoryStatus.EXPIRED,
-            TemporaryMemoryStatus.INVALIDATED,
-            TemporaryMemoryStatus.DELETED,
-        }:
+        if self.status in {TemporaryMemoryStatus.EXPIRED, TemporaryMemoryStatus.DELETED}:
             return True
         if self.expires_at is None:
             return False

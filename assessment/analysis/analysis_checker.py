@@ -1,39 +1,21 @@
 from assessment.analysis.analysis_method_registry import METHODS
 from assessment.analysis.variable_metadata import build_variable_metadata
-from assessment.analysis.checks.data_available import (
-    check_variable_has_data,
-)
-from assessment.analysis.checks.scale_pattern import (
-    check_scale_pattern_supported,
-)
-from assessment.analysis.checks.observed_groups import (
-    check_observed_groups,
-)
-from assessment.analysis.checks.paired_observations import (
-    check_paired_observations,
-)
-from assessment.analysis.checks.sample_size import (
-    check_minimum_paired_sample_size,
-)
+from assessment.analysis.checks.data_available import check_variable_has_data
+from assessment.analysis.checks.scale_pattern import check_scale_pattern_supported
+from assessment.analysis.checks.observed_groups import check_observed_groups
+from assessment.analysis.checks.paired_observations import check_paired_observations
+from assessment.analysis.checks.sample_size import check_minimum_paired_sample_size
 from assessment.analysis.checks.monotonic_relationship import (
     check_monotonic_relationship_plausible,
 )
 from assessment.analysis.method_check_map import METHOD_CHECK_MAP
-from assessment.analysis.checks.scale_defined import (
-    check_scale_defined,
-)
-from assessment.analysis.checks.complete_pairs import (
-    check_minimum_complete_pairs,
-)
+from assessment.analysis.checks.scale_defined import check_scale_defined
+from assessment.analysis.checks.complete_pairs import check_minimum_complete_pairs
 from assessment.analysis.checks.independent_observations import (
     check_independent_observations,
 )
-from assessment.analysis.checks.expected_counts import (
-    check_expected_cell_counts,
-)
-from assessment.analysis.checks.contingency_table import (
-    check_two_by_two_table,
-)
+from assessment.analysis.checks.expected_counts import check_expected_cell_counts
+from assessment.analysis.checks.contingency_table import check_two_by_two_table
 from assessment.analysis.checks.group_count import (
     check_three_or_more_groups,
     check_two_groups,
@@ -41,24 +23,17 @@ from assessment.analysis.checks.group_count import (
 from assessment.analysis.checks.linear_relationship import (
     check_linear_relationship_plausible,
 )
-from assessment.analysis.checks.outliers import (
-    check_extreme_outliers_iqr,
-)
-from assessment.analysis.checks.constant_variable import (
-    check_not_constant_variable,
-)
+from assessment.analysis.checks.outliers import check_extreme_outliers_iqr
+from assessment.analysis.checks.constant_variable import check_not_constant_variable
 from assessment.analysis.checks.group_balance import check_group_balance
 from assessment.analysis.checks.group_size import check_minimum_group_size
 from assessment.analysis.checks.normality import check_group_normality
 from assessment.analysis.checks.numeric_data import check_numeric_data
 from assessment.analysis.checks.variance import check_variance_assumption
-from assessment.analysis.statistics.parametric_groups import (
-    collect_independent_groups,
-)
+from assessment.analysis.statistics.parametric_groups import collect_independent_groups
 from assessment.analysis.statistics.contingency import collect_contingency_table
-from assessment.measurement.scale_registry import (
-    scale_matches_requirement,
-)
+from assessment.measurement.scale_registry import scale_matches_requirement
+
 
 def _values_for_question(answer_records: list[dict], question_code: str) -> list:
     return [
@@ -69,10 +44,7 @@ def _values_for_question(answer_records: list[dict], question_code: str) -> list
 
 
 def _non_missing(values: list) -> list:
-    return [
-        value for value in values
-        if value is not None and value != ""
-    ]
+    return [value for value in values if value is not None and value != ""]
 
 
 def _find_method(method_id: str) -> dict | None:
@@ -80,26 +52,6 @@ def _find_method(method_id: str) -> dict | None:
         if method.get("method_id") == method_id:
             return method
     return None
-
-
-def _scale_matches(method: dict, left_scale: str | None, right_scale: str | None) -> bool:
-    if not left_scale or not right_scale:
-        return False
-
-    for pattern in method.get("scale_patterns", []):
-        if (
-            any(
-                scale_matches_requirement(left_scale, requirement)
-                for requirement in pattern.get("left", [])
-            )
-            and any(
-                scale_matches_requirement(right_scale, requirement)
-                for requirement in pattern.get("right", [])
-            )
-        ):
-            return True
-
-    return False
 
 
 def check_pair_analysis(
@@ -111,7 +63,6 @@ def check_pair_analysis(
     answer_records: list[dict],
 ) -> dict:
     metadata = build_variable_metadata(study_id)
-
     record_metadata = _metadata_from_answer_records(answer_records)
     if not metadata:
         metadata = record_metadata
@@ -126,18 +77,12 @@ def check_pair_analysis(
 
     left_meta = metadata.get(left_question_code, {})
     right_meta = metadata.get(right_question_code, {})
-
     method = _find_method(method_id)
 
     if method is None:
-        return {
-            "ok": False,
-            "status": "method_not_found",
-            "method_id": method_id,
-        }
-    
-    required_checks = METHOD_CHECK_MAP.get(method_id)
+        return {"ok": False, "status": "method_not_found", "method_id": method_id}
 
+    required_checks = METHOD_CHECK_MAP.get(method_id)
     if required_checks is None:
         return {
             "ok": False,
@@ -147,13 +92,10 @@ def check_pair_analysis(
 
     left_values = _values_for_question(answer_records, left_question_code)
     right_values = _values_for_question(answer_records, right_question_code)
-
     left_non_missing = _non_missing(left_values)
     right_non_missing = _non_missing(right_values)
-
     left_scale = left_meta.get("scale_type")
     right_scale = right_meta.get("scale_type")
-
     grouped_dataset = None
 
     def independent_groups() -> dict:
@@ -166,67 +108,34 @@ def check_pair_analysis(
             )
         return grouped_dataset
 
-    checks = []
-
-    checks.append(
+    checks = [
         check_variable_has_data(
             question_code=left_question_code,
             answer_records=answer_records,
             side="left",
-        )
-    )
-
-    checks.append(
+        ),
         check_variable_has_data(
             question_code=right_question_code,
             answer_records=answer_records,
             side="right",
-        )
-    )
-
-    checks.append(
-        check_scale_defined(
-            left_scale=left_scale,
-            right_scale=right_scale,
-        )
-    )
-
-    checks.append(
+        ),
+        check_scale_defined(left_scale=left_scale, right_scale=right_scale),
         check_scale_pattern_supported(
             method=method,
             left_scale=left_scale,
             right_scale=right_scale,
-        )
-    )
-
-    checks.append(
-        check_observed_groups(
-            values=left_non_missing,
-            side="left",
-        )
-    )
-
-    checks.append(
-        check_observed_groups(
-            values=right_non_missing,
-            side="right",
-        )
-    )
-
-    checks.append(
+        ),
+        check_observed_groups(values=left_non_missing, side="left"),
+        check_observed_groups(values=right_non_missing, side="right"),
         check_not_constant_variable(
             values=left_values,
             variable_name=left_question_code,
-        )
-    )
-
-    checks.append(
+        ),
         check_not_constant_variable(
             values=right_values,
             variable_name=right_question_code,
-        )
-    )
-
+        ),
+    ]
 
     for condition in method.get("required_conditions", []):
         if condition == "paired_observations":
@@ -235,16 +144,13 @@ def check_pair_analysis(
                 left_question_code=left_question_code,
                 right_question_code=right_question_code,
             )
-
             checks.append(paired_check)
-
             checks.append(
                 check_minimum_paired_sample_size(
                     paired_count=paired_check["details"]["paired_subject_count"],
                     minimum_required=3,
                 )
             )
-
             checks.append(
                 check_minimum_complete_pairs(
                     left_values=left_values,
@@ -252,7 +158,6 @@ def check_pair_analysis(
                     minimum_required=3,
                 )
             )
-
             continue
 
         if condition == "monotonic_relationship_plausible":
@@ -267,12 +172,15 @@ def check_pair_analysis(
             continue
 
         if condition == "independent_observations":
-            checks.append(check_independent_observations(
-                answer_records=[
-                    record for record in answer_records
-                    if record.get("question_code") == left_question_code
-                ],
-            ))
+            checks.append(
+                check_independent_observations(
+                    answer_records=[
+                        record
+                        for record in answer_records
+                        if record.get("question_code") == left_question_code
+                    ]
+                )
+            )
             continue
 
         if condition == "sufficient_expected_cell_counts":
@@ -282,26 +190,28 @@ def check_pair_analysis(
                 right_question_code=right_question_code,
             )
             if not contingency.get("ok"):
-                checks.append({
-                    "check_id": "expected_cell_counts",
-                    "status": "failed",
-                    "details": contingency,
-                })
+                checks.append(
+                    {
+                        "check_id": "expected_cell_counts",
+                        "status": "failed",
+                        "details": contingency,
+                    }
+                )
             else:
                 checks.append(check_expected_cell_counts(table=contingency["table"]))
             continue
 
         if condition == "two_by_two_table":
-            checks.append(check_two_by_two_table(
-                left_values=left_values,
-                right_values=right_values,
-            ))
+            checks.append(
+                check_two_by_two_table(
+                    left_values=left_values,
+                    right_values=right_values,
+                )
+            )
             continue
 
         if condition in {"two_groups", "three_or_more_groups"}:
-            grouping_is_left = scale_matches_requirement(
-                left_scale, "grouping"
-            )
+            grouping_is_left = scale_matches_requirement(left_scale, "grouping")
             group_values = left_non_missing if grouping_is_left else right_non_missing
             side = "left" if grouping_is_left else "right"
             checks.append(
@@ -314,36 +224,46 @@ def check_pair_analysis(
         if condition == "minimum_group_size":
             grouped = independent_groups()
             if not grouped.get("ok"):
-                checks.append({
-                    "check_id": condition,
-                    "status": "failed",
-                    "details": grouped,
-                })
+                checks.append(
+                    {"check_id": condition, "status": "failed", "details": grouped}
+                )
             else:
-                checks.append(check_minimum_group_size(
-                    group_values=[
-                        name
-                        for name, values in grouped["groups"].items()
-                        for _ in values
-                    ],
-                    minimum_per_group=2,
-                ))
+                checks.append(
+                    check_minimum_group_size(
+                        group_values=[
+                            name
+                            for name, values in grouped["groups"].items()
+                            for _ in values
+                        ],
+                        minimum_per_group=2,
+                    )
+                )
             continue
 
         if condition == "group_balance":
             grouped = independent_groups()
             if not grouped.get("ok"):
-                checks.append({"check_id": condition, "status": "failed", "details": grouped})
+                checks.append(
+                    {"check_id": condition, "status": "failed", "details": grouped}
+                )
             else:
-                checks.append(check_group_balance(group_values=[
-                    name for name, values in grouped["groups"].items() for _ in values
-                ]))
+                checks.append(
+                    check_group_balance(
+                        group_values=[
+                            name
+                            for name, values in grouped["groups"].items()
+                            for _ in values
+                        ]
+                    )
+                )
             continue
 
         if condition == "normality_diagnostic_within_groups":
             grouped = independent_groups()
             if not grouped.get("ok"):
-                checks.append({"check_id": condition, "status": "failed", "details": grouped})
+                checks.append(
+                    {"check_id": condition, "status": "failed", "details": grouped}
+                )
             else:
                 checks.append(check_group_normality(groups=grouped["groups"]))
             continue
@@ -351,10 +271,15 @@ def check_pair_analysis(
         if condition == "variance_assumption_checked":
             grouped = independent_groups()
             if not grouped.get("ok"):
-                checks.append({"check_id": condition, "status": "failed", "details": grouped})
+                checks.append(
+                    {"check_id": condition, "status": "failed", "details": grouped}
+                )
             else:
                 variance_check = check_variance_assumption(groups=grouped["groups"])
-                if method_id in {"independent_t_test", "one_way_anova"} and variance_check.get("status") == "failed":
+                if (
+                    method_id in {"independent_t_test", "one_way_anova"}
+                    and variance_check.get("status") == "failed"
+                ):
                     variance_check["status"] = "warning"
                     variance_check["details"]["selected_variant"] = (
                         "welch_unequal_variance"
@@ -366,17 +291,23 @@ def check_pair_analysis(
 
         if condition == "numeric_data":
             grouping_is_left = scale_matches_requirement(left_scale, "grouping")
-            checks.append(check_numeric_data(
-                values=right_values if grouping_is_left else left_values,
-                variable_name=right_question_code if grouping_is_left else left_question_code,
-            ))
+            checks.append(
+                check_numeric_data(
+                    values=right_values if grouping_is_left else left_values,
+                    variable_name=(
+                        right_question_code if grouping_is_left else left_question_code
+                    ),
+                )
+            )
             continue
 
         if condition == "linear_relationship_plausible":
-            checks.append(check_linear_relationship_plausible(
-                left_values=left_values,
-                right_values=right_values,
-            ))
+            checks.append(
+                check_linear_relationship_plausible(
+                    left_values=left_values,
+                    right_values=right_values,
+                )
+            )
             continue
 
         if condition == "no_extreme_outliers":
@@ -397,23 +328,13 @@ def check_pair_analysis(
             checks.extend([left_check, right_check])
             continue
 
-        checks.append({
-            "check_id": condition,
-            "status": "pending",
-            "details": {
-                "reason": "not implemented yet in analyzer checks",
-            },
-        })
+        raise RuntimeError(
+            "UNIMPLEMENTED_REQUIRED_ANALYSIS_CHECK: "
+            f"method={method_id}; condition={condition}"
+        )
 
-    failed = [
-        check for check in checks
-        if check.get("status") == "failed"
-    ]
-
-    pending = [
-        check for check in checks
-        if check.get("status") == "pending"
-    ]
+    failed = [check for check in checks if check.get("status") == "failed"]
+    pending = [check for check in checks if check.get("status") == "pending"]
 
     if failed:
         status = "not_applicable"
@@ -436,14 +357,12 @@ def check_pair_analysis(
         "checks": checks,
     }
 
-def _metadata_from_answer_records(
-    answer_records: list[dict],
-) -> dict:
+
+def _metadata_from_answer_records(answer_records: list[dict]) -> dict:
     metadata = {}
 
     for record in answer_records:
         code = record.get("question_code")
-
         if not code:
             continue
 

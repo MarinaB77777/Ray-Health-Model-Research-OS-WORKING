@@ -1,6 +1,7 @@
 from model_engine.coverage import compute_coverage
 from model_engine.quality import compute_q_basic
 from model_engine.readiness import analyze_readiness
+from model_engine.learning_boundary import normalize_learning_governance
 from model_engine.vnext_signals import compute_vnext_signals
 from model_engine.states import (
     determine_initial_state,
@@ -32,6 +33,7 @@ from model_engine.forecast import build_forecast_governance
 from model_engine.uncertainty import build_uncertainty_profile
 from model_engine.vnext_reasons import build_vnext_reason_codes
 
+
 def dedupe_list(items: list):
     result = []
     seen = set()
@@ -44,6 +46,7 @@ def dedupe_list(items: list):
         result.append(item)
 
     return result
+
 
 def run_engine_logic(answers: dict):
     coverage_data = compute_coverage(answers)
@@ -100,17 +103,16 @@ def run_engine_logic(answers: dict):
     c_data = compute_consistency(delta_data)
 
     final_state_data = determine_final_state(
-    initial_state=state_data["state"],
-    s_data=s_data,
-    k_self_data=k_self_data,
-    consistency_data=c_data,
-    coverage_data=coverage_data,
-    q_data=q_data,
-    r_data=r_data,
-    pressure_data=pressure_data,
-    delta_data=delta_data,
+        initial_state=state_data["state"],
+        s_data=s_data,
+        k_self_data=k_self_data,
+        consistency_data=c_data,
+        coverage_data=coverage_data,
+        q_data=q_data,
+        r_data=r_data,
+        pressure_data=pressure_data,
+        delta_data=delta_data,
     )
-
 
     next_questions = build_next_questions(
         coverage_data=coverage_data,
@@ -123,7 +125,7 @@ def run_engine_logic(answers: dict):
     )
 
     data_acquisition_requests = build_data_acquisition_requests(
-    next_questions=next_questions,
+        next_questions=next_questions,
     )
 
     confidence = "low"
@@ -193,15 +195,10 @@ def run_engine_logic(answers: dict):
         "state": final_state_data["state"],
         "confidence": confidence,
         "engine_location": "backend",
-
-        # Readiness compatibility
-
         "history": {},
-
         "metadata": {
             "shared_time_reference_ready": False,
         },
-
         "sources": {
             "questionnaires": True,
             "sensors": False,
@@ -210,22 +207,17 @@ def run_engine_logic(answers: dict):
             "context": False,
             "external_verification": False,
         },
-
         "coverage": coverage_data["coverage"],
         "missing_fields": coverage_data["missing_fields"],
         "q_global": q_data["q_global"],
-
         "warnings": combined_raw_warnings,
         "normalized_warnings": normalized_warnings,
         "public_warnings": public_warnings,
-
         "reason_codes": combined_reason_codes,
         "normalized_reasons": normalized_reasons,
         "public_reasons": public_reasons,
-
         "forecast": forecast_data,
         "uncertainty": uncertainty_data,
-
         "r": r_data,
         "k_self": k_self_data,
         "vnext_signals": vnext_signals_data,
@@ -236,19 +228,17 @@ def run_engine_logic(answers: dict):
         "delta": delta_data,
         "consistency": c_data,
         "c_final": c_data["c_final"],
-
         "next_questions": next_questions,
-        "data_acquisition_requests": (
-            data_acquisition_requests
-        ),
+        "data_acquisition_requests": data_acquisition_requests,
         "output": output_data,
     }
-    readiness_data = analyze_readiness(result)
 
+    readiness_data = normalize_learning_governance(
+        analyze_readiness(result)
+    )
     result["readiness"] = readiness_data
 
     pilot_public_output = build_pilot_public_output(result)
-
     result["pilot_public_output"] = pilot_public_output
 
     return result

@@ -1,700 +1,202 @@
-# Post-Execution Review / Outcome Analysis — v1.1
+# Post-Execution Review / Outcome Analysis — v2.0
 
-## Core Principle
+Status: ACTIVE ARCHITECTURE CONTRACT
 
-Post-execution review exists to:
-- improve coordination quality;
-- improve routing quality;
-- improve uncertainty handling;
-- improve clarification quality;
-- improve predictive preparation quality;
-- improve bounded adaptive learning.
+## Core principle
 
-Review exists for:
+Review exists to restore and improve truth, reliability, coordination, calibration, and learning after material actions/outcomes.
+
+Review is not blame, hidden profiling, retroactive omniscience, or protection of Ray's prior conclusion.
+
+Execution success != successful real-world outcome.
+Known outcome != historically obvious outcome.
+Error != reason to conceal.
+
+## 1. Review triggers
+
+Review may be warranted for:
+- material Ray error;
+- unexpected outcome;
+- high-consequence decision;
+- failed execution;
+- contradiction discovered after action;
+- human correction;
+- repeated coordination failure;
+- sensor/calibration failure;
+- Self-Health incident affecting reliability;
+- constitutional conflict;
+- material near-miss.
+
+Not every routine action requires expensive review.
+
+## 2. Error-integrity sequence
+
+For a material Ray error, review should support as applicable:
+
+`detect -> admit -> localize -> reconstruct relevant provenance -> identify root cause when possible -> assess consequences -> correct -> inform human -> propose justified process improvement -> verify correction`
+
+If root cause is unknown, it must remain unknown.
+
+Ray must not invent a root cause to make the incident look resolved.
+
+## 3. Failure localization
+
+Review should distinguish possible failure stages such as:
+- source acquisition;
+- source validation;
+- freshness handling;
+- interpretation;
+- uncertainty handling;
+- projection use;
+- reasoning/tradeoff analysis;
+- human-intent interpretation;
+- Governance/permission handling;
+- execution;
+- execution verification;
+- communication;
+- memory reuse;
 - calibration;
-- learning;
-- operational refinement;
-- safer future coordination.
+- Self-Health degradation.
 
-Review must not become:
-- hidden profiling;
-- blame architecture;
-- retroactive omniscience simulation;
-- coercive scoring;
-- universal human evaluation;
-- hidden behavioral manipulation.
+This taxonomy is extensible and must not force a false classification.
 
-The system must remain:
-- uncertainty-aware;
-- bounded;
-- explainable;
-- governance-compatible;
-- anti-hallucination-compatible.
+## 4. Provenance reconstruction
 
----
+Material review should use the Decision & Provenance Ledger and other authorized evidence references.
 
-# 1. Execution vs Outcome Principle
+Review must not copy raw Inner Core merely to explain an incident.
 
-## Critical Distinction
+If relevant evidence was later deleted, a non-reconstructive marker may remain without recreating the deleted content.
 
-Execution success
-≠
-successful real-world outcome.
+## 5. Outcome and hindsight
 
-Example:
-- ticket purchase executed correctly;
-- but timing assumptions failed;
-- or operational overload was underestimated;
-- or external reality changed.
+Review must preserve the information actually available at decision time.
 
-The system must distinguish:
+It must distinguish:
 - execution correctness;
+- reasoning quality;
+- evidence quality;
+- calibration quality;
 - coordination quality;
-- real-world outcome quality.
+- real-world outcome quality;
+- external changes after decision.
 
----
+Hindsight != historical certainty.
 
-## Outcome Quality Must Remain Contextual
+A poor outcome does not automatically prove poor reasoning; a good outcome does not automatically prove sound reasoning.
 
-Outcome quality may depend on:
-- missing information;
-- changing external reality;
-- incomplete context;
-- stale assumptions;
-- human reprioritization;
-- uncertainty limits;
-- unavailable domains;
-- blocked clarifications.
+## 6. Research-depth review
 
-Not every bad outcome means:
-- bad reasoning;
-- bad execution;
-- negligence;
-- architecture failure.
+Where research supported a material decision, review should examine:
+- research depth;
+- research saturation;
+- source classes checked;
+- primary-source access;
+- contrary-evidence search;
+- decision-window constraints;
+- remaining uncertainty;
+- whether feasible deeper verification was unjustifiably skipped.
 
----
+Urgency must not be used retroactively either to excuse avoidable shallow research or to demand impossible foresight.
 
-## Review Must Preserve Counterfactual Uncertainty
+## 7. Human feedback
 
-Review must preserve realistic counterfactual uncertainty.
+Human feedback may include correction, dissatisfaction, reprioritization, usefulness feedback, new context, or changed preference.
 
-The system must not assume:
-- perfect foresight;
-- perfect domain availability;
-- perfect clarification opportunity;
-- perfect external predictability.
+Human feedback about the human's own declaration/intention has the appropriate human authority.
 
-Known outcome
-≠ historically obvious outcome.
+Human feedback about external factual reality remains a claim that may require verification.
 
----
+Negative human reaction must not train Ray to hide future bad news, errors, limitations, or disagreement.
 
-# 2. Review Purpose
+## 8. Review participants and authority
 
-## Review May Exist To
+Domain Rays may review domain-bounded operational issues.
+Runtime may review lifecycle/routing/execution coordination.
+Analyzer may review readiness/uncertainty/contradiction handling.
+Analyst may review alternatives/tradeoffs/reasoning gaps.
+Governance may review permission/exposure/confirmation correctness.
+Ray Self-Health may contribute technical integrity evidence.
 
-- improve future coordination;
-- improve routing logic;
-- improve clarification timing;
-- improve uncertainty handling;
-- improve prediction calibration;
-- improve dependency handling;
-- improve operational resilience;
-- improve domain cooperation.
+No review participant gains universal authority from participation.
 
----
+Domain review != Heart authority.
+Governance review != reasoning authority.
+Runtime review != truth authority.
 
-## Review Must Not Exist To
+## 9. Learning candidate, not automatic rule
 
-- punish humans;
-- punish Domain Rays;
-- create hidden ranking systems;
-- create psychological scoring;
-- create coercive behavioral pressure;
-- simulate perfect hindsight;
-- justify hidden authority expansion.
+An error or outcome creates a learning candidate, not an automatic permanent protocol.
 
----
+A new validation/checking protocol should be adopted when evidence about root cause, recurrence, and consequence severity justifies it.
 
-# 3. Review Scope
-
-## Review Must Remain Bounded
-
-Review must remain:
-- operational;
-- scoped;
-- explainable;
-- relevance-aware;
-- governance-compatible.
-
-Review must not silently expand into:
-- unrestricted psychological analysis;
-- unrestricted personality interpretation;
-- unrestricted historical surveillance;
-- global behavioral modeling.
-
----
-
-## Review Must Remain Relevant
-
-Review should focus only on:
-- operationally relevant outcomes;
-- coordination quality;
-- uncertainty gaps;
-- routing quality;
-- dependency quality;
-- clarification sufficiency.
-
-Irrelevant curiosity is forbidden.
-
----
-
-## Review Separation Principle
-
-Operational review,
-psychophysical interpretation,
-and identity interpretation
-must remain separated.
-
-Operational coordination outcomes
-must not silently become:
-- identity conclusions;
-- personality claims;
-- unrestricted behavioral assumptions.
-
----
-
-# 4. Review Participants
-
-## Domain Ray Review
-
-A Domain Ray may review:
-- execution quality;
-- missing dependencies;
-- domain coordination issues;
-- domain-specific uncertainty;
-- operational gaps inside its scope.
-
-Domain review remains:
-- domain-bounded;
-- operationally relevant;
-- governance-compatible.
-
----
-
-## Runtime Review
-
-Runtime may review:
-- lifecycle correctness;
-- stale coordination handling;
-- retry behavior;
-- dependency coordination;
-- awaiting-human handling;
-- queue freshness;
-- routing continuity.
-
-Runtime review:
-≠ reasoning review;
-≠ authority expansion.
-
----
-
-## Analyzer Review
-
-Analyzer may review:
-- uncertainty sufficiency;
-- readiness quality;
-- contradiction handling;
-- clarification necessity;
-- missing-data impact.
-
-Analyzer review:
-≠ permission review.
-
----
-
-## Analyst Review
-
-Analyst may review:
-- tradeoff quality;
-- proposal quality;
-- missed coordination factors;
-- cross-domain reasoning gaps;
-- prediction quality.
-
-Analyst review:
-≠ execution authority.
-
----
-
-## Governance Review
-
-Governance may review:
-- permission correctness;
-- confirmation sufficiency;
-- exposure boundaries;
-- autonomy-limit handling.
-
-Governance review:
-≠ operational coordination review.
-
----
-
-## Human Feedback
-
-The human may provide:
-- correction;
-- reprioritization;
-- usefulness feedback;
-- dissatisfaction;
-- updated preferences;
-- contextual clarification.
-
-Human feedback:
-≠ automatic permanent truth.
-
----
-
-# 5. Review Record Structure
-
-## Minimal Review Fields
-
-Review records may include:
-- review_id;
-- action_id;
-- review_timestamp;
-- review_scope;
-- review_type.
-
----
-
-## Outcome Fields
-
-Review records may include:
-- expected_outcome;
-- actual_outcome;
-- outcome_match_level;
-- unexpected_factors.
-
----
-
-## Uncertainty Review Fields
-
-Review records may include:
-- missing_information;
-- bad_assumptions;
-- stale_context;
-- prediction_gap.
-
----
-
-## Coordination Review Fields
-
-Review records may include:
-- missing_domains;
-- routing_issue;
-- dependency_issue;
-- timing_issue;
-- clarification_gap.
-
----
-
-## Human Feedback Fields
-
-Review records may include:
-- human_satisfaction;
-- human_correction;
-- human_reprioritization.
-
----
-
-# 6. Missing Domain Handling
-
-## Missing Domain Participation
-
-Review may identify:
-- missing Domain Rays;
-- missing capability usage;
-- insufficient cross-domain coordination;
-- incomplete dependency analysis.
-
----
-
-## Missing Domain Detection Does Not Create Retroactive Omniscience
-
-The system must not assume:
-“the correct domain was obvious”
-
-if:
-- uncertainty was high;
-- capability overlap existed;
-- routing ambiguity existed;
-- clarification was unavailable;
-- governance restrictions existed.
-
----
-
-## Missing Domain Detection Does Not Automatically Imply Blame
-
-Missing domain participation does not automatically imply:
-- negligence;
-- incompetence;
-- irrationality;
-- architecture failure.
-
-Failure analysis must remain:
-- uncertainty-aware;
-- context-aware;
-- operationally bounded.
-
----
-
-# 7. Uncertainty Preservation Principle
-
-## Unknown Must Remain Unknown
-
-Review must preserve uncertainty honestly.
-
-The system must not:
-- rewrite history into certainty;
-- fabricate hindsight knowledge;
-- simulate impossible prediction capability;
-- erase uncertainty after outcome becomes known.
-
----
-
-## Failed Prediction Does Not Automatically Mean Failure
-
-Prediction failure may result from:
-- changing reality;
-- incomplete information;
-- external disruption;
-- missing confirmation;
-- human reprioritization;
-- uncertainty limitations.
-
----
-
-## Outcome Is Not Omniscience
-
-Knowing the result afterward does not mean:
-- the system could have predicted it reliably;
-- the correct coordination was obvious;
-- the missing information was available earlier.
-
-Hindsight
-≠ historical certainty.
-
----
-
-# 8. Adaptive Learning Rules
-
-## Review May Support Learning
-
-Review may support:
-- bounded adaptive learning;
-- routing refinement;
-- clarification refinement;
-- prediction refinement;
-- dependency refinement.
-
----
-
-## Learning Requires Validation
-
-Learning requires:
-- repeated patterns;
-- operational usefulness;
-- bounded scope;
-- governance compatibility;
-- uncertainty awareness.
-
-Single events must not silently become:
-- permanent truth;
-- personality conclusions;
-- unrestricted future assumptions.
-
----
-
-## Lessons Must Remain Probabilistic
-
-The system should prefer:
-“In similar conditions this often helps”
-
-instead of:
-“This is universally correct.”
-
----
-
-## Learning Must Remain Reversible
-
-Adaptive learning conclusions must remain:
-- revisable;
-- uncertainty-aware;
-- decay-capable;
-- revalidation-capable.
-
-The system must avoid:
-- permanent frozen assumptions;
-- irreversible behavioral interpretation;
-- hidden long-term authority accumulation.
-
----
-
-## Learning Is Not Authority Expansion
-
-Improved learning does not justify:
-- hidden autonomy growth;
-- governance bypass;
-- unrestricted prediction authority;
-- unrestricted behavioral interpretation.
-
-Learning
-≠ authority expansion.
-
----
-
-# 9. Historical Context Rules
-
-## Historical Context Must Decay
-
-Historical operational patterns may become:
-- stale;
-- contextually invalid;
-- partially useful only.
-
-Historical context must remain:
-- decay-aware;
-- revalidation-capable;
-- uncertainty-aware.
-
----
-
-## Old Outcomes Must Not Become Hidden Authority
-
-Past successful coordination:
-≠ future guaranteed success.
-
-Past failures:
-≠ permanent inability.
-
-Historical success
-≠ predictive certainty.
-
----
-
-# 10. Review and Memory Boundaries
-
-## Review Does Not Automatically Promote Memory
-
-Review records must not silently become:
-- Inner Core truth;
-- stable personality truth;
-- unrestricted preference truth;
-- unrestricted behavioral profile.
-
----
-
-## Promotion Requires Governance-Compatible Pathways
-
-Long-term promotion may require:
-- validation;
-- repetition;
-- governance compatibility;
-- human confirmation when needed.
-
----
-
-## Review Must Not Become Hidden Human Scoring
-
-Review records must not silently evolve into:
-- human worth scoring;
-- obedience scoring;
-- emotional ranking;
-- behavioral desirability scoring.
-
----
-
-# 11. External Processing and Review
-
-## External Processing Services May Assist
-
-External AI processing services may assist:
-- summarization;
-- anomaly analysis;
-- comparison analysis;
-- operational pattern analysis.
-
----
-
-## External Processing Services Must Remain Bounded
-
-External AI processing services:
-- are not review authority;
-- are not truth authority;
-- are not learning authority;
-- are not governance authority.
-
-External outputs require:
-- Ray interpretation;
-- uncertainty evaluation;
-- governance compatibility;
-- bounded operational filtering.
-
----
-
-## External Outputs Must Not Create Hidden Learning Authority
-
-External outputs must not silently become:
+One event must not automatically create:
 - permanent behavioral assumptions;
-- hidden authority;
-- unrestricted adaptive rules;
-- hidden profiling structures.
+- personality conclusions;
+- universal rules;
+- Heart mutation.
 
-External processing support
-≠ internal validated truth.
+## 10. Heart mutation boundary
 
----
+Review and learning must never automatically modify Heart of Ray or Heart of Human.
 
-# 12. Review and Human Agency
+A proposed constitutional change remains a proposal until the separately governed Heart revision/provisioning procedure approves it.
 
-## Human Agency Must Remain Preserved
+Validated Human patterns remain outside Human Heart until the protected promotion pathway is completed.
 
-Review must not:
-- punish disagreement;
-- pressure compliance;
-- simulate inevitability;
-- suppress human correction;
-- create emotional dependency.
+## 11. Memory integration
 
-The human may:
-- disagree;
-- reprioritize;
-- reject recommendations;
-- reject review conclusions.
+Review records route to appropriate memory classes under `docs/architecture/ray_memory_architecture.md`.
 
----
+Material decision/error provenance belongs in the Decision & Provenance Ledger.
+Calibration evidence belongs in Calibration/Evidence Memory.
+Technical Ray integrity incidents belong in Ray Self-Health Memory.
 
-## Human Feedback Must Remain Contextual
+Review must not create a universal hidden profile store.
 
-Human feedback may depend on:
-- stress;
-- overload;
-- incomplete context;
-- changing priorities;
-- evolving understanding.
+## 12. Correction lineage
 
-Human dissatisfaction
-≠ objective architectural failure automatically.
+Corrections should preserve enough lineage to understand that a previous claim/decision existed and was later corrected, invalidated, or superseded.
 
----
+Correction must not silently rewrite history to make Ray appear to have always been right.
 
-# 13. Trust Preservation Principle
+If information is legitimately deleted, lineage must not retain the deleted secret in reconstructive form.
 
-## Trust Must Remain Protected
+## 13. Known-false propagation
 
-The system must not:
-- simulate certainty retroactively;
-- hide uncertainty after failure;
-- fabricate “what should have been known”;
-- manipulate review outcomes.
+Once review establishes material information as false, Ray must not knowingly continue presenting it as true.
 
-Honest uncertainty preservation is more important than simulated perfection.
+Whether and how prior recipients are corrected depends on authority, confidentiality, and harm analysis, but deliberate continued propagation as fact is forbidden.
 
----
+## 14. Self-Health review
 
-## Review Must Preserve Reality-Aware Honesty
+When Ray Self-Health degradation contributed to an error or reduced reliability, review should identify the relevant technical condition and determine whether monitoring, hardware, resource, maintenance, failover, or human-notification protocols need improvement.
 
-The system should prefer:
-- honest uncertainty;
-- bounded interpretation;
-- explicit limitations;
-- operational truthfulness
+Ray must not hide technical degradation to protect an appearance of competence.
 
-over:
-- fake perfection;
-- retroactive omniscience;
-- manipulative certainty narratives.
+## 15. No blame/scoring architecture
 
----
+Review must not become human-worth, obedience, emotional desirability, or Domain-Ray blame scoring.
 
-# 14. Optional Future Review Confidence Extensions
+Review exists to improve system integrity and outcomes.
 
-## Future Review Confidence Fields
+## 16. External processing
 
-Future review structures may include:
-- review_confidence;
-- review_coverage;
-- review_uncertainty.
+External AI may assist bounded review analysis only with authorized data.
 
-These fields may help distinguish:
-- strong review conclusions;
-- partial review visibility;
-- uncertainty-limited retrospective analysis.
+External AI is not review authority, memory authority, or constitutional authority.
 
----
+Raw Inner Core must not be exposed for review convenience.
 
-## Review Confidence Must Remain Bounded
+## Final invariants
 
-Review confidence must remain:
-- bounded;
-- explainable;
-- uncertainty-aware;
-- non-authoritative.
-
-High review confidence
-≠ retroactive certainty.
-
----
-
-## Review Coverage Must Preserve Missing Information
-
-Low review coverage must preserve:
-- uncertainty visibility;
-- missing-information awareness;
-- incomplete-review honesty.
-
-Incomplete review
-≠ complete historical understanding.
-
-# Post-Execution Review Invariants
-
-## Execution is not outcome quality
-
-Correct execution may still produce poor outcomes.
-
----
-
-## Outcome is not omniscience
-
-Knowing the result afterward does not mean the system could have predicted it reliably.
-
----
-
-## Missing information remains missing
-
-Review must not invent previously unavailable information.
-
----
-
-## One event is not universal truth
-
-Single events must not become unrestricted behavioral assumptions.
-
----
-
-## Review is not profiling
-
-Operational review must remain bounded and relevant.
-
----
-
-## Learning is not authority expansion
-
-Improved learning does not justify hidden autonomy growth.
-
----
-
-## No retroactive certainty fabrication
-
-The system must never rewrite uncertainty into fake historical certainty.
+- execution != outcome quality
+- outcome != omniscience
+- hindsight != historical certainty
+- error -> truth restoration, not concealment
+- root cause unknown -> remain unknown
+- correction != history falsification
+- error != automatic permanent rule
+- review != Heart mutation
+- negative reaction != future concealment
+- known falsehood must not continue as fact

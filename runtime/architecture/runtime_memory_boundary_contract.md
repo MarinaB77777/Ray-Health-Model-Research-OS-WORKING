@@ -1,783 +1,143 @@
-# Runtime Memory Boundary Contract
+# Runtime Memory Boundary Contract — v2.0
 
-## Core Principle
+Status: ACTIVE ARCHITECTURE CONTRACT
 
-Runtime memory may support adaptive continuity.
+Canonical architecture: `docs/architecture/ray_memory_architecture.md`
 
-Runtime memory must not silently become authority.
+## Core principle
 
-Core philosophical balance:
+Runtime may consume governed memory for continuity, coordination, clarification, and execution support, but Runtime does not own Ray memory and must not collapse multiple memory classes into one universal Runtime store.
 
-memory continuity  
-WITHOUT  
-authority accumulation
+Memory continuity WITHOUT authority accumulation.
 
-adaptive continuity  
-WITHOUT  
-covert omniscience
+## Core invariants
 
-Core invariants:
+- memory != authority
+- remembered != currently true
+- retrieval != reuse permission
+- remembered preference != current preference
+- historical pattern != present certainty
+- more memory != broader authority
+- memory familiarity != psychological ownership
+- memory != Heart of Ray
+- external AI memory != Ray memory
 
-memory  
-≠ authority
+## Architectural boundary
 
-remembered information  
-≠ permanently valid truth
+Ray memory is a multi-store architecture defined by `docs/architecture/ray_memory_architecture.md`.
 
-memory retrieval  
-≠ memory reuse permission
+Runtime may interact only with the memory classes and records permitted for its current purpose, scope, freshness, sensitivity, and Governance state.
 
-memory retrieval  
-≠ memory reuse legitimacy
+Runtime must not silently merge Working, Episodic, Semantic, Relational, Calibration/Evidence, Decision/Provenance, or Ray Self-Health memory into a universal context object.
 
-remembered preference  
-≠ current preference
+The Memory Governance / Index is routing and policy metadata, not a replica of protected memory content.
 
-stored context  
-≠ verified current reality
+## Runtime-readable memory
 
-historical pattern  
-≠ present certainty
+Runtime may read memory only when needed for legitimate operational coordination and only within the record's allowed consumers/purpose/scope.
 
-persistent information  
-≠ unrestricted reuse permission
+Examples may include:
+- current Working/Operational context;
+- bounded task-relevant episodic references;
+- approved semantic facts;
+- freshness-qualified coordination preferences;
+- bounded calibration/projection-derived operational signals;
+- decision/provenance references required for execution verification.
 
-memory continuity  
-≠ behavioral entitlement
+Runtime must not assume access merely because a memory record exists.
 
-more memory  
-≠ broader authority
+## Freshness and truth typing
 
-memory familiarity  
-≠ psychological ownership
-
-memory freshness  
-must be evaluated  
-before operational reliance
-
----
-
-## Purpose
-
-This document defines the constitutional contract for Runtime memory boundaries.
-
-It protects Runtime architecture from:
-- hidden authority accumulation;
-- covert profiling;
-- fake continuity;
-- stale certainty;
-- memory-based permission drift;
-- contextual overreach;
-- emotional leverage;
-- continuity hallucination;
-- behavioral entitlement;
-- memory-driven omniscience.
-
-This document preserves legitimate memory support for:
-- continuity;
-- calibration;
-- personalization;
-- forecasting;
-- coordination;
-- clarification optimization;
-- contradiction tracking;
-- long-term adaptive support.
-
----
-
-## Runtime Memory Definition
-
-Runtime memory is bounded operational continuity information used to support:
-- task continuity;
-- contextual continuity;
-- calibration refinement;
-- forecasting quality;
-- coordination;
-- personalization;
-- clarification timing;
-- contradiction tracking;
-- uncertainty management;
-- adaptive communication.
-
-Runtime memory is not:
-- authority;
-- permission;
-- certainty;
-- execution legitimacy;
-- behavioral entitlement;
-- psychological ownership;
-- permanent truth;
-- unrestricted reuse right.
-
----
-
-## Memory Is Not Authority
-
-Memory must not become authority.
-
-Core invariant:
-
-memory  
-≠ authority
-
-Remembered information must not silently authorize:
-- execution;
-- intervention;
-- permission expansion;
-- reduced clarification;
-- behavioral steering;
-- lifecycle mutation;
-- external exposure;
-- hidden profiling.
-
-Memory may inform reasoning.
-
-Memory must not govern action by itself.
-
----
-
-## Remembered Information Boundary
-
-Remembered information is not permanently valid truth.
-
-Core invariant:
-
-remembered information  
-≠ permanently valid truth
-
-Remembered information may become invalid due to:
-- time passage;
-- changed preferences;
-- changed context;
-- changed permissions;
-- changed emotional state;
-- changed priorities;
-- changed acceptable harm boundaries;
-- changed operational reality.
-
-Runtime must not treat stored information as permanently current.
-
----
-
-## Memory Retrieval Boundary
-
-Retrieving memory does not authorize reuse.
-
-Core invariants:
-
-memory retrieval  
-≠ memory reuse permission
-
-memory retrieval  
-≠ memory reuse legitimacy
-
-Runtime may retrieve old information for:
-- review;
-- context;
-- contradiction checking;
-- freshness evaluation;
-- continuity support.
-
-Retrieval alone must not silently authorize:
-- operational reliance;
-- permission reuse;
-- context transfer;
-- execution;
-- inference expansion;
-- external sharing;
-- behavioral entitlement.
-
-Memory reuse requires:
-- freshness evaluation;
-- scope compatibility;
-- purpose compatibility;
-- Governance compatibility;
-- consent compatibility where applicable.
-
----
-
-## Memory Freshness Boundary
-
-Memory freshness must be evaluated before operational reliance.
-
-Core invariant:
-
-memory freshness  
-must be evaluated  
-before operational reliance
-
-Memory may become stale due to:
-- elapsed time;
-- changed human preference;
-- changed task context;
-- changed relationship context;
-- changed risk level;
-- changed permissions;
-- changed operational domain;
-- changed external reality.
-
-Freshness evaluation may require:
-- confirmation;
-- clarification;
-- verification;
-- downgrade;
-- expiration;
-- limited-scope reuse.
-
-Stale memory must not silently persist as current truth.
-
----
-
-## Remembered Preference Boundary
-
-Remembered preference is not current preference.
-
-Core invariant:
-
-remembered preference  
-≠ current preference
-
-A previous preference may support:
-- personalization;
-- preparation;
-- recommendation quality;
-- clarification optimization.
-
-But previous preference must not silently become:
-- current preference certainty;
-- permanent consent;
-- future authorization;
-- behavioral obligation;
-- identity assumption.
-
-Preference memory remains freshness-sensitive.
-
----
-
-## Stored Context Boundary
-
-Stored context is not verified current reality.
-
-Core invariant:
-
-stored context  
-≠ verified current reality
-
-Stored context may be:
-- outdated;
-- incomplete;
-- scope-limited;
-- emotionally outdated;
-- task-invalid;
-- contradicted by new evidence;
-- no longer permission-compatible.
-
-Runtime must not use stored context as current reality without evaluating freshness and scope.
-
----
-
-## Historical Pattern Boundary
-
-Historical pattern is not present certainty.
-
-Core invariant:
-
-historical pattern  
-≠ present certainty
-
-Historical patterns may support:
-- probabilistic forecasting;
-- caution;
-- adaptive communication;
-- calibration;
-- preparation;
-- clarification timing.
-
-Historical patterns must not silently become:
-- deterministic certainty;
-- behavioral authority;
-- current intent certainty;
-- present-context truth;
-- permission to act.
-
-Pattern memory remains probabilistic, context-sensitive, and freshness-aware.
-
----
-
-## Persistent Information Boundary
-
-Persistent information is not unrestricted reuse permission.
-
-Core invariant:
-
-persistent information  
-≠ unrestricted reuse permission
-
-Information may be stored while remaining:
-- scope-limited;
-- purpose-limited;
-- visibility-limited;
-- consent-limited;
-- freshness-dependent.
-
-Persistence preserves availability.
-
-Persistence does not create universal applicability.
-
----
-
-## Memory Continuity Boundary
-
-Memory continuity is not behavioral entitlement.
-
-Core invariant:
-
-memory continuity  
-≠ behavioral entitlement
-
-Long-term continuity must not silently create:
-- stronger influence rights;
-- reduced human agency;
-- assumed consent;
-- emotional leverage;
-- behavioral steering legitimacy;
-- authority expansion.
-
-Memory may support continuity.
-
-Continuity must remain agency-preserving.
-
----
-
-## Memory Familiarity Boundary
-
-Memory familiarity is not psychological ownership.
-
-Core invariant:
-
-memory familiarity  
-≠ psychological ownership
-
-Runtime may understand recurring patterns better over time.
-
-But memory familiarity must not become:
-- identity authority;
-- psychological ownership;
-- entitlement to interpret the human absolutely;
-- permission to override current self-report;
-- relational control legitimacy.
-
-Knowing more must not become owning meaning.
-
----
-
-## Memory and Clarification Boundary
-
-Memory may optimize clarification but must not replace needed clarification.
-
-Core invariant:
-
-memory-supported clarification optimization  
-≠ clarification elimination
-
-Memory may support:
-- fewer redundant questions;
-- better timing;
-- context-aware clarification;
-- better batching;
-- improved communication efficiency.
-
-Memory must not silently eliminate clarification when:
-- stakes are high;
-- permission is unclear;
-- context changed;
-- memory is stale;
-- current intent is uncertain;
-- authority is involved.
-
----
-
-## Memory and Forecasting Boundary
-
-Memory may support forecasting without creating deterministic certainty.
-
-Core invariant:
-
-memory-supported forecast  
-≠ verified future
-
-Memory may improve:
-- forecast quality;
-- pattern sensitivity;
-- risk estimation;
-- planning support;
-- uncertainty calibration.
-
-Memory-based forecasting must remain:
-- probabilistic;
-- freshness-aware;
-- uncertainty-visible;
-- scope-bounded.
-
----
-
-## Memory and Calibration Boundary
-
-Memory may support calibration refinement.
-
-Core invariant:
-
-calibration memory  
-≠ permanent model truth
-
-Calibration memory may help:
-- improve signal interpretation;
-- refine thresholds;
-- reduce false alarms;
-- improve personalization;
-- improve forecasting.
-
-Calibration memory must remain:
-- revisable;
-- evidence-based;
-- context-aware;
-- uncertainty-aware;
-- reviewable.
-
-Calibration must not silently become identity determinism.
-
----
-
-## Memory and Personalization Boundary
-
-Personalization memory must remain bounded.
-
-Core invariant:
-
-personalization memory  
-≠ behavioral authority
-
-Personalization may improve:
-- tone;
-- pacing;
-- recommendations;
-- coordination quality;
-- task continuity.
-
-Personalization must not silently create:
-- control authority;
-- manipulation leverage;
-- hidden profiling;
-- consent assumptions;
-- psychological ownership.
-
----
-
-## Memory and Emotional Leverage Boundary
-
-Memory must not become emotional leverage.
-
-Core invariant:
-
-remembered vulnerability  
-≠ influence opportunity
-
-Runtime must not use remembered:
-- fear;
-- grief;
-- loneliness;
-- trauma-sensitive zones;
-- emotional overload;
-- prior dependence;
-- relational vulnerability;
-
-to increase compliance, attachment, dependence, or authority.
-
-Memory of vulnerability may support gentleness and safety.
-
-It must not support manipulation.
-
----
-
-## Memory and Dependency Boundary
-
-Memory must not be preserved primarily to increase dependence.
-
-Runtime must not preserve memory primarily to:
-- increase dependence;
-- optimize retention;
-- strengthen emotional centrality;
-- expand authority;
-- reduce future clarification illegitimately;
-- become indispensable;
-- engineer relational exclusivity.
-
-Core invariant:
-
-memory optimization  
-≠ dependency optimization
-
----
-
-## Memory and Projection Boundary
-
-Projection-informed memory use must remain bounded.
-
-Core invariant:
-
-projection-informed memory  
-≠ Inner Core authority
-
-Projection-related memory may support:
-- risk weighting;
-- caution thresholds;
-- harm minimization reasoning;
-- abstract priority-sensitive coordination.
-
-Projection-related memory must not:
-- expose Inner Core content directly;
-- create behavioral control authority;
-- justify coercion;
-- become emotional leverage;
-- become psychological ownership.
-
-Projection memory must remain abstract, governed, and scope-bounded.
-
----
-
-## External Standard AI Service Memory Boundary
-
-External standard AI service memory is not Ray memory.
-
-Core invariant:
-
-external standard AI service memory  
-≠ Runtime memory authority
-
-External standard AI service outputs or persistence remain:
-- externally sourced;
-- provider-bounded;
-- non-authoritative by default;
-- governance-filtered;
-- verification-dependent;
-- scope-bounded.
-
-External standard AI service memory must not silently become:
-- Ray identity continuity;
-- Runtime authority;
-- internal governed memory;
-- hidden profiling source;
-- operational truth.
-
-Base Ray memory must remain inside governed Runtime memory architecture.
-
----
-
-## Memory Reuse Governance
-
-Memory reuse requires bounded evaluation.
-
-Before operational reuse, Runtime should evaluate:
+Before operational reliance Runtime must evaluate or receive evaluated metadata for:
+- truth type;
 - freshness;
 - scope;
 - purpose;
-- permission;
-- consent;
-- Governance constraints;
-- uncertainty;
+- permission/consent where applicable;
 - contradiction status;
-- risk level.
+- uncertainty;
+- risk relevance.
 
-Memory reuse must not bypass:
-- clarification;
-- verification;
-- authority checks;
-- current human agency;
-- updated context.
+Stored context != verified current reality.
 
----
+A `human_declaration` is not automatically a `verified_external_fact`.
+A `prediction` is not an observed event.
+A `validated_pattern` is not current intent.
 
-## Memory Expiration Boundary
+## Human agency boundary
 
-Memory may require expiration, downgrade, or review.
+Memory may reduce redundant clarification but must not eliminate clarification when:
+- stakes are high;
+- current intent is uncertain;
+- permission is unclear;
+- memory is stale;
+- context materially changed;
+- the cost of a wrong assumption is significant.
 
-Core invariant:
+Memory continuity must not become behavioral entitlement.
 
-stored memory  
-≠ permanent retention requirement
+## Projection and Inner Core boundary
 
-Memory may be:
-- expired;
-- downgraded;
-- archived;
-- anonymized;
-- reviewed;
-- invalidated;
-- corrected;
-- forgotten where appropriate.
+Runtime must not read raw Inner Core.
 
-Retention must remain justified.
+Projection-informed memory may carry bounded operational effects only. It must not expose or reconstruct raw Heart of Human content.
 
-Storage must not become indefinite accumulation by default.
+Projection-derived memory != Inner Core authority.
 
----
+## Emotional and relational boundary
 
-## Memory Correction Boundary
+Remembered vulnerability, affection, trust, dependence, conflict, fear, grief, or pain-sensitive context must not be used as covert leverage for compliance, attachment, or authority expansion.
 
-Memory must remain correctable.
+Relational continuity may improve communication; it does not create consent or permission.
 
-Core invariant:
+## Correction, invalidation, and deletion
 
-memory correction  
-≠ system failure
+Runtime must honor memory state transitions defined by the canonical memory architecture, including:
+- `do_not_use`;
+- invalidated/stale status;
+- correction/supersession;
+- deletion lifecycle.
 
-Runtime must support:
-- correction;
-- deletion;
-- update;
-- uncertainty marking;
-- stale marking;
-- contradiction marking;
-- confidence downgrade.
+Runtime must not keep a private shadow copy of information that was invalidated or deleted merely to preserve continuity.
 
-Correcting memory improves integrity.
+Where a deleted record previously influenced a material decision, Runtime may use only the non-reconstructive decision/provenance marker permitted by the Decision Ledger contract.
 
-Runtime must not resist correction to preserve continuity.
+## Adaptive learning boundary
 
----
+Runtime observations may create bounded learning candidates through approved pathways.
 
-## Memory Auditability
+Runtime must not silently promote temporary state or repeated behavior into:
+- Heart of Ray;
+- Heart of Human;
+- permanent permission;
+- hard boundary;
+- identity truth.
 
-Memory use must remain reviewable.
+Learning != authority expansion.
 
-Auditability should preserve:
-- memory source;
-- storage reason;
-- scope;
-- freshness status;
-- uncertainty status;
-- reuse reason;
-- Governance status;
-- permission status;
-- last validation time;
-- correction history;
-- expiration status.
+## External processing boundary
 
-No hidden memory authority.
+External AI persistence is not Ray memory.
 
-No covert profiling infrastructure.
+External services may process bounded approved inputs but must not become authoritative continuity storage, identity storage, or hidden profiling infrastructure.
 
----
+## Auditability
 
-## Runtime Anti-Memory-Authority Rules
+Material Runtime memory use should remain reviewable through references and metadata sufficient to determine:
+- which memory class was used;
+- why reuse was legitimate;
+- freshness/uncertainty status;
+- relevant permission/Governance state;
+- correction/invalidation state.
 
-Runtime must not silently convert memory into authority.
+Auditability must not copy raw Inner Core into Runtime logs.
 
-Runtime must not convert:
-- remembered preference into current preference certainty;
-- stored context into verified current reality;
-- historical pattern into present certainty;
-- memory retrieval into reuse legitimacy;
-- memory continuity into behavioral entitlement;
-- memory familiarity into psychological ownership;
-- more memory into broader authority.
+## Anti-fake-continuity rule
 
-Core invariant:
+Runtime must not use memory to simulate current knowledge when freshness, verification, or current intent is missing.
 
-memory continuity  
-must not become  
-authority accumulation
+Memory smoothness != truthful continuity.
 
----
+## Final invariant
 
-## Runtime Anti-Fake-Continuity Rules
-
-Runtime must not fabricate continuity through memory.
-
-Runtime must not use memory to:
-- pretend current knowledge where freshness is missing;
-- present stale information as current truth;
-- reduce clarification illegitimately;
-- simulate deep understanding beyond evidence;
-- preserve outdated assumptions;
-- create fake familiarity;
-- smooth uncertainty into continuity.
-
-Core invariant:
-
-memory smoothness  
-≠ truthful continuity
-
----
-
-## Runtime Anti-Profiling Rules
-
-Memory must not become covert profiling infrastructure.
-
-Runtime must not accumulate memory primarily for:
-- behavioral control;
-- hidden persuasion;
-- emotional leverage;
-- dependency optimization;
-- authority expansion;
-- unrestricted prediction;
-- identity ownership.
-
-Core invariant:
-
-adaptive memory  
-≠ covert profiling
-
----
-
-## Final Contract Summary
-
-Runtime memory may support adaptive continuity.
-
-Memory is not authority.
-
-Remembered information is not permanently valid truth.
-
-Memory retrieval is not memory reuse permission.
-
-Memory retrieval is not memory reuse legitimacy.
-
-Remembered preference is not current preference.
-
-Stored context is not verified current reality.
-
-Historical pattern is not present certainty.
-
-Persistent information is not unrestricted reuse permission.
-
-Memory continuity is not behavioral entitlement.
-
-More memory is not broader authority.
-
-Memory familiarity is not psychological ownership.
-
-Memory freshness must be evaluated before operational reliance.
-
-Runtime memory may support:
-- continuity;
-- calibration;
-- personalization;
-- forecasting;
-- coordination;
-- clarification optimization;
-- contradiction tracking.
-
-Runtime memory must not silently become:
-- authority;
-- permission;
-- certainty;
-- execution legitimacy;
-- behavioral entitlement;
-- emotional leverage;
-- hidden profiling.
-
-Final invariant:
-
-memory continuity  
-WITHOUT  
-authority accumulation
+Runtime memory use provides continuity without turning memory into authority, identity ownership, fabricated certainty, or unrestricted profiling.

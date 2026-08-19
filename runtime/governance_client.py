@@ -18,7 +18,8 @@ def snapshot_from_governance_verdict(verdict: Any) -> GovernanceVerdictSnapshot:
 
     Runtime MUST NOT mutate or reinterpret this snapshot. Action binding,
     issuance/expiry, and revocation metadata are preserved when Governance
-    provides them.
+    provides them. Legacy verdicts without freshness fields remain readable;
+    Runtime snapshot time becomes their issuance time.
     """
 
     if hasattr(verdict, "model_dump"):
@@ -28,55 +29,49 @@ def snapshot_from_governance_verdict(verdict: Any) -> GovernanceVerdictSnapshot:
     else:
         raise TypeError("Unsupported governance verdict type")
 
-    return GovernanceVerdictSnapshot(
-        governance_decision_status=GovernanceDecisionStatus(
+    snapshot_data: Dict[str, Any] = {
+        "governance_decision_status": GovernanceDecisionStatus(
             data["governance_decision_status"]
         ),
-        governance_visibility_level=GovernanceVisibilityLevel(
+        "governance_visibility_level": GovernanceVisibilityLevel(
             data["governance_visibility_level"]
         ),
-        governance_target_audience=GovernanceTargetAudience(
+        "governance_target_audience": GovernanceTargetAudience(
             data["governance_target_audience"]
         ),
-        governance_confirmation_required=bool(
+        "governance_confirmation_required": bool(
             data.get("governance_confirmation_required", False)
         ),
-
-        allowed_action_scopes=list(
+        "allowed_action_scopes": list(
             data.get("governance_allowed_action_scopes", [])
         ),
-        blocked_action_scopes=list(
+        "blocked_action_scopes": list(
             data.get("governance_blocked_action_scopes", [])
         ),
-        restrictions=list(
-            data.get("governance_restrictions", [])
-        ),
-        reason_codes=list(
-            data.get("governance_reason_codes", [])
-        ),
-
-        external_targets=list(
+        "restrictions": list(data.get("governance_restrictions", [])),
+        "reason_codes": list(data.get("governance_reason_codes", [])),
+        "external_targets": list(
             data.get("governance_allowed_external_targets", [])
         ),
-        memory_targets=list(
+        "memory_targets": list(
             data.get("governance_allowed_memory_targets", [])
         ),
-
-        trace_id=data.get("governance_trace_id"),
-
-        policy_sources=list(
-            data.get("governance_policy_sources", [])
-        ),
-
-        policy_versions={
+        "trace_id": data.get("governance_trace_id"),
+        "policy_sources": list(data.get("governance_policy_sources", [])),
+        "policy_versions": {
             "versions": data.get("governance_policy_versions", [])
         },
-        authority_scope_id=data.get("action_id"),
-        issued_at=data.get("governance_issued_at"),
-        valid_until=data.get("governance_valid_until"),
-        revoked=bool(data.get("governance_revoked", False)),
-        revocation_reason=data.get("governance_revocation_reason"),
-    )
+        "authority_scope_id": data.get("action_id"),
+        "revoked": bool(data.get("governance_revoked", False)),
+        "revocation_reason": data.get("governance_revocation_reason"),
+    }
+
+    if data.get("governance_issued_at") is not None:
+        snapshot_data["issued_at"] = data["governance_issued_at"]
+    if data.get("governance_valid_until") is not None:
+        snapshot_data["valid_until"] = data["governance_valid_until"]
+
+    return GovernanceVerdictSnapshot(**snapshot_data)
 
 
 class GovernanceClient:

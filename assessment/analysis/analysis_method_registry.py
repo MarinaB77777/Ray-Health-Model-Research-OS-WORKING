@@ -64,6 +64,8 @@ METHODS = [
         "required_conditions": [
             "two_groups",
             "independent_observations",
+            "minimum_group_size",
+            "group_balance",
         ],
     },
     {
@@ -78,6 +80,8 @@ METHODS = [
         "required_conditions": [
             "three_or_more_groups",
             "independent_observations",
+            "minimum_group_size",
+            "group_balance",
         ],
     },
     {
@@ -122,9 +126,9 @@ METHODS = [
 ]
 
 
-# A method may be scientifically registered before its numerical runner is
-# implemented. Selection UIs must never present such a definition as directly
-# executable.
+# Every registered method currently has a numerical runner. If a future method is
+# scientifically registered before implementation, it must be marked explicitly
+# and must not be exposed as directly executable.
 EXECUTABLE_METHOD_IDS = {
     "chi_square",
     "fisher_exact",

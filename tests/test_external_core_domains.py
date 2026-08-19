@@ -18,9 +18,7 @@ from external_core.domains import (
 class DomainRayRegistryTests(unittest.TestCase):
     def setUp(self) -> None:
         self.temp_dir = tempfile.TemporaryDirectory()
-        self.registry = DomainRayRegistry(
-            Path(self.temp_dir.name) / "domains.json"
-        )
+        self.registry = DomainRayRegistry(Path(self.temp_dir.name) / "domains.json")
 
     def tearDown(self) -> None:
         self.temp_dir.cleanup()
@@ -35,6 +33,32 @@ class DomainRayRegistryTests(unittest.TestCase):
         self.assertEqual(4, len(domain.capabilities))
         self.assertFalse(domain.external_ai_allowed)
         self.assertFalse(domain.direct_external_execution_allowed)
+        self.assertEqual(
+            {
+                "working_operational",
+                "semantic",
+                "calibration_evidence",
+                "decision_provenance",
+            },
+            set(domain.memory_classes),
+        )
+        self.assertEqual({"human_health", "external_world"}, set(domain.allowed_subjects))
+        self.assertEqual((), domain.projection_scopes)
+
+    def test_research_calculation_is_computation_not_external_execution(self) -> None:
+        domain = health_model_research_domain(
+            owner_id="health_model_team",
+            created_by="research_lead",
+        )
+        capability = next(
+            item
+            for item in domain.capabilities
+            if item.capability_id == "research_data_analysis"
+        )
+        self.assertIn(DomainOperation.COMPUTATION, capability.operations)
+        self.assertNotIn(DomainOperation.EXECUTION, capability.operations)
+        self.assertFalse(capability.requires_human_confirmation)
+        capability.validate()
 
     def test_domain_follows_proposed_sandboxed_registered_active_path(self) -> None:
         domain = health_model_research_domain(
@@ -83,9 +107,9 @@ class DomainRayRegistryTests(unittest.TestCase):
         with self.assertRaises(PermissionError):
             dependency.validate("health_model_research")
 
-    def test_high_risk_execution_requires_human_confirmation(self) -> None:
+    def test_high_risk_external_execution_requires_human_confirmation(self) -> None:
         capability = DomainCapability(
-            capability_id="statistical_execution",
+            capability_id="external_execution",
             operations=(DomainOperation.EXECUTION,),
             resource_scopes=("prepared_datasets",),
             data_classes=("pseudonymized_research",),
@@ -95,6 +119,17 @@ class DomainRayRegistryTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             capability.validate()
 
+    def test_high_risk_internal_computation_does_not_invent_confirmation_gate(self) -> None:
+        capability = DomainCapability(
+            capability_id="scientific_computation",
+            operations=(DomainOperation.READ, DomainOperation.COMPUTATION),
+            resource_scopes=("prepared_datasets",),
+            data_classes=("pseudonymized_research",),
+            risk=DomainRisk.HIGH,
+            requires_human_confirmation=False,
+        )
+        capability.validate()
+
     def test_direct_external_execution_is_forbidden(self) -> None:
         domain = health_model_research_domain(
             owner_id="health_model_team",
@@ -103,6 +138,36 @@ class DomainRayRegistryTests(unittest.TestCase):
         domain.direct_external_execution_allowed = True
         with self.assertRaises(PermissionError):
             domain.validate()
+
+    def test_domain_cannot_declare_raw_inner_core_access(self) -> None:
+        for protected in ("heart_of_ray", "heart_of_human", "inner_core_raw"):
+            with self.subTest(protected=protected):
+                domain = health_model_research_domain(
+                    owner_id="health_model_team",
+                    created_by="research_lead",
+                )
+                domain.memory_classes = (protected,)
+                with self.assertRaises(PermissionError):
+                    domain.validate()
+
+    def test_old_registry_gets_conservative_new_axes(self) -> None:
+        domain = health_model_research_domain(
+            owner_id="health_model_team",
+            created_by="research_lead",
+        )
+        stored = self.registry.register_proposal(domain)
+        state = self.registry._load()
+        item = state["domains"][stored["domain_id"]]
+        del item["memory_classes"]
+        del item["allowed_subjects"]
+        del item["projection_scopes"]
+        state["schema_version"] = "1.0.0"
+        self.registry._write(state)
+
+        loaded = self.registry.get(domain.domain_id)
+        self.assertEqual(("working_operational",), loaded.memory_classes)
+        self.assertEqual(("human_health",), loaded.allowed_subjects)
+        self.assertEqual((), loaded.projection_scopes)
 
 
 if __name__ == "__main__":

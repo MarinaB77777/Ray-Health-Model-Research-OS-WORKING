@@ -1,6 +1,12 @@
-"""External Core contracts shared by Base Ray and registered domain Rays."""
+"""External Core operational contracts.
+
+External Core is mutable operational configuration and domain infrastructure.
+It is not Heart of Ray, Heart of Human, Projection authority, Governance, or
+universal Ray memory.
+"""
 
 from .identity import (
+    OPERATIONAL_IDENTITY_SCOPE,
     DetachmentRequest,
     RayIdentity,
     RayIdentityRegistry,
@@ -30,6 +36,7 @@ from .domains import (
 from .service import ExternalCoreService
 
 __all__ = [
+    "OPERATIONAL_IDENTITY_SCOPE",
     "DetachmentRequest",
     "RayConnectionState",
     "RayIdentity",

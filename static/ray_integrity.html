@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ray Integrity · Developer Observability</title>
+<style>
+:root{font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;color:#172033;background:#f3f6fb}*{box-sizing:border-box}body{margin:0}.top{background:#14243d;color:white;padding:16px 20px;display:flex;gap:12px;align-items:center}.top h1{font-size:19px;margin:0}.top p{margin:3px 0 0;color:#b9c6d8;font-size:12px}.spacer{flex:1}.top button{border:1px solid #526984;background:#1f3555;color:#fff;border-radius:9px;padding:8px 11px;cursor:pointer}.wrap{max-width:1250px;margin:auto;padding:20px}.notice{border-left:4px solid #2563eb;background:#eff6ff;padding:12px 14px;border-radius:10px;margin-bottom:16px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:13px}.card{background:white;border:1px solid #dbe3ef;border-radius:15px;padding:15px;box-shadow:0 7px 20px #0f172a0c}.card h2,.card h3{margin-top:0}.row{display:flex;justify-content:space-between;gap:10px;border-top:1px solid #eef2f7;padding:8px 0;font-size:13px}.row:first-of-type{border-top:0}.badge{font-size:11px;font-weight:800;border-radius:999px;padding:4px 8px;background:#e2e8f0}.ok{background:#dcfce7;color:#166534}.warn{background:#fef3c7;color:#92400e}.bad{background:#fee2e2;color:#991b1b}.muted{color:#64748b;font-size:12px}.full{grid-column:1/-1}pre{white-space:pre-wrap;overflow:auto;background:#0f172a;color:#dbeafe;border-radius:11px;padding:12px;max-height:360px;font-size:12px}.footer{text-align:center;color:#64748b;font-size:12px;padding:18px}
+</style>
+</head>
+<body>
+<header class="top"><div><h1>Ray Integrity</h1><p>Developer observability · без raw Inner Core</p></div><div class="spacer"></div><button onclick="loadStatus()">Обновить</button><button onclick="location.href='/ray-settings'">Настройки</button></header>
+<main class="wrap">
+<div class="notice"><b>Это не интерфейс чтения Inner Core.</b> Здесь отображаются только статус реализации, границы, наличие контрактов и безопасные operational-сигналы. Heart of Ray / Heart of Human никогда не выводятся как raw content.</div>
+<div id="summary" class="grid"></div>
+<div class="grid" style="margin-top:13px">
+<section class="card"><h3>Inner Core</h3><div id="inner"></div></section>
+<section class="card"><h3>Self-Health</h3><div id="selfHealth"></div></section>
+<section class="card"><h3>Learning</h3><div id="learning"></div></section>
+<section class="card"><h3>Invariants</h3><div id="invariants"></div></section>
+<section class="card full"><h3>Architecture contracts</h3><div id="contracts" class="grid"></div></section>
+<section class="card full"><h3>Executable components</h3><div id="implementation" class="grid"></div></section>
+<section class="card full"><h3>External Core safe status</h3><pre id="externalCore">—</pre></section>
+</div>
+<div id="error" class="notice" style="display:none;border-left-color:#b91c1c;background:#fff1f2"></div>
+</main><div class="footer">CRM Sharks & Ray · Integrity view</div>
+<script>
+const esc=v=>String(v??'—').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function badge(v){const good=v===true||['IMPLEMENTED','current','DRAFT_NOT_SEALED'].includes(v);const bad=v===false||['NOT_IMPLEMENTED','NO_DEVICE'].includes(v);return `<span class="badge ${good?'ok':bad?'warn':''}">${esc(v)}</span>`}
+function rows(obj){return Object.entries(obj||{}).map(([k,v])=>`<div class="row"><span>${esc(k)}</span>${typeof v==='object'&&v!==null?`<span class="muted">${esc(JSON.stringify(v))}</span>`:badge(v)}</div>`).join('')}
+function fileCards(obj){return Object.entries(obj||{}).map(([k,v])=>`<div class="card"><b>${esc(k)}</b><div class="row"><span>present</span>${badge(v.present)}</div><div class="muted">${esc(v.path)}</div></div>`).join('')}
+async function loadStatus(){document.getElementById('error').style.display='none';try{const r=await fetch('/ray-integrity/status',{cache:'no-store'});if(!r.ok)throw new Error(`HTTP ${r.status}`);const d=await r.json();document.getElementById('inner').innerHTML=Object.entries(d.inner_core||{}).map(([k,v])=>`<div class="card"><b>${esc(k)}</b>${rows(v)}</div>`).join('');document.getElementById('selfHealth').innerHTML=rows(d.self_health);document.getElementById('learning').innerHTML=rows(d.learning);document.getElementById('invariants').innerHTML=rows(d.invariants);document.getElementById('contracts').innerHTML=fileCards(d.contracts);document.getElementById('implementation').innerHTML=fileCards(d.implementation);document.getElementById('externalCore').textContent=JSON.stringify(d.external_core,null,2);const contractMissing=Object.values(d.contracts||{}).filter(x=>!x.present).length;const implMissing=Object.values(d.implementation||{}).filter(x=>!x.present).length;document.getElementById('summary').innerHTML=`<div class="card"><h3>Schema</h3><div class="muted">${esc(d.schema)}</div></div><div class="card"><h3>Missing contracts</h3>${badge(contractMissing)}</div><div class="card"><h3>Missing implementation files</h3>${badge(implMissing)}</div><div class="card"><h3>Raw Inner Core exposed</h3>${badge(d.invariants?.raw_inner_core_exposed)}</div>`;}catch(e){const box=document.getElementById('error');box.style.display='block';box.textContent=`Не удалось загрузить integrity status: ${e.message}`}}
+loadStatus();
+</script>
+</body></html>

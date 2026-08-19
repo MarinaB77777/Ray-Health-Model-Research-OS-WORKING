@@ -8,40 +8,23 @@ from temporary_memory.schemas import (
 
 
 class TemporaryMemoryRouter:
-    """
-    Safe selector layer for Temporary External Memory.
+    """Compatibility router for Working / Operational Memory.
 
-    Router responsibilities:
-    - select operational records for Runtime / Planner usage
-    - expose unresolved blockers
-    - expose awaiting-human records
-    - expose next questions
-    - expose forecast restrictions
-
-    Router does NOT:
-    - reason
-    - perform governance decisions
-    - mutate records
-    - promote records
-    - rewrite payloads
-    - infer identity or personality
+    It selects only reusable operational records. It does not reason, govern,
+    mutate, promote, infer identity, or expose raw Inner Core.
     """
 
     def __init__(self, records: list[TemporaryMemoryRecord]) -> None:
         self.records = records
 
     def active_records(self) -> list[TemporaryMemoryRecord]:
-        return [
-            record
-            for record in self.records
-            if record.status == TemporaryMemoryStatus.ACTIVE
-        ]
+        return [record for record in self.records if record.is_reusable()]
 
     def unresolved_records(self) -> list[TemporaryMemoryRecord]:
         return [
             record
             for record in self.records
-            if record.status == TemporaryMemoryStatus.UNRESOLVED
+            if record.status == TemporaryMemoryStatus.UNRESOLVED and record.is_reusable()
         ]
 
     def next_questions(self) -> list[TemporaryMemoryRecord]:
@@ -65,10 +48,7 @@ class TemporaryMemoryRouter:
     def planner_notes(self) -> list[TemporaryMemoryRecord]:
         return self._by_type(TemporaryMemoryType.PLANNER_NOTE)
 
-    def _by_type(
-        self,
-        record_type: TemporaryMemoryType,
-    ) -> list[TemporaryMemoryRecord]:
+    def _by_type(self, record_type: TemporaryMemoryType) -> list[TemporaryMemoryRecord]:
         return [
             record
             for record in self.active_records()

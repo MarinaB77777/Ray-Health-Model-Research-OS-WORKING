@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from datetime import datetime, timezone
+
 from runtime.event_log import RuntimeEventLog
 from runtime.schemas import (
     GovernanceDecisionStatus,
@@ -41,6 +43,10 @@ class RuntimeExecutor:
             )
 
         verdict = action.governance_verdict
+        freshness_failure = self._governance_freshness_failure(verdict)
+        if freshness_failure is not None:
+            message, error_code = freshness_failure
+            return self._needs_reanalysis(action, message, error_code)
 
         if verdict.governance_decision_status == GovernanceDecisionStatus.BLOCKED:
             return self._block_by_governance(action)
@@ -56,6 +62,26 @@ class RuntimeExecutor:
             return self._await_human_confirmation(action)
 
         return self._execute_allowed_or_restricted(action)
+
+    @staticmethod
+    def _governance_freshness_failure(verdict):
+        now = datetime.now(timezone.utc)
+        if verdict.revoked:
+            return (
+                "Governance verdict was revoked and must be reevaluated.",
+                "GOVERNANCE_VERDICT_REVOKED",
+            )
+        if verdict.issued_at > now:
+            return (
+                "Governance verdict issuance time is in the future.",
+                "GOVERNANCE_VERDICT_TIME_INVALID",
+            )
+        if verdict.valid_until is not None and now >= verdict.valid_until:
+            return (
+                "Governance verdict expired and must be reevaluated.",
+                "GOVERNANCE_VERDICT_EXPIRED",
+            )
+        return None
 
     def _execute_allowed_or_restricted(
         self,

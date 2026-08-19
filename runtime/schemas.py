@@ -3,10 +3,15 @@
 
 from __future__ import annotations
 
+from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field, model_validator
+
+
+def utc_now() -> datetime:
+    return datetime.now(timezone.utc)
 
 
 # ----------------------------
@@ -56,7 +61,7 @@ class RuntimeCompletionScope(str, Enum):
 
 
 # ----------------------------
-# Governance MVP v4.1 snapshot
+# Governance snapshot
 # Runtime reads this, never mutates it.
 # ----------------------------
 
@@ -86,12 +91,13 @@ class GovernanceTargetAudience(str, Enum):
 
 
 class GovernanceVerdictSnapshot(BaseModel):
-    """
-    Runtime-side read-only snapshot of GovernanceVerdict.
+    """Runtime-side read-only snapshot of a bounded Governance verdict.
 
-    IMPORTANT:
-    Runtime must NOT collapse these axes into one flat status.
+    Permission truth is context- and freshness-sensitive. The snapshot therefore
+    carries issuance/revocation/expiry state; Runtime must re-evaluate instead of
+    executing a revoked or expired verdict.
     """
+
     governance_decision_status: GovernanceDecisionStatus
     governance_visibility_level: GovernanceVisibilityLevel
     governance_target_audience: GovernanceTargetAudience
@@ -108,6 +114,20 @@ class GovernanceVerdictSnapshot(BaseModel):
     trace_id: Optional[str] = None
     policy_sources: List[str] = Field(default_factory=list)
     policy_versions: Dict[str, str] = Field(default_factory=dict)
+
+    authority_scope_id: Optional[str] = None
+    issued_at: datetime = Field(default_factory=utc_now)
+    valid_until: Optional[datetime] = None
+    revoked: bool = False
+    revocation_reason: Optional[str] = None
+
+    @model_validator(mode="after")
+    def validate_authority_freshness(self) -> "GovernanceVerdictSnapshot":
+        if self.valid_until is not None and self.valid_until < self.issued_at:
+            raise ValueError("Governance valid_until cannot precede issued_at")
+        if self.revoked and not self.revocation_reason:
+            raise ValueError("Revoked Governance verdict requires revocation_reason")
+        return self
 
 
 # ----------------------------

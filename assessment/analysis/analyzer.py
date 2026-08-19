@@ -219,31 +219,70 @@ def analyze_assessment(
     ]
 
     answered_count = len(question_codes) - len(missing_required_data)
-
+    completion_known = bool(question_codes)
     completion = (
         answered_count / len(question_codes)
-        if question_codes
-        else 0
+        if completion_known
+        else None
     )
 
     domain_scores = calculate_domain_scores(answers)
 
     prognosis_layer = build_prognosis_layer(domain_scores)
 
+    active_mechanisms = prognosis_layer["active_candidate_mechanisms"]
+    all_required_data_present = completion_known and not missing_required_data
+    forecast_allowed = bool(active_mechanisms) and all_required_data_present
+
+    if not completion_known:
+        readiness_status = "NOT_EVALUABLE"
+    elif forecast_allowed:
+        readiness_status = "BOUNDED_FORECAST_READY"
+    else:
+        readiness_status = "ORIENTING"
+
     public_explanation = build_public_explanation(
         prognosis_layer
     )
+
+    # An active mechanism candidate is not enough to expose a forecast when the
+    # assessment itself is incomplete or its denominator is unknown.
+    if not forecast_allowed:
+        public_explanation = dict(public_explanation)
+        public_explanation["forecast"] = None
 
     next_questions = build_next_questions(
         prognosis_layer
     )
 
+    warnings = [
+        "Forecast must be based only on supported mechanisms.",
+        "Weak candidates are not treated as forecast.",
+    ]
+    reason_codes = [
+        "RESOURCE_LEVEL_MAPS_CONNECTED",
+        "PROGNOSIS_LAYER_CONNECTED",
+        "NO_ANSWER_RESTATEMENT_IN_PUBLIC_OUTPUT",
+    ]
+
+    if not completion_known:
+        warnings.append(
+            "Assessment completion is unknown because no coded questions were available."
+        )
+        reason_codes.append("COMPLETION_DENOMINATOR_UNKNOWN")
+    elif missing_required_data:
+        warnings.append(
+            "Forecast remains disabled while coded assessment data are missing."
+        )
+        reason_codes.append("FORECAST_BLOCKED_BY_MISSING_REQUIRED_DATA")
+
     return {
         "ok": True,
-        "engine": "pilot_analysis_with_prognosis_v1",
+        "engine": "pilot_analysis_with_prognosis_v2",
         "assessment_id": assessment_id,
 
         "completion": completion,
+        "completion_known": completion_known,
         "answered_count": answered_count,
         "question_count": len(question_codes),
 
@@ -254,30 +293,19 @@ def analyze_assessment(
         "vulnerable_functions": prognosis_layer["vulnerable_functions"],
         "preserved_functions": prognosis_layer["preserved_functions"],
         "candidate_mechanisms": prognosis_layer["candidate_mechanisms"],
-        "active_candidate_mechanisms": (
-            prognosis_layer["active_candidate_mechanisms"]
-        ),
+        "active_candidate_mechanisms": active_mechanisms,
         "weak_candidate_mechanisms": (
             prognosis_layer["weak_candidate_mechanisms"]
         ),
 
-        "readiness_status": "ORIENTING",
-        "forecast_allowed": bool(
-            prognosis_layer["active_candidate_mechanisms"]
-        ),
+        "readiness_status": readiness_status,
+        "forecast_allowed": forecast_allowed,
 
         "missing_required_data": missing_required_data,
         "next_questions": next_questions,
 
-        "warnings": [
-            "Forecast must be based only on supported mechanisms.",
-            "Weak candidates are not treated as forecast.",
-        ],
-        "reason_codes": [
-            "RESOURCE_LEVEL_MAPS_CONNECTED",
-            "PROGNOSIS_LAYER_CONNECTED",
-            "NO_ANSWER_RESTATEMENT_IN_PUBLIC_OUTPUT",
-        ],
+        "warnings": warnings,
+        "reason_codes": reason_codes,
         "public_explanation": {
             "ru": public_explanation,
             "en": public_explanation,

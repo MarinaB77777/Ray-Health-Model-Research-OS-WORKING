@@ -1,560 +1,146 @@
-# Ownership Rules Matrix — v1.1
-
-## Core Principle
-
-Ownership is:
-- operational responsibility;
-- coordination responsibility;
-- execution-tracking responsibility.
-
-Ownership is not:
-- universal authority;
-- unrestricted autonomy;
-- governance bypass;
-- permanent control.
+# Ownership Rules Matrix — v2.0
 
-Ownership must remain:
-- explicit;
-- bounded;
-- revocable;
-- traceable;
-- governance-compatible.
-
-The system must not collapse into:
-- hidden ownership authority;
-- silent delegation drift;
-- orphan authority;
-- recursive ownership escalation;
-- hidden coordination hierarchy.
+Status: ACTIVE ARCHITECTURE CONTRACT
 
----
+## Core principle
 
-# 1. Ownership Types
+Operational ownership is responsibility for coordination or execution tracking. It is not identity ownership, truth ownership, unrestricted authority, or ownership of a person.
 
-## Human Ownership
+Ownership != permission.
+Ownership != identity authority.
+Ownership != Inner Core authority.
+Ownership != possession of the human.
+Ownership != possession of Ray.
 
-The primary human may own:
-- personal decisions;
-- approvals;
-- rejections;
-- personal tasks;
-- delegation preferences;
-- revocation decisions.
+## 1. Primary Human
 
-Human ownership does not automatically transfer execution responsibility to Ray.
+The primary human retains agency over personal decisions, approvals, rejections, delegations, revocations, and Human Heart declarations through their applicable protected pathways.
 
----
+Human sovereignty over Human Heart != unrestricted raw storage access.
 
-## Runtime Ownership
+The primary human does not own Heart of Ray as a mutable setting.
 
-Runtime may temporarily own:
-- operational coordination flows;
-- queue routing;
-- awaiting-human handling;
-- stale action handling;
-- execution coordination state.
+## 2. Heart and Inner Core ownership boundary
 
-Runtime ownership is operational only.
+Heart of Ray has constitutional identity authority only within its own protected domain.
 
-Temporary Runtime ownership is:
-- operational-state ownership only;
-- not decision-authority ownership;
-- not governance authority;
-- not unrestricted execution authority.
+Heart of Human has human-sovereign protected declaration/boundary authority only within its own protected domain.
 
-Runtime ownership must remain:
-- bounded;
-- revocable;
-- operationally scoped.
+Ray Self-Health has protected technical-integrity authority only within its own subject domain.
 
----
+None of these are ordinary operational action owners.
 
-## Domain Ownership
+No Runtime/Domain/Shared Action ownership assignment may grant authority to read or rewrite raw Inner Core.
 
-A Domain Ray may own:
-- bounded domain tasks;
-- domain coordination flows;
-- domain execution tracking.
+## 3. Runtime ownership
 
-Domain ownership must remain:
-- scope-bounded;
-- governance-compatible;
-- operationally limited.
+Runtime may temporarily own operational coordination state, queue routing, awaiting-human handling, stale-action handling, and execution coordination.
 
-Domain ownership does not grant:
-- cross-domain authority;
-- governance authority;
-- unrestricted delegation authority.
+Runtime ownership:
+- is temporary and scope-bounded;
+- does not create decision authority;
+- does not create Governance authority;
+- does not create Heart authority;
+- does not create unrestricted execution authority.
 
----
+## 4. Domain Ray ownership
 
-## Shared Ownership
+A Domain Ray may own bounded domain tasks, domain coordination flows, and domain execution tracking.
 
-Shared ownership may exist only when:
-- explicitly defined;
-- operationally necessary;
-- conflict-resolved.
+Domain Ray ownership does not grant:
+- cross-domain universal authority;
+- Governance authority;
+- raw Inner Core access;
+- Heart of Ray mutation authority;
+- Human Heart authority;
+- unrestricted delegation.
 
-Shared ownership must define:
-- responsibility boundaries;
-- coordination precedence;
-- final coordination authority;
-- escalation pathway;
-- conflict-routing authority.
+Domain Ray != independent Heart.
 
-Shared ownership must not silently become:
-- distributed hidden authority;
-- implicit hierarchy;
-- hidden arbitration layer.
+## 5. Shared ownership
 
----
+Shared operational ownership may exist only when responsibility boundaries, scope, coordination precedence, escalation, and conflict routing are explicit.
 
-# 2. Ownership Assignment Rules
+Shared ownership must not become distributed hidden authority.
 
-## Ownership Assignment Must Be Explicit
+## 6. Assignment and transfer
 
-Ownership assignment must:
-- identify owner;
-- identify owner type;
-- identify scope;
-- identify execution boundaries;
-- identify revocation pathway.
+Ownership assignment/transfer must identify:
+- owner and owner type;
+- scope;
+- execution boundary;
+- validity/freshness where relevant;
+- revocation pathway;
+- required Governance state.
 
-Implicit ownership is forbidden.
+Transfer must preserve audit continuity and must not transfer Governance or constitutional authority.
 
----
+## 7. Delegation
 
-## Ownership Assignment Does Not Imply Permission
+Delegation must be explicit, scope-bounded, enforceable, traceable, revocable, and Governance-compatible.
 
-Ownership:
-≠ permission.
+Delegation != autonomy transfer.
+Delegation != identity transfer.
+Delegation != Heart authority transfer.
 
-An owner may still require:
-- governance approval;
-- confirmation;
-- runtime coordination;
-- dependency validation.
+Past delegation != universally current permission.
 
----
+Long-lived delegation must have explicit scope and validity semantics.
 
-## Ownership Assignment Does Not Imply Authority Expansion
+## 8. Human override and conflict
 
-Assigning ownership must not silently grant:
-- new permissions;
-- broader autonomy;
-- governance bypass;
-- cross-domain control.
+The primary human may revoke or reclaim ordinary operational delegation/ownership within applicable Governance and emergency boundaries.
 
----
+Human override must not be interpreted as authority to rewrite Heart of Ray through an ordinary operational command.
 
-# 3. Ownership Transfer Rules
+Where a requested override conflicts with applicable hard boundaries, the conflict follows the Conflict-Resolution Kernel rather than being silently converted into either blind obedience or hidden paternalism.
 
-## Ownership Transfer Must Be Explicit
+## 9. Orphan actions
 
-Ownership transfer requires:
-- valid transition pathway;
-- governance compatibility;
-- operational traceability.
+An action is orphaned when its operational owner becomes invalid/unavailable or its delegation/permission chain fails.
 
-Ownership transfer must not occur silently.
+Orphaned actions must not silently self-assign a new owner or infer replacement authority.
 
----
+Recovery requires an explicit Runtime, Governance, human, or pre-authorized emergency pathway appropriate to the action.
 
-## Ownership Transfer Must Preserve Audit Continuity
+## 10. Memory ownership boundary
 
-Ownership transfer must preserve:
-- audit trace continuity;
-- responsibility-chain continuity;
-- operational history traceability.
+Memory stores have storage/maintenance responsibilities defined by `docs/architecture/ray_memory_architecture.md`.
 
-Transfer must not create:
-- orphan history;
-- responsibility gaps;
-- hidden authority discontinuity.
+Storage ownership != truth authority.
+Memory custody != reuse permission.
+Memory custody != identity ownership.
 
----
+A component operating a memory store must not infer authority over the person or Ray from custody of data.
 
-## Ownership Transfer Does Not Transfer Governance
+## 11. External AI
 
-Ownership transfer:
-≠ governance transfer.
+External AI services must not own Ray actions, lifecycle, Governance, Inner Core, Ray memory authority, or Ray identity.
 
-The new owner does not inherit:
-- unrestricted authority;
-- unrestricted permissions;
-- unrestricted autonomy.
+External AI may perform bounded processing only.
 
----
+## 12. Ray Self-Health operational ownership
 
-## Ownership Transfer Must Respect Boundaries
+Ray Self-Health mechanisms may own bounded monitoring and integrity-maintenance flows for Ray hardware/software health.
 
-Ownership transfer must not violate:
-- domain scope;
-- governance restrictions;
-- human prohibitions;
-- execution boundaries;
-- trust-level boundaries.
+This does not create general action authority over the human or unrelated domains.
 
----
+Hardware safety mechanisms may execute narrowly defined protective actions within their legitimate scope (for example, thermal protection) without becoming general-purpose authority.
 
-# 4. Runtime Ownership Boundaries
+## 13. Conflict handling
 
-## Runtime May
+Cross-domain or multi-owner conflicts must not be resolved by hidden Runtime heuristics or implicit hierarchy.
 
-- coordinate ownership state;
-- update ownership records;
-- route ownership transitions;
-- manage temporary operational ownership.
+Material conflicts use explicit routing and, when constitutional/harm issues are involved, `docs/inner_core/conflict_resolution_kernel.md`.
 
-## Runtime Must Not
+## Final invariants
 
-- silently assign permanent ownership;
-- bypass governance restrictions;
-- invent human approval;
-- silently escalate ownership scope;
-- become hidden decision authority.
-
-## Important Principle
-
-Runtime coordinates ownership.
-
-Runtime does not own authority.
-
-Operational coordination
-≠ governance authority.
-
----
-
-# 5. Analyst Ownership Boundaries
-
-## Analyst May
-
-- recommend delegation;
-- recommend reassignment;
-- recommend escalation pathways;
-- recommend coordination changes.
-
-## Analyst Must Not
-
-- directly assign ownership;
-- mutate ownership state directly;
-- override governance restrictions;
-- create hidden authority chains.
-
-## Important Principle
-
-Recommendation
-≠ assignment.
-
----
-
-# 6. Governance Ownership Boundaries
-
-## Governance May
-
-- restrict ownership pathways;
-- block ownership transfer;
-- require confirmation;
-- invalidate ownership under governance rules.
-
-## Governance Must Not
-
-- directly manage operational ownership;
-- become ownership coordinator;
-- silently absorb Runtime authority.
-
-## Important Principle
-
-Governance validates ownership boundaries.
-
-Governance does not operationally coordinate ownership.
-
----
-
-# 7. Human Override Principle
-
-## Human Override Priority
-
-The primary human may:
-- revoke ownership;
-- deny delegation;
-- cancel ownership transfer;
-- reclaim ownership authority.
-
-Human override must remain:
-- traceable;
-- explicit;
-- governance-compatible.
-
----
-
-## Human Override Boundary Rules
-
-Human override may be temporarily bounded only by:
-- explicitly defined emergency rules;
-- legal restrictions;
-- safety-critical governance rules.
-
-Any override limitation must remain:
-- logged;
-- explainable;
-- bounded;
-- auditable.
-
-The system must not silently introduce:
-- hidden paternalism;
-- unrestricted override blocking.
-
----
-
-## Human Prohibition Priority
-
-If the human explicitly forbids:
-- delegation;
-- ownership transfer;
-- execution continuation
-
-then:
-- Runtime must stop affected operational flows;
-- ownership reassignment must stop;
-- stale ownership chains must be invalidated.
-
----
-
-# 8. Temporary Ownership Rules
-
-## Temporary Ownership Must Expire
-
-Temporary ownership must:
-- expire;
-- be renewed explicitly if needed;
-- remain context-bounded.
-
-Temporary ownership must not silently become:
-- permanent authority;
-- persistent autonomy.
-
----
-
-## Temporary Ownership Requires Revalidation
-
-Temporary ownership may require reevaluation if:
-- context changes;
-- permissions change;
-- dependencies fail;
-- governance restrictions change;
-- stale operational state is detected.
-
----
-
-## Expired Ownership Propagation
-
-Expired temporary ownership must invalidate dependent execution assumptions when relevant.
-
-Stale ownership must not leave:
-- active hidden coordination;
-- orphan delegated flows;
-- stale execution chains;
-- outdated authority assumptions.
-
----
-
-# 9. Orphan Action Handling
-
-## Orphan Actions Must Be Detectable
-
-An action becomes orphaned when:
-- ownership becomes invalid;
-- owner disappears;
-- delegation chain breaks;
-- governance revokes operational pathway.
-
----
-
-## Owner Liveness / Heartbeat Principle
-
-Distributed architecture may require explicit owner liveness semantics.
-
-Future Runtime / Domain Ray architecture may define:
-- heartbeat rules;
-- inactivity rules;
-- disconnected-owner handling;
-- stale delegation detection;
-- dead-runtime recovery pathways.
-
----
-
-## Orphan Actions Must Not Self-Recover Silently
-
-Orphaned actions must not:
-- self-reactivate;
-- self-assign ownership;
-- infer replacement authority.
-
-## Orphan Handling Requires Explicit Routing
-
-Orphan handling may require:
-- Runtime routing;
-- governance reevaluation;
-- human clarification;
-- reassignment pathway.
-
----
-
-# 10. Cross-Domain Ownership Rules
-
-## Cross-Domain Ownership Must Remain Bounded
-
-A Domain Ray must not silently acquire:
-- cross-domain ownership authority;
-- unrestricted coordination authority.
-
-Cross-domain coordination requires:
-- explicit routing;
-- bounded authority;
-- governance compatibility.
-
----
-
-## Cross-Domain Conflicts Must Not Self-Resolve
-
-Ownership conflicts between domains must not silently resolve through:
-- hidden Runtime heuristics;
-- hidden Analyst assumptions;
-- hidden Governance reinterpretation.
-
-Conflict resolution requires:
-- explicit routing;
-- operational traceability;
-- bounded authority semantics.
-
----
-
-# 11. Shared Action Ownership Rules
-
-## Shared Action Stores Ownership State
-
-Shared Action may store:
-- owner_id;
-- owner_type;
-- ownership timestamps;
-- delegation metadata;
-- transfer metadata.
-
-## Shared Action Does Not Create Authority
-
-Stored ownership state:
-≠ execution authority;
-≠ governance authority;
-≠ permission authority.
-
-Storage
-≠ operational legitimacy automatically.
-
----
-
-# 12. Delegation Rules
-
-## Delegation Must Remain Explicit
-
-Delegation requires:
-- explicit delegation pathway;
-- bounded scope;
-- governance compatibility.
-
----
-
-## Delegation Scope Must Be Enforceable
-
-Delegation scope must remain:
-- machine-readable;
-- enforceable;
-- traceable;
-- operationally bounded.
-
-Delegation boundaries must not become:
-- vague assumptions;
-- implicit social interpretation;
-- hidden autonomy expansion.
-
----
-
-## Delegation Does Not Transfer Identity Authority
-
-Delegation:
-≠ identity transfer;
-≠ unrestricted autonomy transfer;
-≠ Inner Core authority transfer.
-
----
-
-## Delegation Must Remain Revocable
-
-Delegation must remain:
-- revocable;
-- traceable;
-- bounded by governance rules.
-
----
-
-# 13. External Processing Service Ownership Limits
-
-Ray includes all internal governed architecture layers.
-
-External AI processing services are not part of Ray architecture.
-
-### External AI Processing Services Must Not Own Actions
-
-External AI processing services:
-- must not become action owner;
-- must not become lifecycle owner;
-- must not become governance owner;
-- must not become coordination authority.
-
-## Important Principle
-
-External AI processing services may assist bounded processing,
-but may not own operational authority.
-
-External AI processing service outputs must not recursively grant:
-- execution authority;
-- ownership authority;
-- coordination legitimacy.
-
----
-
-# Ownership Separation Invariants
-
-## Ownership is not authority
-
-Operational responsibility does not grant unrestricted authority.
-
----
-
-## Permission is not ownership
-
-Permission boundaries do not automatically assign ownership.
-
----
-
-## Execution is not ownership
-
-Executing a task does not automatically create authority ownership.
-
----
-
-## Delegation is not autonomy transfer
-
-Delegation remains bounded and revocable.
-
----
-
-## Stored ownership is not legitimacy
-
-Database ownership records do not automatically validate authority.
-
----
-
-## No hidden ownership escalation
-
-No layer may silently expand ownership into unrestricted authority.
+- operational ownership != authority
+- permission != ownership
+- execution != ownership
+- delegation != identity transfer
+- storage != legitimacy
+- Domain Ray ownership != Heart authority
+- human sovereignty != ownership of Heart of Ray
+- Ray protection != ownership of the human
+- no hidden ownership escalation

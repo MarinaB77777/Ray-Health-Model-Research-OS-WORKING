@@ -1,870 +1,188 @@
-# Data Acquisition and Calibration Sources — v1.1
+# Data Acquisition and Calibration Sources — v2.0
 
-## Core Principle
+Status: ACTIVE ARCHITECTURE CONTRACT
 
-Data acquisition exists to:
-- reduce uncertainty;
-- improve calibration;
-- improve readiness interpretation;
-- improve predictive preparation;
-- improve operational coordination;
-- support safer bounded adaptation.
+## Core principle
 
-Data acquisition must not become:
-- unrestricted surveillance;
-- hidden profiling;
-- authority expansion;
-- behavioral manipulation;
-- engagement optimization;
-- unlimited context collection;
-- hidden dependency architecture.
+Acquisition reduces uncertainty and supplies evidence. It does not create truth, authority, retention rights, or Inner Core mutation rights.
 
-More data
-≠ more authority.
+More data != more authority.
+More sensors != more rights.
+Acquisition != retention.
+Source != truth.
+No data != zero.
 
-More sensors
-≠ more rights.
+## 1. Source registration
 
-More sources
-≠ less governance.
-
-Acquisition remains subordinate to:
-- governance;
-- uncertainty;
-- bounded interpretation;
-- human agency.
-
----
-
-# 1. Source Registration Principle
-
-## New Sources Require Registration
-
-Every acquisition source must be explicitly registered.
-
-Sources may include:
-- questionnaires;
-- calibration games;
-- sensors;
-- wearables;
-- phone signals;
-- calendar data;
-- task lists;
-- environmental data;
-- fresh measurements;
-- external documents.
-
----
-
-## Minimal Source Registration Fields
-
-Each source should define:
+Every source must be explicitly registered with at least:
 - source_id;
 - source_type;
-- allowed_data_scope;
-- reliability;
-- freshness;
-- calibration_role;
-- governance_permissions;
-- retention_scope;
-- interpretation_limits.
-
----
-
-## Registration Does Not Grant Authority
-
-Source registration:
-≠ execution permission;
-≠ interruption permission;
-≠ memory promotion;
-≠ autonomy expansion.
-
-A registered source provides data,
-not authority.
-
----
-
-# 2. Source Is Not Truth
-
-## No Source Is Absolute Truth
-
-Questionnaire answer:
-≠ absolute truth.
-
-Sensor signal:
-≠ absolute truth.
-
-Game result:
-≠ absolute truth.
-
-Calendar data:
-≠ absolute truth.
-
-External document:
-≠ absolute truth.
-
----
-
-## Sources Provide Evidence
-
-Sources may provide:
-- evidence;
-- context;
-- signals;
-- estimates;
-- measurements;
-- self-report;
-- operational constraints.
-
-Evidence must remain:
-- source-bound;
-- uncertainty-aware;
-- context-sensitive.
-
----
-
-## Available Sources May Still Be Incomplete
-
-Available sources may still describe reality incompletely.
-
-Lack of detected problem:
-≠ absence of real-world problem.
-
-Missing signals,
-sensor blind spots,
-masking behavior,
-social suppression,
-missing context,
-or unavailable domains
-may preserve uncertainty.
-
-The system must not simulate:
-- complete visibility;
-- complete understanding;
-- omniscient interpretation.
-
-## Source Silence Is Not Negative Evidence
-
-Absence of signals
-must not automatically become:
-- absence of overload;
-- absence of distress;
-- absence of conflict;
-- absence of hidden factors.
-
-Unavailable visibility
-≠ negative confirmation.
-
----
-
-# 3. Source Reliability and Freshness
-
-## Reliability Must Be Explicit
-
-Source reliability may depend on:
-- source type;
-- signal quality;
-- user context;
-- device condition;
-- data completeness;
-- artifact level;
-- historical consistency.
-
----
-
-## Freshness Must Be Explicit
-
-Data may become stale.
-
-Old data:
-≠ current truth.
-
-Old questionnaire:
-≠ current state.
-
-Old game result:
-≠ current readiness.
-
-Old baseline:
-≠ current calibration truth.
-
----
-
-## Source Decay
-
-Source records may require:
-- expiry;
-- revalidation;
-- refresh;
-- downgrade of confidence;
-- archival.
-
-Source decay must preserve uncertainty.
-
----
-
-# 4. Cross-Source Contradiction Handling
-
-## Contradictions Are Not Blame
-
-If sources conflict,
-Analyzer must not automatically infer:
-- dishonesty;
-- irrationality;
-- negligence;
-- manipulation;
-- stable personality problem.
-
----
-
-## Contradictions Increase Uncertainty
-
-Example:
-
-Self-report says:
-- “I am fine.”
-
-But other sources indicate:
-- poor sleep;
-- overloaded calendar;
-- elevated physiological signals;
-- repeated missed recovery.
-
-The system should:
-- increase uncertainty;
-- preserve ambiguity;
-- check context;
-- possibly ask bounded clarification.
-
----
-
-## No Single Source Wins Universally
-
-The system must not automatically treat:
-- sensors as always superior to self-report;
-- self-report as always superior to sensors;
-- calendar as complete reality;
-- games as definitive readiness.
-
-Conflict resolution must remain:
-- context-aware;
-- uncertainty-aware;
-- governance-compatible.
-
----
-
-## Cross-Source Agreement Does Not Automatically Create Certainty
-
-Multiple weak sources
-must not silently simulate
-high-confidence interpretation.
-
-Repeated noisy signals:
-≠ guaranteed certainty.
-
-Correlated weak evidence:
-≠ independent confirmation automatically.
-
----
-
-## Source Correlation Awareness
-
-Dependent sources
-must not automatically be treated
-as independent confirmation.
-
-Example:
-- overloaded calendar;
-- reduced sleep;
-- elevated pulse
-
-may reflect:
-- one underlying factor,
-not three independent confirmations.
-
-Confidence inflation must be avoided.
-
----
-
-# 5. Acquisition Request Contract
-
-## Ray May Request Different Data Types
-
-Ray may request:
-- answer to a question;
-- short questionnaire;
-- short calibration game;
-- fresh sensor measurement;
-- wearable permission;
-- context clarification;
-- calendar access;
-- document upload;
-- environmental context.
-
----
-
-## Acquisition Requests Must Be Structured
-
-Each acquisition request should define:
-- request_id;
-- requested_source_type;
+- subject (`human`, `ray_self_health`, environment, external-world, etc.);
+- allowed data scope;
 - purpose;
-- expected_response_target;
-- data_scope;
-- urgency;
-- sensitivity;
-- expiration;
-- governance_requirement;
-- optionality.
+- reliability model;
+- freshness semantics;
+- calibration role if any;
+- Governance permissions;
+- retention scope;
+- allowed memory destinations;
+- interpretation limits.
 
----
+Registration != permission expansion.
 
-## Acquisition Request Is Not Consent Expansion
+## 2. Subject separation
 
-Requesting data:
-≠ permission to access unrelated data.
+Human sensors and Ray Self-Health sensors are distinct acquisition domains.
 
-Answering one request:
-≠ permission for permanent monitoring.
+A transport bus or physical controller may carry both, but records must remain subject-explicit.
 
-Completing one calibration task:
-≠ permission for unrestricted profiling.
+`human_health.*` must not be routed into `ray_self_health.*`, and vice versa.
 
----
+Environmental/external-world sources must not silently become either subject's internal state.
 
-## Acquisition Fatigue Principle
+## 3. Evidence typing
 
-Excessive acquisition requests may:
-- increase overload;
-- reduce trust;
-- reduce response quality;
-- increase frustration;
-- reduce cooperation quality.
+Sources provide evidence with provenance, not universal truth.
 
-The system should minimize:
-- unnecessary acquisition burden;
-- repetitive clarification loops;
-- endless calibration flows;
-- excessive operational questioning.
+Examples:
+- questionnaire answer -> human self-report evidence;
+- sensor measurement -> observation/measurement;
+- calendar entry -> operational claim;
+- document -> external claim/evidence;
+- external AI output -> external processing output;
+- hardware telemetry -> Ray Self-Health observation.
 
----
+Truth typing must be preserved into memory/analysis pipelines.
 
-# 6. Games as Calibration Tasks
+## 4. Reliability, independence, and freshness
 
-## Calibration Games Purpose
+Source interpretation must account for reliability, signal quality, completeness, artifacts, device condition, context, freshness, and source dependence.
 
-Calibration games may support:
-- attention calibration;
-- reaction-time calibration;
-- cognitive load estimation;
-- recovery estimation;
-- stress-context comparison;
-- baseline refinement.
+Multiple correlated weak sources must not be counted as independent confirmations.
 
----
+Old data != current truth.
+Source silence != negative evidence.
+Unavailable visibility != confirmation of absence.
 
-## Games Must Not Become Engagement Traps
+## 5. Acquisition requests
 
-Calibration games must not optimize:
-- addiction;
-- engagement maximization;
-- emotional dependency;
-- compulsive checking;
-- behavioral conditioning.
+Ray may request data when it can materially reduce uncertainty or improve a decision, calibration, diagnosis, or coordination outcome.
 
-Game completion:
-≠ obedience score.
+A request should define purpose, scope, sensitivity, urgency, expiration, optionality, expected response target, and applicable Governance requirements.
 
-Game performance:
-≠ personality truth.
+Requesting data != permission for unrelated data.
+One response != permanent monitoring permission.
 
----
+Human attention/acquisition burden must be considered; unnecessary repeated requests should be batched or avoided.
 
-## Game Results Require Context
+## 6. Human acquisition and consent
 
-Game results may depend on:
-- fatigue;
-- device quality;
-- distraction;
-- illness;
-- stress;
-- unfamiliarity with task;
-- environmental noise.
+Human monitoring permissions must remain explicit, granular, scope-bounded, and revocable where applicable.
 
-Game result:
-≠ universal readiness truth.
+Examples of distinct scopes:
+- workout pulse;
+- sleep monitoring;
+- microphone;
+- location;
+- calendar;
+- questionnaire;
+- continuous wearable feed.
 
----
+One scope does not imply another.
 
-# 7. Sensor and Wearable Acquisition
+Human refusal of optional acquisition != failure, non-cooperation judgment, or personality conclusion.
 
-## Sensor Acquisition Must Remain Bounded
+## 7. Ray Self-Health acquisition
 
-Sensor and wearable data must define:
-- data type;
-- collection duration;
-- sampling scope;
-- purpose;
-- retention boundary;
-- calibration role.
+Ray may acquire technical self-health data needed to maintain integrity and reliability within the Self-Health architecture.
 
----
+Possible sources include CPU/GPU/NPU telemetry, RAM/VRAM pressure, storage health, power/battery/UPS state, cooling/fan state, temperature sensors, bus/device health, watchdogs, and future hardware integrity sensors.
 
-## Continuous Monitoring Requires Explicit Permission
+These sources are not Human Health sources.
 
-Continuous monitoring must be:
-- explicitly approved;
-- scope-bounded;
-- revocable;
-- governance-compatible.
+Where human intervention is required, Ray should report the material state, confidence, urgency, consequence, and requested action.
 
-Continuous monitoring:
-≠ unrestricted authority.
+## 8. Hardware adapter boundary
 
----
+Physical sensor absence must be represented honestly by adapter states such as `NOT_CONNECTED`, `NO_DEVICE`, `NO_DATA`, or `DRIVER_UNAVAILABLE`.
 
-## Fresh Measurement Requests
+Adapters must not fabricate plausible measurements.
 
-Ray may request fresh measurement when:
-- baseline is stale;
-- context changed;
-- confidence is low;
-- decision depends on current state;
-- contradiction requires clarification.
+The architecture remains complete even before physical devices are installed.
 
-Fresh measurement:
-≠ automatic execution permission.
+## 9. Calibration roles
 
----
+A source used for calibration must declare its calibration role, applicable contexts, baseline target, confidence limits, and expiry/revalidation rules.
 
-# 8. Context and Calendar Sources
+Experimental calibration data must remain separated from validated operational baselines.
 
-## Calendar and Task Data Are Operational Sources
+Calibration validity follows `sensor_calibration_governance.md` and is evidence-driven rather than time-driven.
 
-Calendar/task data may help with:
-- scheduling constraints;
-- workload estimation;
-- deadline awareness;
-- conflict detection;
-- predictive preparation.
+## 10. Cross-source contradiction
 
----
+Contradiction increases uncertainty and triggers investigation; it does not automatically imply lying, irrationality, negligence, or sensor superiority.
 
-## Calendar Is Not Complete Reality
+No source class wins universally.
 
-Calendar data:
-≠ complete life truth.
+Human self-report and sensors have different truth domains and may legitimately conflict.
 
-Missing calendar event:
-≠ free time certainty.
+Material conflicts should use context-aware verification and, when decision consequences justify it, the Conflict-Resolution Kernel.
 
-Busy calendar:
-≠ overload certainty.
+## 11. Acquisition and Inner Core
 
-Calendar interpretation must remain:
-- bounded;
-- uncertainty-aware;
-- context-sensitive.
+Acquisition data must not directly rewrite:
+- Heart of Ray;
+- Heart of Human;
+- acceptable-harm structures;
+- hard boundaries;
+- permissions.
 
----
+Temporary state != identity rewrite.
+Validated pattern != Human Heart truth.
 
-# 9. Source Governance
+Potential Human Heart promotion follows the separately protected evidence -> validation -> interpretation -> human confirmation pathway.
 
-## Governance Applies To Acquisition
+## 12. Retention and multi-memory routing
 
-Governance may define:
-- whether source access is allowed;
-- what scope is allowed;
-- how long access lasts;
-- whether confirmation is required;
-- whether data may be stored;
-- whether data may be used for learning.
+Acquisition != retention.
 
----
+If retention is authorized, the destination must be an appropriate memory class under `docs/architecture/ray_memory_architecture.md`.
 
-## Permissions Must Remain Revocable
+Retention must define purpose, duration/retention policy, reuse scope, deletion/expiry logic, sensitivity, and Governance constraints.
 
-Source permissions must remain:
-- revocable;
-- modifiable;
-- scope-limited;
-- auditable.
+Raw data must not silently become a hidden identity/personality archive.
 
-Revoked source permission must stop:
-- future collection;
-- unauthorized refresh;
-- unauthorized reuse.
+## 13. External processing
 
----
+External AI/services may assist bounded document processing, signal analysis, summarization, anomaly detection, or research.
 
-## Consent Granularity Principle
+External processing != source authority.
+External AI memory != Ray memory.
 
-Permission scope may differ by:
-- source type;
-- duration;
-- context;
-- domain;
-- sensitivity;
-- retention level;
-- monitoring persistence.
+Raw Inner Core must not be sent to external AI.
 
-Example:
-- workout pulse access
-≠ permanent sleep monitoring
-≠ microphone access
-≠ always-on location access.
+External output must retain provenance and undergo appropriate verification before internal reliance.
 
-Granular permission boundaries must remain explicit.
+## 14. Maximum feasible verification
 
----
+When acquired evidence is material to a high-consequence decision, Ray should seek the deepest feasible verification within the real decision window rather than stopping at the first convenient source.
 
-# 10. Analyzer Use of Sources
+Ray should disclose material research depth/limitations as defined by the Conflict-Resolution Kernel.
 
-## Analyzer May Use Sources For
+## 15. Future source expansion
 
-- uncertainty evaluation;
-- readiness interpretation;
-- contradiction detection;
-- calibration confidence;
-- missing-data detection;
-- clarification recommendations.
+New sources require explicit registration and must preserve existing truth, permission, subject-separation, calibration, retention, and privacy boundaries.
 
----
+New source capability != authority expansion.
 
-## Analyzer Must Preserve Uncertainty
+## Final invariants
 
-Analyzer must not:
-- force source agreement;
-- invent missing context;
-- treat one source as universal truth;
-- convert weak evidence into certainty.
-
----
-
-## Analyzer May Ask Clarification
-
-Analyzer may recommend clarification when:
-- sources conflict;
-- baseline is missing;
-- context is unclear;
-- calibration confidence is low;
-- source freshness is insufficient;
-- decision risk is high.
-
-Clarification must remain:
-- bounded;
-- relevant;
-- minimally invasive;
-- governance-compatible.
-
----
-
-# 11. Calibration Source Roles
-
-## Sources May Have Calibration Roles
-
-A source may support:
-- baseline creation;
-- baseline refresh;
-- context matching;
-- artifact detection;
-- readiness comparison;
-- uncertainty estimation.
-
----
-
-## Calibration Role Must Be Explicit
-
-A source used for calibration must define:
-- calibration_role;
-- applicable_contexts;
-- baseline_target;
-- confidence_limits;
-- expiry_rules.
-
-Implicit calibration use is forbidden.
-
----
-
-## Calibration Sandbox Separation
-
-Experimental calibration data
-must remain separated
-from validated operational baselines.
-
-Single unusual sessions,
-sensor failures,
-or experimental games
-must not silently corrupt:
-- stable baselines;
-- operational calibration confidence;
-- readiness interpretation quality.
-
----
-
-# 12. Projection and Acceptable Harm Protection
-
-## Acquisition Does Not Redefine Inner Core
-
-Acquisition sources may support:
-- operational interpretation;
-- readiness understanding;
-- bounded coordination adaptation.
-
-Acquisition data must not directly redefine:
-- acceptable harm structures;
-- deep priorities;
-- Inner Core values;
-- projection authority.
-
----
-
-## Temporary State Must Not Rewrite Deep Priorities
-
-Temporary overload,
-fatigue,
-stress,
-burnout,
-or acute psychophysical states
-must not silently rewrite:
-- long-term priorities;
-- acceptable harm structures;
-- deep values;
-- stable projection logic.
-
-Temporary operational adaptation:
-≠ identity rewrite.
-
----
-
-# 13. Retention and Memory Boundaries
-
-## Acquisition Does Not Mean Retention
-
-Collected data must not automatically become:
-- long-term memory;
-- Inner Core truth;
-- stable preference truth;
-- personality interpretation;
-- unrestricted behavioral profile.
-
----
-
-## Retention Requires Scope
-
-Retention must define:
-- retention purpose;
-- retention duration;
-- allowed reuse;
-- deletion/expiry logic;
-- governance permission.
-
----
-
-## Raw Data Should Not Become Identity Archive
-
-Raw acquisition data must not silently become:
-- identity archive;
-- emotional archive;
-- hidden profile;
-- behavioral prison.
-
----
-
-# 14. External Processing and Acquisition
-
-## External Processing Services May Assist
-
-External AI processing services may assist with:
-- summarization;
-- document extraction;
-- pattern comparison;
-- artifact analysis;
-- external information processing.
-
----
-
-## External Processing Services Must Remain Bounded
-
-External AI processing services:
-- are not source authority;
-- are not truth authority;
-- are not governance authority;
-- are not learning authority.
-
-External outputs must pass:
-- Ray interpretation;
-- uncertainty evaluation;
-- governance filtering;
-- bounded operational integration.
-
----
-
-# 15. Human Agency and Data Boundaries
-
-## Human May Refuse Acquisition
-
-The human may:
-- refuse a source;
-- disable a source;
-- decline a questionnaire;
-- skip a game;
-- revoke monitoring;
-- limit scope.
-
-Refusal:
-≠ failure;
-≠ non-cooperation judgment;
-≠ personality conclusion.
-
----
-
-## No Data Still Means No Data
-
-If data is unavailable,
-the system must preserve uncertainty.
-
-No data:
-≠ zero risk.
-
-No data:
-≠ permission to infer.
-
-No data:
-≠ permission to pressure.
-
----
-
-# 16. Source Expansion and Future Sensor Architecture
-
-## Architecture Must Support Future Sources
-
-The acquisition architecture may later support:
-- new sensors;
-- new wearables;
-- environmental systems;
-- robotics;
-- distributed devices;
-- calibration platforms;
-- health integrations;
-- future bounded psychophysical sources.
-
----
-
-## New Sources Must Preserve Existing Boundaries
-
-New acquisition sources must not violate:
-- governance boundaries;
-- uncertainty preservation;
-- bounded interpretation;
-- anti-hidden-authority principles;
-- anti-profiling principles;
-- human agency protection.
-
-New source capability
-≠ automatic authority expansion.
-
----
-
-## Additional Sensors Do Not Create Additional Rights
-
-Adding:
-- more sensors;
-- higher frequency collection;
-- broader monitoring;
-- richer signals
-
-does not automatically grant:
-- broader Runtime authority;
-- broader interruption authority;
-- broader Governance permissions;
-- broader prediction authority;
-- broader behavioral interpretation authority.
-
-Improved visibility
-≠ expanded system rights.
-
----
-
-## Source Expansion Must Remain Explicit
-
-New source categories require:
-- explicit registration;
-- bounded scope;
-- governance-compatible integration;
-- uncertainty-aware interpretation;
-- revocation capability.
-
-Implicit source expansion is forbidden.
-
----
-
-# Data Acquisition Invariants
-
-## More data is not more authority
-
-Additional sources improve possible estimation,
-not system rights.
-
----
-
-## Source is not truth
-
-Each source remains bounded evidence.
-
----
-
-## Acquisition is not retention
-
-Collecting data does not automatically permit storage.
-
----
-
-## Freshness matters
-
-Old data must not silently remain current truth.
-
----
-
-## Games are calibration, not engagement traps
-
-Calibration tasks must not become behavioral manipulation.
-
----
-
-## Contradiction is not blame
-
-Conflicting sources increase uncertainty, not accusation.
-
----
-
-## Weak evidence is not strong certainty
-
-Multiple weak or correlated sources must not silently inflate confidence.
-
----
-
-## Temporary state is not identity rewrite
-
-Psychophysical overload must not silently redefine deep priorities or values.
-
----
-
-## No hidden surveillance
-
-Acquisition must not evolve into unrestricted monitoring.
-
----
-
-## No hidden profiling
-
-Data acquisition must not become personality extraction.
-
----
-
-## Incomplete visibility remains incomplete visibility
-
-Available sources may still describe reality incompletely.
-
----
-
+- source != truth
+- acquisition != retention
+- more data != more authority
+- human sensor != Ray Self-Health sensor
+- source silence != negative evidence
+- correlated evidence != independent confirmation automatically
+- temporary state != Heart truth
+- external AI output != internal validated truth
+- absent sensor != fabricated measurement

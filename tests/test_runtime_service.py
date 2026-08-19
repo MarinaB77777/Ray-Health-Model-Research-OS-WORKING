@@ -1,5 +1,7 @@
 # runtime/tests/test_runtime_service.py
 
+from datetime import datetime, timedelta, timezone
+
 from runtime.schemas import (
     GovernanceDecisionStatus,
     GovernanceTargetAudience,
@@ -31,22 +33,55 @@ def make_action(verdict: GovernanceVerdictSnapshot) -> RuntimeActionRecord:
     )
 
 
-def test_runtime_completes_only_runtime_step_without_claiming_world_effect():
-    verdict = GovernanceVerdictSnapshot(
-        governance_decision_status=GovernanceDecisionStatus.ALLOWED,
-        governance_visibility_level=GovernanceVisibilityLevel.HUMAN_SAFE,
-        governance_target_audience=GovernanceTargetAudience.PRIMARY_HUMAN,
-        governance_confirmation_required=False,
-    )
+def allowed_verdict(**kwargs) -> GovernanceVerdictSnapshot:
+    data = {
+        "governance_decision_status": GovernanceDecisionStatus.ALLOWED,
+        "governance_visibility_level": GovernanceVisibilityLevel.HUMAN_SAFE,
+        "governance_target_audience": GovernanceTargetAudience.PRIMARY_HUMAN,
+        "governance_confirmation_required": False,
+    }
+    data.update(kwargs)
+    return GovernanceVerdictSnapshot(**data)
 
+
+def test_runtime_completes_only_runtime_step_without_claiming_world_effect():
     service = RuntimeService()
-    result = service.process_action(make_action(verdict))
+    result = service.process_action(make_action(allowed_verdict()))
 
     assert result.success is True
     assert result.status == RuntimeStatus.COMPLETED
     assert result.completion_scope == RuntimeCompletionScope.RUNTIME_STEP
     assert result.external_effect_verified is False
     assert result.verification_evidence == {}
+
+
+def test_runtime_rejects_expired_governance_verdict():
+    issued = datetime.now(timezone.utc) - timedelta(minutes=10)
+    verdict = allowed_verdict(
+        issued_at=issued,
+        valid_until=issued + timedelta(minutes=1),
+    )
+
+    result = RuntimeService().process_action(make_action(verdict))
+
+    assert result.success is False
+    assert result.reanalysis_requested is True
+    assert result.status == RuntimeStatus.NEEDS_REANALYSIS
+    assert result.error_code == "GOVERNANCE_VERDICT_EXPIRED"
+
+
+def test_runtime_rejects_revoked_governance_verdict():
+    verdict = allowed_verdict(
+        revoked=True,
+        revocation_reason="Human revoked the operational permission.",
+    )
+
+    result = RuntimeService().process_action(make_action(verdict))
+
+    assert result.success is False
+    assert result.reanalysis_requested is True
+    assert result.status == RuntimeStatus.NEEDS_REANALYSIS
+    assert result.error_code == "GOVERNANCE_VERDICT_REVOKED"
 
 
 def test_runtime_blocks_governance_blocked_action():
@@ -100,18 +135,10 @@ def test_runtime_requests_reanalysis_on_not_enough_data():
 
 
 def test_human_prohibition_blocks_runtime():
-    verdict = GovernanceVerdictSnapshot(
-        governance_decision_status=GovernanceDecisionStatus.ALLOWED,
-        governance_visibility_level=GovernanceVisibilityLevel.HUMAN_SAFE,
-        governance_target_audience=GovernanceTargetAudience.PRIMARY_HUMAN,
-        governance_confirmation_required=False,
-    )
-
-    action = make_action(verdict)
+    action = make_action(allowed_verdict())
     action.human_prohibition_active = True
 
-    service = RuntimeService()
-    result = service.process_action(action)
+    result = RuntimeService().process_action(action)
 
     assert result.success is False
     assert result.blocked is True

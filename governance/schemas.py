@@ -1,8 +1,12 @@
 # governance/schemas.py.
 from enum import Enum
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
+
+
+def utc_now() -> datetime:
+    return datetime.now(timezone.utc)
 
 
 class GovernanceDecisionStatus(str, Enum):
@@ -197,7 +201,7 @@ class GovernanceVerdict(BaseModel):
     governance_policy_versions: List[str] = Field(default_factory=list)
 
     governance_trace_id: str
-    governance_version: str = "governance_mvp_v4_1"
+    governance_version: str = "governance_mvp_v4_2"
     governance_rule_hits: List[str] = Field(default_factory=list)
 
     governance_sanitizer_required: bool = False
@@ -213,3 +217,25 @@ class GovernanceVerdict(BaseModel):
     governance_policy_temporal_details: List[str] = Field(default_factory=list)
 
     governance_scope_conflicts: List[str] = Field(default_factory=list)
+
+    # Verdict freshness is separate from policy-version validity. Runtime may use
+    # this verdict only for the bound action while it remains current.
+    governance_issued_at: datetime = Field(default_factory=utc_now)
+    governance_valid_until: Optional[datetime] = None
+    governance_revoked: bool = False
+    governance_revocation_reason: Optional[str] = None
+
+    @model_validator(mode="after")
+    def validate_verdict_freshness(self) -> "GovernanceVerdict":
+        if (
+            self.governance_valid_until is not None
+            and self.governance_valid_until < self.governance_issued_at
+        ):
+            raise ValueError(
+                "governance_valid_until cannot precede governance_issued_at"
+            )
+        if self.governance_revoked and not self.governance_revocation_reason:
+            raise ValueError(
+                "Revoked Governance verdict requires governance_revocation_reason"
+            )
+        return self

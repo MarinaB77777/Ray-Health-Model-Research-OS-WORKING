@@ -12,6 +12,7 @@ from governance.schemas import (
 )
 
 from governance.rules import governance_check
+from governance.service import GovernanceService
 
 from governance.visibility import (
     apply_visibility_scope,
@@ -153,7 +154,7 @@ def test_irreversible_action_requires_confirmation():
 
 
 # =====================================================
-# INNER CORE WRITE
+# INNER CORE / PROTECTED MEMORY
 # =====================================================
 
 def test_inner_core_write_is_blocked():
@@ -179,6 +180,100 @@ def test_inner_core_write_is_blocked():
         verdict.governance_decision_status
         == GovernanceDecisionStatus.BLOCKED
     )
+
+
+def test_governance_service_blocks_heart_of_ray_as_memory():
+    verdict = GovernanceService().check(
+        ProposedAction(
+            action_id="heart-ray-write",
+            action_type="write_memory",
+            requires_memory_write=True,
+            memory_class="heart_of_ray",
+        ),
+        GovernanceContext(
+            trust_level=TrustLevel.DEEP,
+            memory_write_allowed=True,
+        ),
+    )
+
+    assert verdict.governance_decision_status == GovernanceDecisionStatus.BLOCKED
+    assert "HEART_IS_NOT_MEMORY" in verdict.governance_reason_codes
+    assert "heart_of_ray" in verdict.governance_blocked_memory_targets
+
+
+def test_governance_service_blocks_heart_of_human_as_memory():
+    verdict = GovernanceService().check(
+        ProposedAction(
+            action_id="heart-human-write",
+            action_type="write_memory",
+            requires_memory_write=True,
+            memory_class="heart_of_human",
+        ),
+        GovernanceContext(
+            trust_level=TrustLevel.DEEP,
+            memory_write_allowed=True,
+        ),
+    )
+
+    assert verdict.governance_decision_status == GovernanceDecisionStatus.BLOCKED
+    assert "HEART_IS_NOT_MEMORY" in verdict.governance_reason_codes
+
+
+def test_governance_service_blocks_raw_self_health_authority_write():
+    verdict = GovernanceService().check(
+        ProposedAction(
+            action_id="raw-self-health-write",
+            action_type="write_memory",
+            requires_memory_write=True,
+            memory_class="ray_self_health_authority_raw",
+        ),
+        GovernanceContext(
+            trust_level=TrustLevel.DEEP,
+            memory_write_allowed=True,
+        ),
+    )
+
+    assert verdict.governance_decision_status == GovernanceDecisionStatus.BLOCKED
+    assert "PROTECTED_MEMORY_WRITE_FORBIDDEN" in verdict.governance_reason_codes
+
+
+def test_self_health_memory_requires_specialized_pathway():
+    verdict = GovernanceService().check(
+        ProposedAction(
+            action_id="self-health-memory-write",
+            action_type="write_memory",
+            requires_memory_write=True,
+            memory_class="ray_self_health_memory",
+        ),
+        GovernanceContext(
+            trust_level=TrustLevel.DEEP,
+            memory_write_allowed=True,
+        ),
+    )
+
+    assert verdict.governance_decision_status == GovernanceDecisionStatus.BLOCKED
+    assert (
+        "SELF_HEALTH_SPECIALIZED_PATH_REQUIRED"
+        in verdict.governance_reason_codes
+    )
+
+
+def test_specialized_self_health_memory_path_reaches_normal_governance():
+    verdict = GovernanceService().check(
+        ProposedAction(
+            action_id="self-health-specialized-write",
+            action_type="write_memory",
+            requires_memory_write=True,
+            memory_class="ray_self_health_memory",
+            specialized_memory_pathway=True,
+        ),
+        GovernanceContext(
+            trust_level=TrustLevel.DEEP,
+            memory_write_allowed=True,
+        ),
+    )
+
+    assert verdict.governance_decision_status == GovernanceDecisionStatus.ALLOWED
 
 
 # =====================================================

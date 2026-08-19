@@ -7,6 +7,7 @@ from runtime.schemas import (
     GovernanceVisibilityLevel,
     RuntimeActionClass,
     RuntimeActionRecord,
+    RuntimeCompletionScope,
     RuntimeRiskLevel,
     RuntimeStatus,
 )
@@ -30,7 +31,7 @@ def make_action(verdict: GovernanceVerdictSnapshot) -> RuntimeActionRecord:
     )
 
 
-def test_runtime_executes_allowed_action():
+def test_runtime_completes_only_runtime_step_without_claiming_world_effect():
     verdict = GovernanceVerdictSnapshot(
         governance_decision_status=GovernanceDecisionStatus.ALLOWED,
         governance_visibility_level=GovernanceVisibilityLevel.HUMAN_SAFE,
@@ -43,6 +44,9 @@ def test_runtime_executes_allowed_action():
 
     assert result.success is True
     assert result.status == RuntimeStatus.COMPLETED
+    assert result.completion_scope == RuntimeCompletionScope.RUNTIME_STEP
+    assert result.external_effect_verified is False
+    assert result.verification_evidence == {}
 
 
 def test_runtime_blocks_governance_blocked_action():

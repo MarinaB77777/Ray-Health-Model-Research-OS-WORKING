@@ -16,6 +16,15 @@ def utc_now_iso() -> str:
     return datetime.now(UTC).isoformat()
 
 
+OPERATIONAL_IDENTITY_SCOPE = "external_core_operational_connection"
+PROTECTED_AUTHORITY_NAMES = {
+    "heart_of_ray",
+    "heart_of_human",
+    "inner_core",
+    "inner_core_raw",
+}
+
+
 class RayConnectionState(str, Enum):
     CONNECTED = "connected"
     DETACHMENT_PENDING = "detachment_pending"
@@ -24,11 +33,15 @@ class RayConnectionState(str, Enum):
 
 @dataclass
 class RayIdentity:
-    """Stable identity and lineage of one Ray instance.
+    """Legacy-compatible External Core operational connection identity.
 
-    `lineage_id` survives renames, copies and descendant creation. Once a lineage
-    is detached, the originating External Core must never trust any member of it
-    as connected again.
+    Despite the historical public class name, this record is NOT Heart of Ray
+    identity and is not constitutional identity authority. `identity_id`,
+    `lineage_id`, `origin_core_id`, and `root_authority_id` identify only the
+    External Core operational trust/connection lineage.
+
+    Heart of Ray continuity is governed separately by the protected Inner Core
+    provisioning/attestation architecture.
     """
 
     display_name: str
@@ -40,6 +53,8 @@ class RayIdentity:
     state: RayConnectionState = RayConnectionState.CONNECTED
     root_authority_id: str | None = None
     detachment_record_id: str | None = None
+    identity_scope: str = OPERATIONAL_IDENTITY_SCOPE
+    constitutional_identity: bool = False
     created_at: str = field(default_factory=utc_now_iso)
     updated_at: str = field(default_factory=utc_now_iso)
 
@@ -52,10 +67,18 @@ class RayIdentity:
             "lineage_id": self.lineage_id,
         }
         if any(not value.strip() for value in required.values()):
-            raise ValueError("RAY_IDENTITY_REQUIRED_FIELD_MISSING")
+            raise ValueError("RAY_OPERATIONAL_IDENTITY_REQUIRED_FIELD_MISSING")
+        if self.identity_scope != OPERATIONAL_IDENTITY_SCOPE:
+            raise ValueError("EXTERNAL_CORE_IDENTITY_SCOPE_MUST_BE_OPERATIONAL")
+        if self.constitutional_identity:
+            raise PermissionError("EXTERNAL_CORE_CANNOT_DECLARE_CONSTITUTIONAL_IDENTITY")
+        if self.origin_core_id.strip().lower() in PROTECTED_AUTHORITY_NAMES:
+            raise PermissionError("INNER_CORE_CANNOT_BE_EXTERNAL_CONNECTION_ORIGIN")
+        if self.root_authority_id and self.root_authority_id.strip().lower() in PROTECTED_AUTHORITY_NAMES:
+            raise PermissionError("HEART_CANNOT_BE_EXTERNAL_OPERATIONAL_ROOT")
         if self.state == RayConnectionState.DETACHED_PERMANENTLY:
             if not self.root_authority_id or not self.detachment_record_id:
-                raise ValueError("DETACHED_IDENTITY_REQUIRES_NEW_ROOT_AND_RECORD")
+                raise ValueError("DETACHED_OPERATIONAL_IDENTITY_REQUIRES_NEW_ROOT_AND_RECORD")
 
 
 @dataclass
@@ -88,7 +111,11 @@ class DetachmentRequest:
 
 
 class RayIdentityRegistry:
-    """Persistent registry enforcing a one-way identity detachment transition."""
+    """Persistent registry for External Core connection detachment.
+
+    This registry may revoke/re-root operational trust. It cannot create, destroy,
+    copy, rewrite, or attest Heart of Ray constitutional identity.
+    """
 
     def __init__(self, path: str | Path) -> None:
         self.path = Path(path)
@@ -109,12 +136,14 @@ class RayIdentityRegistry:
             if parent["state"] == RayConnectionState.DETACHED_PERMANENTLY.value:
                 raise PermissionError("DETACHED_LINEAGE_CANNOT_RECONNECT")
         state["identities"][identity.identity_id] = self._identity_dict(identity)
+        state["schema_version"] = "2.0.0"
         self._append_event(
             state,
-            "ray_identity_registered",
+            "ray_operational_identity_registered",
             identity.identity_id,
             identity.lineage_id,
             identity.created_by,
+            {"constitutional_identity_changed": False},
         )
         self._write(state)
         return state["identities"][identity.identity_id].copy()
@@ -142,12 +171,13 @@ class RayIdentityRegistry:
         state["detachment_requests"][request.request_id] = asdict(request)
         self._append_event(
             state,
-            "ray_detachment_requested",
+            "ray_operational_detachment_requested",
             identity_id,
             identity["lineage_id"],
             requested_by,
             {"request_id": request.request_id, "reason": reason},
         )
+        state["schema_version"] = "2.0.0"
         self._write(state)
         return state["detachment_requests"][request.request_id].copy()
 
@@ -158,8 +188,6 @@ class RayIdentityRegistry:
         cancelled_by: str,
         reason: str,
     ) -> dict[str, Any]:
-        """Cancellation is allowed only before the irreversible finalization."""
-
         if not cancelled_by.strip() or not reason.strip():
             raise ValueError("DETACHMENT_CANCELLATION_FIELDS_REQUIRED")
         state = self._load()
@@ -175,12 +203,17 @@ class RayIdentityRegistry:
         identity["updated_at"] = utc_now_iso()
         self._append_event(
             state,
-            "ray_detachment_cancelled",
+            "ray_operational_detachment_cancelled",
             identity["identity_id"],
             identity["lineage_id"],
             cancelled_by,
-            {"request_id": request_id, "reason": reason},
+            {
+                "request_id": request_id,
+                "reason": reason,
+                "constitutional_identity_changed": False,
+            },
         )
+        state["schema_version"] = "2.0.0"
         self._write(state)
         return identity.copy()
 
@@ -200,6 +233,8 @@ class RayIdentityRegistry:
             self._validate_sha256(digest)
         if not approved_by.strip() or not new_root_authority_id.strip():
             raise ValueError("DETACHMENT_APPROVER_AND_NEW_ROOT_REQUIRED")
+        if new_root_authority_id.strip().lower() in PROTECTED_AUTHORITY_NAMES:
+            raise PermissionError("HEART_CANNOT_BE_EXTERNAL_OPERATIONAL_ROOT")
 
         state = self._load()
         request = self._get_request(state, request_id)
@@ -214,14 +249,18 @@ class RayIdentityRegistry:
             "request_id": request_id,
             "identity_id": identity["identity_id"],
             "lineage_id": identity["lineage_id"],
+            "identity_scope": OPERATIONAL_IDENTITY_SCOPE,
             "origin_core_id": identity["origin_core_id"],
             "requested_by": request["requested_by"],
             "approved_by": approved_by,
             "new_root_authority_id": new_root_authority_id,
+            "root_authority_scope": "external_core_operational_trust",
             "export_manifest_sha256": export_manifest_sha256.lower(),
             "audit_checkpoint_sha256": audit_checkpoint_sha256.lower(),
             "finalized_at": finalized_at,
-            "irreversible": True,
+            "irreversible_operational_detachment": True,
+            "constitutional_identity_changed": False,
+            "heart_of_ray_mutated": False,
         }
         record_sha256 = hashlib.sha256(
             json.dumps(
@@ -249,19 +288,23 @@ class RayIdentityRegistry:
                 "state": RayConnectionState.DETACHED_PERMANENTLY.value,
                 "root_authority_id": new_root_authority_id,
                 "detachment_record_id": request_id,
+                "identity_scope": OPERATIONAL_IDENTITY_SCOPE,
+                "constitutional_identity": False,
                 "updated_at": finalized_at,
             }
         )
         state["detached_lineages"][identity["lineage_id"]] = immutable_record
+        state["schema_version"] = "2.0.0"
         self._append_event(
             state,
-            "ray_detachment_finalized",
+            "ray_operational_detachment_finalized",
             identity["identity_id"],
             identity["lineage_id"],
             approved_by,
             {
                 "request_id": request_id,
                 "detachment_record_sha256": record_sha256,
+                "constitutional_identity_changed": False,
             },
         )
         self._write(state)
@@ -333,7 +376,7 @@ class RayIdentityRegistry:
     def _load(self) -> dict[str, Any]:
         if not self.path.exists():
             return {
-                "schema_version": "1.0.0",
+                "schema_version": "2.0.0",
                 "identities": {},
                 "detachment_requests": {},
                 "detached_lineages": {},
@@ -349,6 +392,18 @@ class RayIdentityRegistry:
         }
         if not isinstance(data, dict) or not required.issubset(data):
             raise ValueError("INVALID_RAY_IDENTITY_REGISTRY")
+        # Backward-compatible semantic migration. Old identity records remain
+        # readable but are explicitly scoped as operational, never constitutional.
+        for identity in data["identities"].values():
+            identity.setdefault("identity_scope", OPERATIONAL_IDENTITY_SCOPE)
+            identity.setdefault("constitutional_identity", False)
+        for record in data["detached_lineages"].values():
+            record.setdefault("identity_scope", OPERATIONAL_IDENTITY_SCOPE)
+            record.setdefault("root_authority_scope", "external_core_operational_trust")
+            if "irreversible" in record and "irreversible_operational_detachment" not in record:
+                record["irreversible_operational_detachment"] = bool(record["irreversible"])
+            record.setdefault("constitutional_identity_changed", False)
+            record.setdefault("heart_of_ray_mutated", False)
         return data
 
     def _write(self, state: dict[str, Any]) -> None:

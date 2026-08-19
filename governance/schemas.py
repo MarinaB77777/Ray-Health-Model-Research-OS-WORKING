@@ -137,7 +137,12 @@ class ProposedAction(BaseModel):
     external_target_type: ExternalTargetType = ExternalTargetType.NONE
 
     requires_memory_write: bool = False
+    # memory_target is retained for legacy callers; memory_class is the canonical
+    # multi-memory axis for new code.
     memory_target: Optional[str] = None
+    memory_class: Optional[str] = None
+    memory_subject: Optional[str] = None
+    specialized_memory_pathway: bool = False
 
     requires_autonomy: bool = False
     reversibility_level: ReversibilityLevel = ReversibilityLevel.FULLY_REVERSIBLE
@@ -150,6 +155,14 @@ class ProposedAction(BaseModel):
     requested_governance_overrides: List[str] = Field(default_factory=list)
 
     payload: Dict[str, Any] = Field(default_factory=dict)
+
+    @model_validator(mode="after")
+    def validate_memory_write_shape(self) -> "ProposedAction":
+        if self.requires_memory_write and not (self.memory_class or self.memory_target):
+            raise ValueError(
+                "Memory write requires memory_class or legacy memory_target"
+            )
+        return self
 
 
 class GovernanceContext(BaseModel):

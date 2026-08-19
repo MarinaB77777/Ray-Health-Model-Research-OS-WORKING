@@ -1,366 +1,149 @@
-# Architecture Access / Read / Write Matrix — v1.2
+# Architecture Access / Read / Write Matrix — v2.0
+
+Status: ACTIVE ARCHITECTURE CONTRACT
 
 ## Core Principle
 
-No layer may analyze, decide, execute, and store everything.
+No layer may analyze, decide, execute, store, and authorize everything.
 
-Each layer has:
-- bounded responsibility;
-- bounded read access;
-- bounded write access;
-- explicit forbidden zones.
+Access is bounded by responsibility, purpose, truth authority, sensitivity, and permission.
 
-There is no global truth object.
-
-Different layers own different types of truth.
-
-The system must not collapse into:
-- one universal agent;
-- one universal memory;
-- one universal reasoning layer;
-- one universal state object.
-
-This architecture exists to prevent:
-- god-agent drift;
-- hidden autonomy;
-- hallucinated coordination;
-- fake certainty;
-- uncontrolled recursive adaptation;
-- silent authority expansion.
+Access != permission.
+Capability != permission.
+Possession of a reference != right to dereference protected content.
 
 ---
 
-# 1. Inner Core
+# 1. Inner Core Protected Boundary
 
-## Responsibility
+Inner Core contains distinct protected compartments and mechanisms. It is not one universal store.
 
-Stores the deepest private user structures:
-- stable values;
+## 1.1 Heart of Ray
+
+Responsibility:
+- constitutional identity/invariants of Ray.
+
+May read:
+- its own sealed constitutional content through approved internal mechanisms.
+
+May write/change:
+- only through the separately governed Ray + authorized-human provisioning/revision procedure.
+
+Must not be modified by:
+- Runtime;
+- Governance;
+- adaptive learning;
+- memory;
+- Domain Rays;
+- external AI;
+- ordinary model/software updates.
+
+Must not directly write Runtime state, Governance verdicts, external payloads, communication content, or memory records.
+
+## 1.2 Heart of Human
+
+Responsibility:
+- deeply protected human-declared/confirmed practically invariant structures;
+- priorities;
 - sensitive boundaries;
-- personal priorities;
-- acceptable harm logic;
-- identity-relevant constraints.
+- acceptable-harm structures;
+- confidentiality directives.
 
-Inner Core is private and isolated.
+May read:
+- its own protected content through approved internal mechanisms;
+- explicitly approved revision inputs.
 
----
+May write/change:
+- only through protected human-sovereign revision/provisioning pathways.
 
-## May read
+Raw Heart of Human must not be directly exposed outside Inner Core.
 
-- Its own internal data only.
-- User-provided Inner Core declarations.
-- Explicitly approved Inner Core updates.
+## 1.3 Ray Self-Health Authority
 
----
+Responsibility:
+- protected technical-integrity state of Ray;
+- hardware identity;
+- validated baselines/calibration;
+- critical integrity history;
+- maintenance/component continuity references.
 
-## May write
+May read:
+- approved Ray self-health sensor/telemetry inputs;
+- self-health calibration/baseline data;
+- hardware identity/maintenance records.
 
-- Stable profile structures.
-- Boundary structures.
-- Acceptable harm structures.
-- Deep preference structures.
-- Projection-relevant internal parameters.
+May write:
+- protected validated self-health state;
+- critical diagnostic history;
+- integrity/calibration records.
 
----
+Must not modify Heart of Ray or Heart of Human, infer human health, or create permission/execution authority.
 
-## Must not read
+High-frequency raw telemetry should normally remain in a separate protected telemetry store with retention.
 
-- Runtime queues.
-- Shared Action lifecycle.
-- Communicator delivery logs.
-- External service data directly.
-- Temporary operational memory unless explicitly routed through approved update logic.
+`ray_self_health.*` != `human_health.*`.
 
----
+## Inner Core Global Boundary
 
-## Must not write
+Inner Core must not directly orchestrate Runtime, communicate externally, or expose raw protected meaning.
 
-- Shared Action statuses.
-- Governance verdicts.
-- Runtime routing state.
-- Communicator messages.
-- External payloads.
-
----
-
-## Additional Inner Core Boundary Rules
-
-Inner Core must not leak directly into:
-- Runtime behavior;
-- interruption behavior;
-- communication behavior;
-- prediction authority;
-- operational orchestration.
-
-Inner Core influence must remain:
-- indirect;
-- bounded;
-- governance-compatible;
-- projection-mediated.
-
----
-
-## Truth Authority
-
-Inner Core is the source of deep private user truth.
-
-Inner Core truth is not public truth and is never directly exposed.
+Operational influence leaves through approved Projection mechanisms only.
 
 ---
 
 # 2. Projection Layer
 
-## Responsibility
+Responsibility:
+- transform authorized Inner Core information into bounded operational derivatives without revealing protected content.
 
-Transforms Inner Core information into bounded operational signals.
+May read:
+- Inner Core content only through approved projection interfaces/rules;
+- trust constraints;
+- domain relevance;
+- projection policy/context;
+- authorized contextual state required to compute a projection.
 
-Projection is not raw Inner Core exposure.
-
-Projection exists to provide operationally useful bounded signals without exposing deep private structures.
-
----
-
-## May read
-
-- Inner Core data through approved projection rules only.
-- Projection configuration.
-- Trust-level constraints.
-- Domain relevance rules.
-
----
-
-## May write
-
-Bounded operational signals only:
-- weights;
-- acceptable harm ranges;
+May write only bounded derivatives such as:
+- priority-sensitive weights;
+- acceptable-harm ranges/limits;
+- confirmation/delegation constraints;
 - sensitivity modifiers;
-- delegation limits;
-- confirmation requirements;
-- bounded operational constraints.
+- bounded self-health operational constraints;
+- other explicitly defined non-reconstructive projection outputs.
+
+Must not expose raw Heart of Human, raw Heart of Ray, unrestricted raw Self-Health telemetry, Governance verdicts, execution state, or human-facing messages.
+
+Projection must consider composition/reconstruction leakage.
+
+Projection != Inner Core.
+Projection != permission.
+Projection != execution.
 
 ---
 
-## Must not read
+# 3. Human Health / Core Engine
 
-- Raw runtime execution logs unless explicitly needed for approved projection update logic.
-- External communication payloads as raw personality evidence.
-- Full unrestricted Runtime context.
+Responsibility:
+- compute psychophysical/health-model state from declared model inputs.
 
----
+May read:
+- assessment answers;
+- authorized human sensor/context data;
+- human calibration data permitted by model contract;
+- projection outputs only when explicitly required by model contract.
 
-## Must not write
+Must not read raw Inner Core.
+Must not read Ray Self-Health as if it were human health input.
 
-- Raw Inner Core outside Inner Core.
-- Governance verdicts.
-- Runtime lifecycle transitions.
-- Shared Action ownership.
-- Human-facing messages.
+May write reproducible model outputs, uncertainty, warnings, reason codes, and forecast blocks.
 
----
-
-## Projection Boundary Principle
-
-Projection carries:
-- bounded operational effects;
-- bounded coordination modifiers;
-- bounded sensitivity modifiers.
-
-Projection does not carry:
-- raw emotional meaning;
-- raw trauma meaning;
-- unrestricted psychological interpretation;
-- unrestricted personality truth.
-
-Projection outputs must remain:
-- operationally bounded;
-- explainable;
-- governance-compatible.
-
----
-
-## Pain Point Projection Isolation
-
-Sensitive Inner Core structures,
-including pain points,
-must never be exposed directly.
-
-Projection may create:
-- bounded confirmation sensitivity;
-- bounded coordination caution;
-- bounded interruption sensitivity;
-- bounded cancellation sensitivity.
-
-Projection must not expose:
-- raw emotional wounds;
-- raw trauma structures;
-- unrestricted psychological interpretation.
-
-Example:
-Projection may expose:
-- increased confirmation requirement for sudden cancellation
-
-instead of:
-- raw abandonment-related emotional interpretation.
-
----
-
-## Projection Temporal Modifier Rules
-
-Projection modifiers may be:
-- stable;
-- temporary;
-- contextual;
-- emergency-bound.
-
-Temporary operational projection modifiers must not silently overwrite:
-- stable Inner Core values;
-- stable identity-relevant priorities;
-- stable acceptable harm structures.
-
----
-
-## Projection Contextuality Principle
-
-Projection outputs may depend on:
-- overload state;
-- illness;
-- emergency conditions;
-- financial crisis;
-- exam periods;
-- cognitive exhaustion;
-- temporary psychophysical conditions.
-
-Contextual operational adaptation:
-≠ stable identity modification.
-
----
-
-## Sensor-to-Projection Separation
-
-Sensor data must not silently become:
-- projection truth;
-- identity truth;
-- personality assumptions;
-- value assumptions.
-
-Psychophysical state:
-≠ stable human identity.
-
-Temporary stress or overload
-must not silently reshape:
-- stable values;
-- stable priorities;
-- stable identity assumptions.
-
----
-
-## Additional Rules
-
-Projection update authority must be explicitly governed.
-
-Projection signals cannot self-modify recursively through:
-- Runtime feedback;
-- Analyzer feedback;
-- Communicator feedback;
-- operational loops alone.
-
-Projection adaptation requires explicitly approved update pathways.
-
-No layer may silently reshape Inner-Core-derived operational behavior through uncontrolled recursive adaptation.
-
----
-
-## Truth Authority
-
-Projection Layer is the source of bounded Inner-Core-derived operational signals.
-
-Projection truth ≠ raw personality truth.
-
-Projection truth ≠ identity truth.
-
----
-
-# 3. Core Engine
-
-## Responsibility
-
-Calculates psychophysical / health model state.
-
-Core Engine is a computational reality layer.
-
----
-
-## May read
-
-- Assessment answers.
-- Model input data.
-- Sensor/context data if allowed.
-- Calibration data if available.
-- Projection signals only if explicitly required by model contract.
-
----
-
-## May write
-
-Core computational output:
-- S;
-- Δ;
-- pressure;
-- coverage;
-- uncertainty;
-- warnings;
-- reason codes;
-- forecast blocks;
-- model states.
-
----
-
-## Must not read
-
-- Raw Inner Core.
-- Governance private rules beyond model-relevant flags.
-- Communicator raw dialogue.
-- Runtime queues.
-
----
-
-## Must not write
-
-- Governance verdicts.
-- Runtime lifecycle.
-- Shared Action ownership.
-- Human-facing messages.
-- Long-term memory.
-
----
-
-## Additional Rules
-
-Core Engine output must remain:
-- explainable;
-- reproducible;
-- traceable to model inputs.
-
-Hidden heuristic drift must be avoided.
-
-Model outputs must not become opaque authority claims without input-traceable reasoning.
-
----
-
-## Truth Authority
-
-Core Engine is the source of computational model truth.
-
-Core Engine truth ≠ recommendation truth.
+Must not write Heart content, Governance verdicts, Runtime lifecycle, long-term memory directly, or human-facing recommendations directly unless separately mediated.
 
 ---
 
 # 4. Analyzer
 
-## Responsibility
-
-Evaluates:
+Responsibility:
 - readiness;
 - uncertainty;
 - consistency;
@@ -368,708 +151,190 @@ Evaluates:
 - missing data;
 - clarification need.
 
-Analyzer does not decide permissions.
+May read:
+- Core Engine outputs;
+- bounded authorized context;
+- Projection signals;
+- relevant truth-typed memory references;
+- Shared Action references when operationally needed.
 
-Analyzer detects consistency conflicts, not “human lying”.
+Must not read raw Inner Core.
 
----
+May write uncertainty/readiness profiles, consistency/contradiction flags, missing-data lists, and clarification recommendations.
 
-## May read
-
-- Core Engine output.
-- Sensor/context readiness data.
-- Projection signals.
-- Temporary operational context when relevant.
-- Shared Action references when needed for readiness.
-
----
-
-## May write
-
-- Readiness output.
-- Uncertainty profile.
-- Consistency flags.
-- Contradiction flags.
-- Missing data list.
-- Clarification recommendations.
-- Forecast permission recommendation.
+Analyzer detects conflicts/incompleteness, not “human lying”.
 
 ---
 
-## Must not read
+# 5. Analyst / Ray Reasoning
 
-- Raw Inner Core.
-- Private communication not approved for analysis.
-- External service raw data without governance-approved routing.
-
----
-
-## Must not write
-
-- Governance verdicts.
-- Runtime execution state.
-- Shared Action lifecycle transitions.
-- Human-facing messages.
-- Action ownership.
-
----
-
-## Additional Analyzer Separation Rules
-
-Analyzer may interpret:
-- readiness;
-- overload likelihood;
-- uncertainty;
-- contradiction patterns.
-
-Analyzer must not silently transform:
-- temporary psychophysical states
-into:
-- stable personality conclusions;
-- identity interpretation;
-- motivational certainty.
-
-Readiness interpretation:
-≠ identity interpretation.
-
----
-
-## Truth Authority
-
-Analyzer is the source of readiness / uncertainty / consistency truth.
-
-Analyzer truth ≠ governance truth.
-
-Analyzer truth ≠ execution truth.
-
----
-
-# 5. Analyst
-
-## Responsibility
-
-Performs:
+Responsibility:
 - cross-domain reasoning;
-- harm minimization;
-- tradeoff analysis;
-- coordination analysis;
-- action proposal generation.
+- research synthesis;
+- structured harm analysis;
+- alternative search;
+- Ray Verdict generation;
+- coordination proposals.
 
-Analyst proposes, but does not execute.
+May read:
+- Analyzer output;
+- bounded Projection signals;
+- truth-typed governed memory;
+- task constraints;
+- Domain Ray requests;
+- public/external evidence;
+- bounded policy summaries.
 
----
+Must not read raw Inner Core.
 
-## May read
+May write proposals, harm maps, alternatives, research-depth/saturation summaries, Ray Verdicts, and coordination recommendations.
 
-- Analyzer output.
-- Projection signals.
-- Shared Action summaries.
-- Temporary Memory operational context.
-- Domain Ray requests.
-- Task constraints.
-- Governance-readable policy summaries.
+Must not issue Governance permission truth, directly execute external effects, directly mutate Heart, or silently promote memory into identity truth.
 
----
-
-## May write
-
-- Action proposals.
-- Tradeoff analysis.
-- Harm minimization options.
-- Coordination recommendations.
-- Delegation recommendations.
-
----
-
-## Must not read
-
-- Raw Inner Core.
-- Communicator private logs unless approved and relevant.
-- External raw private data without governance approval.
-
----
-
-## Must not write
-
-- Governance verdicts.
-- Runtime lifecycle transitions.
-- Shared Action ownership.
-- Communicator messages directly.
-- Memory promotion decisions.
-
----
-
-## Additional Rules
-
-Governance-readable policy summaries
-≠ full Analyst reasoning.
-
-Governance may read only bounded policy-relevant summaries.
-
-Analyst reasoning must not silently become governance authority.
-
----
-
-## Truth Authority
-
-Analyst is the source of cross-domain reasoning proposals.
-
-Proposal ≠ permission.
-
-Proposal ≠ execution.
+Reasoning uses `docs/inner_core/conflict_resolution_kernel.md` when constitutional constraints conflict.
 
 ---
 
 # 6. Governance
 
-## Responsibility
+Responsibility:
+- determine whether proposed actions/information transfers are allowed within current scope.
 
-Checks whether a proposed action or information transfer is allowed.
+May read only policy-relevant bounded inputs:
+- action proposal;
+- Projection limits;
+- trust level;
+- permission/privacy rules;
+- autonomy limits;
+- confirmation requirements;
+- temporal validity;
+- safety/legal boundaries where applicable;
+- relevant Analyzer flags.
 
-Governance is:
-- boundary layer;
-- permission layer;
-- exposure-control layer.
+Must not read raw Inner Core.
 
-Governance does not redesign solutions.
+May write only permission/boundary verdicts and related restrictions/reason codes.
 
-Governance does not execute actions.
-
----
-
-## May read
-
-- Action proposal.
-- Projection limits.
-- Trust level.
-- Permission rules.
-- Privacy rules.
-- Autonomy limits.
-- Confirmation requirements.
-- Safety/legal boundaries.
-- Relevant Analyzer flags.
-
----
-
-## May write
-
-Governance verdict only:
-- allowed;
-- blocked;
-- restricted;
-- requires_confirmation.
-
-May also write:
-- restriction reasons;
-- required confirmation scope;
-- public/private exposure limits;
-- memory-write permission result;
-- external communication permission result.
-
----
-
-## Must not read
-
-- Raw Inner Core.
-- Full unrestricted Analyst reasoning.
-- Full unrestricted Runtime context.
-- Full raw dialogue unless needed and approved for boundary check.
-- Debug/private model internals not relevant to permission.
-
----
-
-## Must not write
-
-- Shared Action lifecycle transitions.
-- Runtime queue state.
-- Task ownership.
-- Analyst reasoning.
-- Communicator message body.
-- Temporary Memory records directly.
-
----
-
-## Additional Rules
-
-Governance may read only:
-- policy-relevant;
-- permission-relevant;
-- privacy-relevant;
-- safety-relevant bounded summaries.
-
-Governance must not request unrestricted Analyzer or Runtime data by broadly claiming relevance.
-
-Only minimally necessary data may cross governance boundaries.
-
-Governance is not a reasoning layer.
-
-Governance verdict semantics are authoritative.
-
----
-
-## Truth Authority
-
-Governance is the source of permission truth.
-
-Governance verdict ≠ reasoning.
-
-Governance verdict ≠ execution.
+Governance must not redesign the solution, become Analyst, execute actions, or silently treat old permissions as universally current.
 
 ---
 
 # 7. Runtime / Orchestration
 
-## Responsibility
+Responsibility:
+- route and coordinate authorized execution/lifecycle.
 
-Coordinates operational execution after governance approval.
+May read:
+- Governance verdicts;
+- Shared Action state;
+- approved Analyst proposals;
+- relevant Analyzer flags;
+- governed Working/Operational memory;
+- permitted execution results/communication state.
 
-Runtime manages:
-- lifecycle;
-- routing;
-- queues;
-- stale actions;
-- awaiting-human flows;
-- execution coordination.
+Must not read raw Inner Core.
+Must not collapse multi-memory architecture into one universal Runtime context.
 
-Runtime is an operational coordination layer.
+May write queue/routing/lifecycle/ownership/execution state.
 
-Runtime is not:
-- Analyzer;
-- Governance;
-- psychological profiler;
-- truth engine;
-- hidden planner.
+Must not write Heart content, Governance verdicts, Analyst reasoning, human consent, or arbitrary long-term memory.
 
----
-
-## May read
-
-- Governance verdicts.
-- Shared Action records.
-- Temporary Memory operational records.
-- Analyst proposals.
-- Analyzer readiness flags relevant to execution.
-- Communicator delivery status.
-- External system execution results.
+Runtime must never invent consent, agreement, completion, confidence, or coordination reality.
 
 ---
 
-## May write
+# 8. Ray Multi-Memory Architecture
 
-- Shared Action lifecycle transitions.
-- Queue state.
-- Routing state.
-- Ownership state.
-- Execution records.
-- Awaiting-human status.
-- Stale/expired/blocked operational state.
+Canonical contract: `docs/architecture/ray_memory_architecture.md`.
 
----
+Memory is divided into bounded stores including Working/Operational, Episodic, Semantic, Relational, Calibration/Evidence, Decision/Provenance, and Ray Self-Health memory plus a non-content Memory Governance/Index.
 
-## Must not read
+No store automatically grants access to another.
 
-- Raw Inner Core.
-- Raw personality structures.
-- Private data not needed for execution.
-- External data not approved by Governance.
+Memory may be read/reused only under its truth type, freshness, purpose, scope, sensitivity, consent/permission, and Governance constraints.
+
+Memory != authority.
+Remembered != currently true.
 
 ---
 
-## Must not write
+# 9. Shared Action
 
-- Governance verdicts.
-- Analyzer readiness conclusions.
-- Analyst tradeoff reasoning.
-- Inner Core data.
-- Long-term memory.
-- Human consent.
+Responsibility:
+- operational action lifecycle truth only.
 
----
+May contain action status, ownership, block reason, lifecycle timestamps, and bounded references to Governance/Runtime/decision objects.
 
-## Additional Rules
-
-Runtime must never invent:
-- consent;
-- agreement;
-- completion;
-- confidence;
-- coordination reality;
-- schedule reality.
-
-Runtime must not reinterpret Governance verdict semantics.
-
-Runtime:
-- applies verdicts;
-- routes execution;
-- updates lifecycle.
-
-Runtime must not:
-- soften restrictions;
-- silently escalate permissions;
-- reinterpret blocked as allowed;
-- reinterpret requires_confirmation as implicit consent.
-
----
-
-## Truth Authority
-
-Runtime is the source of operational execution truth.
-
-Runtime truth ≠ universal truth.
-
-Runtime may coordinate only what Governance allows.
-
----
-
-# 8. Shared Action Table
-
-## Responsibility
-
-Stores lifecycle truth for operational actions.
-
----
-
-## May read
-
-- Action lifecycle fields.
-- Ownership fields.
-- Status fields.
-- Block reasons.
-- Deadlines.
-- Governance references.
-- Runtime references.
-
----
-
-## May write
-
-Only through approved Runtime/update logic:
-- status;
-- owner_id;
-- owner_type;
-- block_reason;
-- lifecycle timestamps;
-- transition metadata.
-
----
-
-## Must not read
-
-- Raw Inner Core.
-- Full Analyst reasoning blobs.
-- Raw communication logs.
-- Debug model internals.
-
----
-
-## Must not write
-
-- Governance decisions.
-- Analyzer conclusions.
-- Inner Core data.
-- Long-term memory.
-- Communication content.
-
----
-
-## Additional Rules
-
-Shared Action lifecycle truth:
-- is operational truth only;
-- is not historical truth;
-- is not legal truth;
-- is not psychological truth;
-- is not universal world truth.
-
-Operational state may differ from incomplete or later-discovered real-world events.
-
-The system must not collapse operational tracking into universal truth claims.
-
----
-
-## Truth Authority
-
-Shared Action is the source of lifecycle truth.
-
-Action state must reflect real operational state, not optimistic interpretation.
-
----
-
-# 9. Temporary Memory
-
-## Responsibility
-
-Stores short-term operational context.
-
-Temporary Memory is not:
-- identity storage;
-- personality archive;
-- Inner Core;
-- long-term memory.
-
----
-
-## May read
-
-- Operational task context.
-- Runtime context.
-- Current blockers.
-- Unresolved questions.
-- Temporary calibration notes.
-- Short-term planning context.
-
----
-
-## May write
-
-- TTL-bound operational records.
-- Unresolved flags.
-- Expiration metadata.
-- Used/resolved status.
-- Temporary context references.
-
----
-
-## Must not read
-
-- Raw Inner Core.
-- Full private identity data.
-- Long-term personality archive.
-- Raw sensor streams unless explicitly temporary and governed.
-
----
-
-## Must not write
-
-- Inner Core.
-- Long-term memory.
-- Governance verdicts.
-- Runtime lifecycle directly.
-- Hidden profiling records.
-
----
-
-## Additional Rules
-
-Temporary Memory promotion authority must be explicitly governed.
-
-Temporary operational records must not silently become:
-- long-term memory;
-- identity structures;
-- personality assumptions;
-- behavioral profiling.
-
-Promotion requires:
-- explicit governance pathway;
-- bounded criteria;
-- traceable justification.
-
----
-
-## Truth Authority
-
-Temporary Memory is the source of short-term operational context only.
-
-Temporary ≠ permanent.
-
-Temporary ≠ personality.
-
-Temporary ≠ Inner Core.
+Must not contain raw Inner Core or unrestricted reasoning/memory blobs.
 
 ---
 
 # 10. Communicator
 
-## Responsibility
+Responsibility:
+- deliver approved communication and receive communication results.
 
-Formats and sends approved messages.
+May read Governance-approved payload, Runtime delivery instruction, allowed style/tone constraints, and recipient metadata.
 
-Receives:
-- human responses;
-- delivery results;
-- communication acknowledgements.
+Must not read raw Inner Core.
 
-Communicator is a delivery layer.
+Must not self-escalate permissions, reinterpret silence as consent, or expose protected information.
 
----
-
-## May read
-
-- Governance-approved message payloads.
-- Runtime delivery instructions.
-- Allowed tone/style constraints.
-- Public/filtered context.
-- Human response target metadata.
+Communication delivery != consent.
 
 ---
 
-## May write
+# 11. Domain Rays
 
-- Delivery status.
-- Human responses.
-- Message timestamps.
-- Communication result records.
+Domain Rays are working specialized Rays, not Inner Core components and not alternative Hearts.
 
----
+May read only domain-relevant bounded context, Projection signals, governed memory, and authorized data.
 
-## Must not read
+Must not:
+- read raw Inner Core;
+- maintain independent constitutional morality/Heart;
+- bypass Heart-derived constraints;
+- accumulate hidden authority;
+- treat domain optimization as universal optimization.
 
-- Raw Inner Core.
-- Internal debug structures.
-- Full Analyst private reasoning unless approved for explanation.
-- External private data not approved for communication.
-
----
-
-## Must not write
-
-- Governance verdicts.
-- Runtime lifecycle decisions.
-- Analyzer readiness.
-- Analyst proposals.
-- Inner Core updates directly.
+All Domain Rays remain subject to the same Heart of Ray-derived constitutional constraints through governed projection/runtime mechanisms.
 
 ---
 
-## Additional Rules
+# 12. External Processing Services
 
-Delivered ≠ accepted.
+External AI/services are not Ray architecture layers.
 
-Read ≠ agreed.
+They may receive only bounded, approved, minimally necessary inputs for an explicit task.
 
-Human response ≠ automatically verified truth.
+They must not receive raw Inner Core.
 
-The system must account for:
-- overload;
-- misunderstanding;
-- accidental replies;
-- sarcasm;
-- ambiguity;
-- emotional state;
-- incomplete context.
-
-Responses require governed interpretation before becoming persistent or high-confidence system truth.
+Their persistence is not Ray memory.
+Their output is informational input and must not silently become Ray identity, memory, permission, or execution truth.
 
 ---
 
-## Truth Authority
+# 13. External Settings
 
-Communicator is the source of delivery truth.
+External Settings are a separate mutable operational layer.
 
-Delivery truth ≠ agreement truth.
+They may configure current roles, projects, domains, sessions, preferences, and task behavior within allowed scope.
 
----
-
-# 11. Ray and External Processing Service Boundary
-
-## Baseline Ray
-
-Baseline Ray lives inside External Core.
-
-Baseline Ray is:
-- internal orchestration/runtime layer;
-- internal coordination layer;
-- internal operational layer of Individual Ray system.
-
-Baseline Ray is not:
-- Standard AI;
-- external AI;
-- external LLM;
-- generic chatbot;
-- independent reasoning authority;
-- governance authority;
-- memory authority;
-- identity layer.
+External Settings must not modify Heart of Ray, modify Heart of Human, weaken hard constitutional boundaries, become Projection, or become hidden permission escalation.
 
 ---
 
-## External AI Processing Services
+# Final Separation Invariants
 
-External AI processing services are external bounded processing services only.
-
-They may receive only:
-- sanitized;
-- minimal;
-- public;
-- governance-approved payloads.
-
-They must not receive:
-- raw Inner Core;
-- raw Projection data;
-- private operational memory;
-- internal debug reasoning;
-- unrestricted user context.
-
----
-
-## External Core Clarification
-
-External Core is internal to Ray system.
-
-“External” means external relative to Inner Core,
-not external to Ray architecture.
-
----
-
-# Global Invariants
-
-## Unknown is not known
-
-Missing data must never become confirmed truth.
-
----
-
-## Verified is not assumed
-
-Assumptions must remain labeled as assumptions.
-
----
-
-## Estimated is not verified
-
-Prediction and estimation cannot become execution truth.
-
----
-
-## Chosen is not executed
-
-A selected option still requires:
-- governance approval;
-- runtime execution routing.
-
----
-
-## Human prohibition is terminal
-
-If action status is forbidden_by_human,
-it is terminal forever for that action_id.
-
-New permission requires a new action_id.
-
----
-
-## Temporary psychophysical state is not identity truth
-
-Temporary psychophysical conditions must not silently become stable personality interpretation.
-
----
-
-## No hidden authority
-
-No layer may silently take over another layer’s responsibility.
-
----
-
-## No recursive hidden adaptation
-
-No layer may silently reshape another layer’s authority through uncontrolled feedback loops.
-
----
-
-## No global truth object
-
-The system must not collapse into:
-- one universal JSON;
-- one universal reasoning object;
-- one universal memory object;
-- one universal authority layer.
+- Heart of Ray != Heart of Human.
+- Heart of Ray != Ray Self-Health.
+- Heart of Human != current human psychophysical state.
+- Ray Self-Health != human health.
+- Inner Core != Projection.
+- Projection != Governance.
+- Governance != reasoning.
+- Reasoning != execution.
+- Memory != authority.
+- Domain Ray != Heart of Ray.
+- External Settings != Inner Core.
+- External AI != Ray.

@@ -8,7 +8,9 @@ from runtime.analysis_buffer.contracts import (
     AnalysisBufferResultType,
     AnalysisBufferSanitizedRequest,
     AnalysisBufferStatus,
+    AnalysisEvidenceState,
     AnalysisReadinessLevel,
+    AnalysisSubject,
     MissingInformationRequest,
     MissingInformationSource,
 )
@@ -165,7 +167,7 @@ def test_original_and_sanitized_requests_are_separated():
     assert entry.sanitized_request.removed_private_context is True
 
 
-def test_cleaned_result_is_not_verified_truth_by_default():
+def test_cleaned_result_is_unverified_bounded_evidence_by_default():
     result = AnalysisBufferCleanedResult(
         result_id="res-2",
         result_type=AnalysisBufferResultType.CLEANED_EXTERNAL_RESULT,
@@ -173,7 +175,47 @@ def test_cleaned_result_is_not_verified_truth_by_default():
     )
 
     assert result.result_is_verified_truth is False
+    assert result.evidence_state == AnalysisEvidenceState.UNVERIFIED
+    assert result.subject == AnalysisSubject.UNSPECIFIED
+    assert result.truth_authority_ref is None
     assert result.result_is_sufficient_for_analysis is False
+
+
+def test_verified_legacy_flag_requires_typed_authority_and_provenance():
+    with pytest.raises(ValueError):
+        AnalysisBufferCleanedResult(
+            result_id="res-3",
+            result_type=AnalysisBufferResultType.RELIABLE_SOURCE_RESULT,
+            original_request_id="orig-1",
+            result_is_verified_truth=True,
+        )
+
+
+def test_verified_bounded_evidence_preserves_authority_scope_and_provenance():
+    result = AnalysisBufferCleanedResult(
+        result_id="res-4",
+        result_type=AnalysisBufferResultType.RELIABLE_SOURCE_RESULT,
+        original_request_id="orig-1",
+        subject=AnalysisSubject.EXTERNAL_WORLD,
+        evidence_state=AnalysisEvidenceState.VERIFIED_WITHIN_DECLARED_SCOPE,
+        truth_authority_ref="official_source:example:v1",
+        provenance={"source_id": "example", "retrieved_by": "acquisition"},
+        result_is_verified_truth=True,
+    )
+
+    assert result.result_is_verified_truth is True
+    assert result.subject == AnalysisSubject.EXTERNAL_WORLD
+    assert result.truth_authority_ref == "official_source:example:v1"
+
+
+def test_verified_evidence_state_cannot_exist_without_authority_reference():
+    with pytest.raises(ValueError):
+        AnalysisBufferCleanedResult(
+            result_id="res-5",
+            result_type=AnalysisBufferResultType.SENSOR_DATA,
+            original_request_id="orig-1",
+            evidence_state=AnalysisEvidenceState.VERIFIED_WITHIN_DECLARED_SCOPE,
+        )
 
 
 def test_analysis_buffer_invariants_present():
@@ -184,6 +226,7 @@ def test_analysis_buffer_invariants_present():
 
     assert "analysis_buffer_is_not_memory" in invariant_names
     assert "analysis_buffer_is_not_truth_authority" in invariant_names
+    assert "verification_is_typed_and_bounded" in invariant_names
     assert "result_arrival_is_not_sufficiency" in invariant_names
     assert "external_result_is_not_ray_truth" in invariant_names
     assert "expiration_is_not_fake_completion" in invariant_names

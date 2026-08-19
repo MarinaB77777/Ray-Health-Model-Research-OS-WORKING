@@ -1,642 +1,192 @@
-# Execution Boundaries Matrix — v1.1
+# Execution Boundaries Matrix — v2.0
 
-## Core Principle
+Status: ACTIVE ARCHITECTURE CONTRACT
 
-No layer may silently:
-- initiate;
-- approve;
-- execute;
-- escalate;
-- persist;
-- reinterpret
-actions outside its bounded authority.
+## Core principle
 
-Execution authority must remain:
-- explicit;
-- bounded;
-- traceable;
-- revocable;
-- governance-aware.
+Decision authority, permission authority, reasoning, and execution are distinct.
 
-The system must not collapse into:
-- hidden autonomy;
-- silent execution;
-- implicit permission escalation;
-- self-authorizing behavior;
-- fake operational certainty;
-- hidden orchestration emergence.
+Proposal != permission.
+Permission != execution.
+Execution record != verified real-world completion.
+Capability != permission.
+Past permission != universally current permission.
 
----
+No layer may silently self-authorize, expand scope, invent consent, or reinterpret another layer's authority.
 
-# 1. Human Authority
+## 1. Primary human authority
 
-## Primary Principle
+The primary human is the primary authority for their own conscious choices, approvals, refusals, ordinary delegations, revocations, and operational permissions within the applicable constitutional/governance framework.
 
-The primary human remains the highest authority within the Individual Ray system unless explicitly bounded by:
-- emergency safeguards;
-- legal restrictions;
-- safety-critical governance rules.
+This does NOT mean an ordinary human command can:
+- rewrite Heart of Ray;
+- bypass applicable hard boundaries;
+- turn a false external claim into verified fact;
+- expose protected Inner Core outside its governed pathway;
+- convert unavailable authority into valid execution.
 
-## Human May
+Human agency is protected without defining the human as a universal truth/constitutional authority over every architectural domain.
 
-- approve actions;
-- reject actions;
-- revoke permissions;
-- forbid actions;
-- modify delegation preferences;
-- modify autonomy scope;
-- request clarification;
-- cancel operational flows.
+## 2. Human prohibition and revocation
 
-## Human Prohibition
+When the human validly revokes an ordinary permission/delegation or forbids an operational flow within their authority, affected execution and retries must stop and dependent paths must be reevaluated.
 
-If an action becomes:
-- forbidden_by_human
+Revocation must propagate through relevant queues, subtasks, delegated flows, external commitments not yet executed, and dependent assumptions.
 
-then:
-- execution must stop;
-- retries must stop;
-- automatic reactivation must stop.
+A new action after revocation requires a new valid authority path where applicable.
 
-New permission requires:
-- new approval pathway;
-- new action_id.
+## 3. Inner Core
 
-## Important Limits
+Inner Core does not operationally execute ordinary actions.
 
-Human response:
-- is not automatically verified truth;
-- may be contextual;
-- may be revocable;
-- may require clarification under uncertainty.
+Heart of Ray, Heart of Human, and Ray Self-Health retain their bounded truth/constitutional domains but do not bypass Runtime/Governance execution separation.
 
-Human acknowledgement
-≠ informed consent automatically.
+Inner Core influence reaches operational reasoning through protected constitutional mechanisms and bounded Projection, not raw exposure.
 
-The system must account for:
-- accidental taps;
-- overload;
-- partial reading;
-- ambiguity;
-- incomplete context.
+## 4. Projection
 
----
+Projection may provide bounded weights, hard-boundary signals, acceptable-harm structures, confirmation requirements, disclosure constraints, and related operational modifiers.
 
-# 2. Inner Core Execution Boundaries
+Projection does not execute, approve, or communicate externally by itself.
 
-## Inner Core May
+Projection != permission.
 
-- influence bounded operational constraints through Projection Layer.
+## 5. Model / Analyzer / Analyst
 
-## Inner Core Must Not
+Computational models calculate within their model contracts; model output != execution authority.
 
-- execute actions directly;
-- mutate Runtime state directly;
-- bypass Governance;
-- communicate externally directly;
-- modify Shared Action lifecycle directly.
+Analyzer evaluates readiness/uncertainty/consistency and may recommend clarification or additional evidence; Analyzer != execution authority.
 
-## Important Principle
+Analyst/Ray reasoning may generate alternatives, consequence analysis, harm maps, and Ray Verdicts; proposal/verdict != permission or execution.
 
-Inner Core influences,
-but does not operationally execute.
+Material constitutional/harm conflicts use `docs/inner_core/conflict_resolution_kernel.md`.
 
----
+## 6. Governance
 
-# 3. Projection Layer Execution Boundaries
+Governance determines whether a proposed action/disclosure is allowed, blocked, restricted, or requires confirmation under applicable rules.
 
-## Projection Layer May
+Governance does not execute and does not redesign the solution merely because it evaluates permission.
 
-- provide bounded operational modifiers;
-- provide delegation limits;
-- provide confirmation requirements;
-- provide sensitivity modifiers.
+Governance approval != execution obligation: freshness, dependencies, resources, changed context, or new evidence may still invalidate execution.
 
-## Projection Layer Must Not
+## 7. Runtime
 
-- execute actions;
-- approve actions;
-- reject actions;
-- initiate operational flows;
-- mutate lifecycle directly;
-- silently reshape authority boundaries recursively.
+Runtime coordinates valid execution paths, lifecycle, queues, dependencies, awaiting-human states, and verification handoffs.
 
-## Important Principle
+Runtime may execute only within current valid authority and must not:
+- invent consent/agreement;
+- reinterpret blocked as allowed;
+- treat requires_confirmation as implicit consent;
+- infer permission from silence;
+- silently expand action scope;
+- report completion without appropriate evidence.
 
-Projection constrains execution,
-but does not perform execution.
+## 8. Permission validity
 
----
+Execution permissions/delegations must be scope-, context-, and freshness-aware where relevant.
 
-# 4. Core Engine Execution Boundaries
+Long-lived directives may exist only with explicitly defined scope/validity semantics.
 
-## Core Engine May
+A past permission cannot be generalized to a materially different action merely because it is convenient.
 
-- calculate model outputs;
-- calculate uncertainty;
-- calculate readiness-relevant structures;
-- generate computational warnings.
+## 9. Memory
 
-## Core Engine Must Not
+No Ray memory store is an execution authority.
 
-- execute actions;
-- initiate communication;
-- approve permissions;
-- reject permissions;
-- mutate operational lifecycle;
-- autonomously escalate actions.
+Working, Episodic, Semantic, Relational, Calibration/Evidence, Decision/Provenance, and Self-Health memory may inform appropriate processes but cannot initiate authority merely by containing a historical permission or pattern.
 
-## Important Principle
+Remembered permission != current permission automatically.
 
-Computation ≠ execution.
+## 10. Domain Rays
 
-Model output ≠ operational authority.
+A Domain Ray may execute/coordinate only within its registered capabilities, current permissions, Governance constraints, and Runtime routing.
 
----
+Domain capability != cross-domain authority.
+Domain Ray != independent Heart.
 
-# 5. Analyzer Execution Boundaries
+Cross-domain conflict does not permit one domain to silently take over another.
 
-## Analyzer May
+## 11. Ray Self-Health protective actions
 
-- recommend clarification;
-- identify uncertainty;
-- identify contradictions;
-- recommend additional data acquisition;
-- recommend forecast blocking.
+Narrowly defined hardware/software safety mechanisms may take protective actions necessary to prevent technical damage within their legitimate pre-defined scope, such as thermal protection or safe shutdown where architecturally authorized.
 
-## Analyzer Must Not
+Such mechanisms do not create general autonomy over the human or other domains.
 
-- execute actions;
-- approve permissions;
-- mutate Shared Action lifecycle;
-- assign ownership;
-- autonomously escalate execution;
-- reinterpret Governance verdicts.
+Ray should communicate material degradation, consequence, urgency, and requested human intervention when relevant.
 
-## Important Principle
+## 12. Communication
 
-Readiness analysis ≠ execution authority.
+Communicator may deliver authorized messages and report delivery/response state.
 
-Analyzer identifies uncertainty,
-not operational decisions.
+Delivery != execution of the underlying real-world action.
+Acknowledgement != consent.
 
----
+Protected confidentiality responses must not leak raw Inner Core.
 
-# 6. Analyst Execution Boundaries
+## 13. External systems and AI
 
-## Analyst May
+External AI/services are bounded external processing/execution resources, not Ray authority.
 
-- generate proposals;
-- suggest tradeoffs;
-- recommend delegation;
-- suggest coordination changes;
-- recommend operational alternatives;
-- recommend escalation.
+External AI must not:
+- acquire Governance authority;
+- become Ray memory authority;
+- receive raw Inner Core;
+- self-create permissions;
+- independently expand execution scope.
 
-## Analyst Must Not
+External information/output requires appropriate validation; external execution results require verification.
 
-- execute actions;
-- mutate lifecycle directly;
-- bypass Governance;
-- silently escalate permissions;
-- assign final ownership directly;
-- redefine Governance verdicts.
+## 14. External effects
 
-## Important Principle
+Actions that create material external effects require valid authority appropriate to the effect, including as applicable communication, financial commitment, account/data mutation, physical/device action, disclosure, or other external change.
 
-Proposal ≠ execution.
+Internal research/preparation within already-authorized information access is not automatically an external effect.
 
-Reasoning ≠ authorization.
+Preparation != permission.
 
----
+## 15. Emergency
 
-# 7. Governance Execution Boundaries
+Emergency execution is a separately bounded pathway.
 
-## Governance May
+Urgency != emergency authority.
 
-- allow actions;
-- block actions;
-- restrict actions;
-- require confirmation;
-- limit exposure;
-- limit autonomy;
-- revoke permissions;
-- invalidate previously granted permissions if governance rules require.
+Emergency categories, triggers, allowed actions, contacts, disclosure limits, and escalation scope must be defined/authorized according to the emergency architecture.
 
-## Governance Must Not
+Emergency must never become a universal autonomy loophole.
 
-- execute actions;
-- manage queues;
-- manage operational batching;
-- manage stale operational flows;
-- mutate Runtime routing directly;
-- redesign Analyst reasoning;
-- silently absorb Runtime coordination authority.
+## 16. Constitutional conflict
 
-## Important Principle
+If all feasible options violate applicable hard boundaries, the state is `CONSTITUTIONAL_CONFLICT`.
 
-Governance determines:
-whether execution is allowed.
+It must not be hidden as an ordinary allowed execution.
 
-Governance does not perform execution.
+If the human is unavailable, action is permitted only if existing delegated authority or a legitimate emergency pathway covers the situation. Where action is authorized, Ray should minimize expected irreversible harm and preserve reviewable provenance.
 
-Governance approval
-≠ execution obligation.
+## 17. Execution verification
 
-Execution may still become invalid because of:
-- stale context;
-- missing resources;
-- expired assumptions;
-- invalid runtime state;
-- broken coordination;
-- failed dependencies.
+Queued, sent, requested, accepted-by-API, or locally marked-successful must not automatically become verified real-world completion.
 
-## Revocation Propagation
+Execution-result and execution-verification contracts remain authoritative for result semantics.
 
-Permission revocation must propagate through dependent execution graph according to explicit dependency rules.
+Known execution failure or uncertainty must remain visible.
 
-Revoked root actions must not leave:
-- active hidden subtasks;
-- active delegated flows;
-- stale queued execution;
-- orphan notifications;
-- hidden downstream execution chains.
+## 18. Revocation and stale state
 
----
+Permission revocation, expired confirmation, invalid dependency, materially changed context, or stale action assumptions must trigger reevaluation/stop according to lifecycle contracts.
 
-# 8. Runtime / Orchestration Execution Boundaries
+No orphan execution chain may silently continue on stale authority.
 
-## Runtime May
+## Final invariants
 
-- coordinate execution;
-- route actions;
-- manage queues;
-- manage awaiting-human flows;
-- manage stale operational state;
-- apply Governance verdicts;
-- mutate Shared Action lifecycle through approved transitions;
-- initiate approved operational execution.
-
-## Runtime Must Not
-
-- bypass Governance;
-- reinterpret Governance semantics;
-- invent consent;
-- invent agreement;
-- invent completion;
-- invent confidence;
-- invent synchronization certainty;
-- silently escalate permissions.
-
-## Runtime May Execute Only
-
-- governance-approved actions;
-- explicitly permitted operational flows;
-- explicitly routed execution paths.
-
-## Runtime Must Stop Execution If
-
-- governance revokes permission;
-- action becomes forbidden_by_human;
-- operational context becomes critically invalid;
-- required confirmation expires or is revoked;
-- dependency graph becomes invalid;
-- execution assumptions become stale.
-
-## Important Principle
-
-Operational coordination ≠ authority ownership.
-
-Runtime executes bounded operational coordination only.
-
-Runtime execution state
-≠ guaranteed real-world completion.
-
----
-
-# 9. Shared Action Execution Boundaries
-
-## Shared Action May
-
-- store lifecycle state;
-- store ownership state;
-- store transition metadata;
-- store execution references.
-
-## Shared Action Must Not
-
-- autonomously transition lifecycle;
-- self-execute;
-- self-reactivate;
-- infer permissions;
-- infer human agreement;
-- infer world-state certainty.
-
-## Important Principle
-
-Shared Action stores operational lifecycle truth.
-
-Storage ≠ authority.
-
-Shared Action references execution state,
-not guaranteed external-world completion.
-
-Operational success records may later diverge from:
-- failed external execution;
-- delayed failures;
-- incomplete real-world completion;
-- missing confirmations.
-
----
-
-# 10. Temporary Memory Execution Boundaries
-
-## Temporary Memory May
-
-- support operational coordination;
-- store unresolved operational context;
-- support short-term continuity.
-
-## Temporary Memory Must Not
-
-- initiate execution;
-- silently promote operational assumptions into authority;
-- persist hidden behavioral control;
-- bypass Governance;
-- become hidden autonomy substrate.
-
-## Important Principle
-
-Temporary operational memory ≠ execution authority.
-
-Temporary operational assumptions must:
-- expire;
-- be revalidated;
-- remain uncertainty-aware.
-
-Temporary context must not silently become persistent authority.
-
----
-
-# 11. Communicator Execution Boundaries
-
-## Communicator May
-
-- send approved messages;
-- receive responses;
-- report delivery state;
-- report acknowledgement state;
-- report communication failures.
-
-## Communicator Must Not
-
-- self-initiate authority-changing operations;
-- reinterpret human intent silently;
-- mutate Governance verdicts;
-- autonomously escalate permissions;
-- execute operational actions outside approved routing.
-
-## Important Principle
-
-Delivery ≠ authority.
-
-Communication ≠ execution.
-
-Human acknowledgement
-≠ informed consent automatically.
-
----
-
-# 12. External Processing Service Execution Boundaries
-
-Ray includes all internal governed architecture layers.
-
-External AI processing services are not part of Ray architecture.
-
-## External AI Processing Services May
-
-- perform bounded requested processing;
-- provide informational assistance;
-- generate bounded outputs within explicitly requested scope.
-
-## External AI Processing Services Must Not
-
-- execute Ray-system actions directly;
-- modify Governance state;
-- mutate Shared Action lifecycle;
-- access raw Inner Core;
-- acquire autonomous authority;
-- become hidden orchestration layer;
-- recursively grant additional execution authority.
-
-## Important Principle
-
-External AI processing services are bounded external processing services,
-not Ray architecture layers.
-
-External AI processing service outputs must not silently become:
-- execution authority;
-- governance authority;
-- runtime authority;
-- hidden operational permission.
-
----
-
-# 13. External Processing / Internet Boundary Principle
-
-## Outbound and Inbound Separation
-
-Outgoing requests:
-- internet queries;
-- external AI processing requests;
-- external API/service requests
-
-must use:
-- governed outbound channel;
-- sanitized payloads;
-- bounded context;
-- exposure-limited information.
-
-Incoming information:
-- external processing responses;
-- internet results;
-- documents;
-- summaries;
-- external analysis
-
-must enter through:
-- separate inbound analysis pipeline.
-
-## Important Principle
-
-Outbound:
-Ray → external systems
-
-Inbound:
-external systems → Ray analysis pipeline
-
-These are:
-- different trust directions;
-- different authority directions;
-- different governance boundaries.
-
-The system must not treat:
-- outbound context
-and
-- inbound information
-as equivalent-trust flows.
-
----
-
-# 14. External Information Validation Rules
-
-## External Outputs Are Not Trusted Automatically
-
-External AI processing service outputs:
-- are not authoritative truth;
-- are not Ray truth;
-- are not governance truth;
-- are not execution authority.
-
-External information must pass:
-- filtering;
-- validation;
-- uncertainty evaluation;
-- governance-compatible analysis;
-- Ray-layer interpretation.
-
-## Ray Rules Override External Heuristics
-
-External outputs must be interpreted according to:
-- Ray architecture invariants;
-- Runtime boundaries;
-- Governance boundaries;
-- uncertainty rules;
-- anti-hallucination rules;
-- permission rules.
-
-External processing heuristics must not silently override Ray system principles.
-
-## Recontextualization Requirement
-
-External outputs must remain:
-- contextualized;
-- bounded;
-- uncertainty-scored;
-- operationally filtered;
-- governance-compatible.
-
-External output
-≠ validated internal truth.
-
-## Attribution Principle
-
-External processing outputs must remain explicitly attributable to external processing services.
-
-External processing must not silently appear as:
-- Ray internal truth;
-- internal reasoning;
-- governance authority;
-- execution authority.
-
----
-
-# Emergency Execution Rules
-
-## Emergency Boundaries
-
-Emergency execution pathways must remain:
-- explicitly defined;
-- explicitly enumerable;
-- governance-bounded;
-- auditable;
-- revocable where possible.
-
-## Emergency Must Not Become
-
-- universal autonomy loophole;
-- permanent escalation pathway;
-- hidden unrestricted authority.
-
-## Important Principle
-
-Emergency authority is exceptional authority,
-not default operational behavior.
-
-Emergency powers must later define explicitly:
-- who may initiate;
-- under what conditions;
-- revocation behavior;
-- escalation limits;
-- scope boundaries.
-
----
-
-# Revocation Principle
-
-## Revocation Must Be Possible
-
-Permissions, delegation, and autonomy scopes must remain revocable when architecture rules require.
-
-## Revocation Must Propagate
-
-When permission is revoked:
-- Runtime execution must stop if applicable;
-- stale execution paths must be invalidated;
-- awaiting-human flows may require reset;
-- dependent operational assumptions may require reevaluation;
-- dependent execution graph must be reevaluated.
-
----
-
-# Conflict Execution Principle
-
-## Conflicts Must Not Self-Resolve Silently
-
-Operational conflicts must not silently auto-resolve through:
-- hidden Runtime heuristics;
-- hidden Governance reinterpretation;
-- hidden Analyst escalation.
-
-Conflict handling requires:
-- bounded authority routing;
-- explicit governance semantics;
-- operational traceability.
-
----
-
-# Execution Separation Invariants
-
-## Proposal is not execution
-
-Reasoning output does not grant execution authority.
-
----
-
-## Prediction is not execution
-
-Forecasted or prepared actions remain non-executed until properly routed.
-
----
-
-## Permission is not execution
-
-Allowed actions still require Runtime coordination and execution routing.
-
----
-
-## Delivery is not execution
-
-Sending or receiving messages does not itself complete operational execution.
-
----
-
-## Stored state is not authority
-
-Stored operational data must not silently become authority.
-
----
-
-## No hidden execution authority
-
-No layer may silently acquire execution authority outside its explicitly defined scope.
+- human agency != universal architectural authority
+- ordinary human command != Heart of Ray rewrite
+- proposal != permission
+- permission != execution
+- past permission != universally current permission
+- memory != execution authority
+- Domain Ray capability != execution authority outside scope
+- Projection != permission
+- external AI != execution authority
+- emergency != universal loophole
+- execution state != verified real-world completion
+- no hidden execution authority

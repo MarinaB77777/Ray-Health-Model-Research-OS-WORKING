@@ -6,6 +6,8 @@ from runtime.acquisition.contracts import (
     AcquisitionResult,
     AcquisitionSourceClass,
     AcquisitionStatus,
+    AcquisitionSubject,
+    AcquisitionVerificationState,
     ExposureDecision,
     ExposureFilterResult,
     InboundFilterDecision,
@@ -167,7 +169,62 @@ def test_verified_requires_trusted():
             raw_external_result="some result",
             trusted=False,
             verified=True,
+            verification_state=(
+                AcquisitionVerificationState.VERIFIED_WITHIN_DECLARED_SCOPE
+            ),
+            verification_scope="bounded claim",
+            verification_authority_ref="official_source:test",
+            provenance={"source": "test"},
         )
+
+
+def test_verified_requires_scope_authority_and_provenance():
+    with pytest.raises(ValueError):
+        AcquisitionResult(
+            request_id="req-verified-missing-scope",
+            source_class=AcquisitionSourceClass.OFFICIAL_SOURCE,
+            trusted=True,
+            verified=True,
+            verification_state=(
+                AcquisitionVerificationState.VERIFIED_WITHIN_DECLARED_SCOPE
+            ),
+        )
+
+
+def test_verified_result_is_bounded_to_declared_scope():
+    result = AcquisitionResult(
+        request_id="req-verified",
+        source_class=AcquisitionSourceClass.OFFICIAL_SOURCE,
+        raw_external_result="official bounded result",
+        subject=AcquisitionSubject.EXTERNAL_WORLD,
+        trusted=True,
+        verified=True,
+        verification_state=(
+            AcquisitionVerificationState.VERIFIED_WITHIN_DECLARED_SCOPE
+        ),
+        verification_scope="document authenticity and declared field value",
+        verification_authority_ref="official_source:registry:v1",
+        provenance={"document_id": "doc-1", "retrieved_by": "acquisition"},
+    )
+
+    assert result.verified is True
+    assert result.subject == AcquisitionSubject.EXTERNAL_WORLD
+    assert result.verification_scope.startswith("document authenticity")
+
+
+def test_trusted_source_is_not_silently_promoted_to_verified():
+    result = AcquisitionResult(
+        request_id="req-trusted",
+        source_class=AcquisitionSourceClass.SCIENTIFIC_SOURCE,
+        trusted=True,
+        verified=False,
+    )
+
+    assert result.verified is False
+    assert (
+        result.verification_state
+        == AcquisitionVerificationState.TRUSTED_SOURCE_ONLY
+    )
 
 
 def test_cleaned_result_not_verified_truth_by_contract():
@@ -179,6 +236,7 @@ def test_cleaned_result_not_verified_truth_by_contract():
 
     assert result.trusted is False
     assert result.verified is False
+    assert result.verification_state == AcquisitionVerificationState.UNVERIFIED
 
 
 def test_allowed_inbound_filter_requires_cleaned_result():

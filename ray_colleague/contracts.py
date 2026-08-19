@@ -51,6 +51,30 @@ class MemoryScope(str, Enum):
     PARTICIPANT_PREFERENCE = "participant_preference"
 
 
+class MemoryClass(str, Enum):
+    """Memory class within the canonical multi-memory architecture.
+
+    Ray Colleague currently implements only bounded operational/relational
+    compatibility stores. Protected Inner Core classes are intentionally absent.
+    """
+
+    WORKING_OPERATIONAL = "working_operational"
+    EPISODIC = "episodic"
+    RELATIONAL = "relational"
+    SEMANTIC = "semantic"
+
+
+class MemoryTruthType(str, Enum):
+    HUMAN_DECLARATION = "human_declaration"
+    HUMAN_PREFERENCE = "human_preference"
+    OBSERVATION = "observation"
+    EXTERNAL_CLAIM = "external_claim"
+    VERIFIED_EXTERNAL_FACT = "verified_external_fact"
+    INFERENCE = "inference"
+    HYPOTHESIS = "hypothesis"
+    OPERATIONAL_STATE = "operational_state"
+
+
 class LearningStatus(str, Enum):
     DRAFT = "draft"
     TRIAL = "trial"
@@ -98,6 +122,15 @@ class RayActionProposal:
     action_id: str = field(default_factory=lambda: str(uuid4()))
     status: ActionStatus = ActionStatus.PROPOSED
     created_at: str = field(default_factory=utc_now_iso)
+    # EXECUTED means the colleague action handler ran. It does not prove a
+    # real-world external effect. Verification belongs to the Runtime/Handoff
+    # execution-verification boundary.
+    external_effect_verified: bool = False
+    verification_evidence_ref: str | None = None
+
+    def validate(self) -> None:
+        if self.external_effect_verified and not self.verification_evidence_ref:
+            raise ValueError("VERIFIED_EXTERNAL_EFFECT_REQUIRES_EVIDENCE")
 
 
 @dataclass
@@ -118,6 +151,8 @@ class RayResponse:
     def to_dict(self) -> dict[str, Any]:
         for claim in self.claims:
             claim.validate()
+        for proposal in self.action_proposals:
+            proposal.validate()
         return _jsonable(asdict(self))
 
 

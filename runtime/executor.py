@@ -6,6 +6,7 @@ from runtime.event_log import RuntimeEventLog
 from runtime.schemas import (
     GovernanceDecisionStatus,
     RuntimeActionRecord,
+    RuntimeCompletionScope,
     RuntimeEventType,
     RuntimeExecutionResult,
     RuntimeStatus,
@@ -20,6 +21,9 @@ class RuntimeExecutor:
 
     Runtime executes only what Governance already allowed/restricted.
     Runtime does not reason, govern, or expand permissions.
+
+    A completed Runtime step is not automatically a verified real-world effect.
+    External-effect verification is a separate authority/evidence path.
     """
 
     def __init__(self, event_log: RuntimeEventLog | None = None) -> None:
@@ -80,8 +84,6 @@ class RuntimeExecutor:
         previous_status = action.runtime_status
         new_status = RuntimeStatus.EXECUTING
 
-
-
         require_valid_transition(previous_status, new_status)
 
         start_event = self.event_log.create_and_append(
@@ -89,7 +91,7 @@ class RuntimeExecutor:
             event_type=RuntimeEventType.EXECUTION_STARTED,
             previous_status=previous_status,
             new_status=new_status,
-            note="Runtime execution started within Governance scope.",
+            note="Runtime execution step started within Governance scope.",
         )
 
         filtered_payload = apply_runtime_visibility_scope(
@@ -108,8 +110,13 @@ class RuntimeExecutor:
             payload={
                 "delivered_payload": filtered_payload,
                 "governance_trace_id": action.governance_verdict.trace_id,
+                "completion_scope": RuntimeCompletionScope.RUNTIME_STEP.value,
+                "external_effect_verified": False,
             },
-            note="Runtime execution completed.",
+            note=(
+                "Runtime execution step completed. This event does not prove "
+                "verified real-world completion."
+            ),
         )
 
         return RuntimeExecutionResult(
@@ -117,8 +124,13 @@ class RuntimeExecutor:
             status=completed_status,
             success=True,
             blocked=False,
-            message="Execution completed.",
+            message=(
+                "Runtime step completed; external real-world effect is not "
+                "verified by this result."
+            ),
             events=[start_event, completed_event],
+            completion_scope=RuntimeCompletionScope.RUNTIME_STEP,
+            external_effect_verified=False,
         )
 
     def _await_human_confirmation(

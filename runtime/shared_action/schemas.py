@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Optional, List
+from typing import Any, Optional, List
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -64,6 +64,15 @@ class ActionStatus(str, Enum):
     archived = "archived"
 
 
+class ActionCompletionScope(str, Enum):
+    """What the terminal `completed` coordination state actually proves."""
+
+    coordination_step = "coordination_step"
+    internal_task = "internal_task"
+    delivery_handoff = "delivery_handoff"
+    external_effect_verified = "external_effect_verified"
+
+
 class BlockReason(str, Enum):
     governance = "governance"
     runtime = "runtime"
@@ -120,11 +129,11 @@ class InterruptionCost(str, Enum):
 
 
 class SharedActionRecord(BaseModel):
-    """
-    Shared Action Table record.
+    """Shared Action Table coordination record.
 
-    Coordination layer only.
-    Not memory, not reasoning, not Inner Core, not universal truth.
+    This is not memory, reasoning, Inner Core, universal truth, or real-world
+    effect authority. A terminal `completed` record proves only its explicit
+    `completion_scope`.
     """
 
     # Identity
@@ -149,6 +158,9 @@ class SharedActionRecord(BaseModel):
     block_reason: Optional[BlockReason] = None
     requires_confirmation: bool = False
     forbidden_by_human: bool = False
+    completion_scope: Optional[ActionCompletionScope] = None
+    external_effect_verified: bool = False
+    completion_evidence: dict[str, Any] = Field(default_factory=dict)
 
     # Coordination
     priority: Priority = Priority.normal
@@ -211,5 +223,29 @@ class SharedActionRecord(BaseModel):
         if self.relevance_score is not None:
             if not 0.0 <= self.relevance_score <= 1.0:
                 raise ValueError("relevance_score must be between 0.0 and 1.0")
+
+        if self.status != ActionStatus.completed:
+            if self.completion_scope is not None:
+                raise ValueError("completion_scope is only valid for completed status")
+            if self.external_effect_verified or self.completion_evidence:
+                raise ValueError(
+                    "completion verification fields are only valid for completed status"
+                )
+
+        if self.external_effect_verified:
+            if self.completion_scope != ActionCompletionScope.external_effect_verified:
+                raise ValueError(
+                    "external_effect_verified requires external_effect_verified completion scope"
+                )
+            if not self.completion_evidence:
+                raise ValueError(
+                    "verified external effect requires completion_evidence"
+                )
+
+        if self.completion_scope == ActionCompletionScope.external_effect_verified:
+            if not self.external_effect_verified:
+                raise ValueError(
+                    "external_effect_verified completion scope requires verification"
+                )
 
         return self

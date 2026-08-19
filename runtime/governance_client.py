@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import inspect
 from typing import Any, Dict, Optional
 
+from governance.schemas import GovernanceContext, ProposedAction
 from runtime.schemas import (
     GovernanceDecisionStatus,
     GovernanceTargetAudience,
@@ -75,28 +77,59 @@ def snapshot_from_governance_verdict(verdict: Any) -> GovernanceVerdictSnapshot:
 
 
 class GovernanceClient:
-    """
-    Runtime-side adapter for Governance.
+    """Runtime-side adapter for Governance.
 
-    Runtime asks Governance for a verdict.
-    Runtime stores the snapshot.
-    Runtime obeys the snapshot.
-    Runtime never changes the verdict.
+    Current Governance requires an explicit ProposedAction and GovernanceContext.
+    Runtime must not infer missing permission context from an arbitrary payload.
+    Legacy one-argument governance adapters remain supported for compatibility.
     """
 
     def __init__(self, governance_service: Optional[Any] = None) -> None:
         self.governance_service = governance_service
 
-    def get_verdict(self, action_payload: Dict[str, Any]) -> GovernanceVerdictSnapshot:
+    def get_verdict(self, governance_payload: Dict[str, Any]) -> GovernanceVerdictSnapshot:
         if self.governance_service is None:
-            return GovernanceVerdictSnapshot(
-                governance_decision_status=GovernanceDecisionStatus.NOT_ENOUGH_DATA,
-                governance_visibility_level=GovernanceVisibilityLevel.INTERNAL_ONLY,
-                governance_target_audience=GovernanceTargetAudience.INTERNAL_RAY,
-                governance_confirmation_required=True,
-                restrictions=["governance_service_missing"],
-                reason_codes=["GOVERNANCE_SERVICE_MISSING"],
-            )
+            return self._not_enough_data("GOVERNANCE_SERVICE_MISSING")
 
-        verdict = self.governance_service.check(action_payload)
+        check = getattr(self.governance_service, "check", None)
+        if check is None or not callable(check):
+            return self._not_enough_data("GOVERNANCE_CHECK_UNAVAILABLE")
+
+        parameter_count = len(inspect.signature(check).parameters)
+
+        if parameter_count >= 2:
+            action_data = governance_payload.get("governance_action")
+            context_data = governance_payload.get("governance_context")
+            if action_data is None or context_data is None:
+                return self._not_enough_data("GOVERNANCE_CONTEXT_REQUIRED")
+
+            action = (
+                action_data
+                if isinstance(action_data, ProposedAction)
+                else ProposedAction.model_validate(action_data)
+            )
+            context = (
+                context_data
+                if isinstance(context_data, GovernanceContext)
+                else GovernanceContext.model_validate(context_data)
+            )
+            verdict = check(action, context)
+            return snapshot_from_governance_verdict(verdict)
+
+        # Compatibility path for an explicitly installed legacy adapter whose
+        # contract is check(payload). It may return either a verdict or snapshot.
+        verdict = check(governance_payload)
+        if isinstance(verdict, GovernanceVerdictSnapshot):
+            return verdict
         return snapshot_from_governance_verdict(verdict)
+
+    @staticmethod
+    def _not_enough_data(reason_code: str) -> GovernanceVerdictSnapshot:
+        return GovernanceVerdictSnapshot(
+            governance_decision_status=GovernanceDecisionStatus.NOT_ENOUGH_DATA,
+            governance_visibility_level=GovernanceVisibilityLevel.INTERNAL_ONLY,
+            governance_target_audience=GovernanceTargetAudience.INTERNAL_RAY,
+            governance_confirmation_required=True,
+            restrictions=[reason_code.lower()],
+            reason_codes=[reason_code],
+        )

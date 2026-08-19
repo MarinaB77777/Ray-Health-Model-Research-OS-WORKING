@@ -36,6 +36,13 @@ def active_default() -> RaySettingsRevision:
         allowed_languages=("ru", "en", "es"),
         default_language="ru",
         allowed_memory_scopes=("session", "project", "role_preference"),
+        allowed_memory_classes=(
+            "working_operational",
+            "semantic",
+            "relational",
+            "calibration_evidence",
+            "decision_provenance",
+        ),
         maximum_retention_days=365,
         learning_enabled=True,
         allowed_learning_categories=("confirmed_correction", "response_rule"),
@@ -58,6 +65,7 @@ class EffectiveSettingsTests(unittest.TestCase):
             allowed_data_classes=("public",),
             allowed_channels=("chat",),
             allowed_memory_scopes=("session",),
+            allowed_memory_classes=("working_operational",),
             maximum_retention_days=30,
             allowed_learning_categories=("confirmed_correction",),
             human_confirmation_actions=("learning_activation",),
@@ -65,6 +73,7 @@ class EffectiveSettingsTests(unittest.TestCase):
         effective = EffectiveSettingsResolver().resolve([active_default(), role])
         self.assertEqual(("navigation", "participant_guidance"), effective.allowed_capabilities)
         self.assertEqual(("public",), effective.allowed_data_classes)
+        self.assertEqual(("working_operational",), effective.allowed_memory_classes)
         self.assertEqual(30, effective.maximum_retention_days)
         self.assertIn("learning_activation", effective.human_confirmation_actions)
         self.assertEqual(
@@ -118,13 +127,38 @@ class EffectiveSettingsTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             EffectiveSettingsResolver().resolve([active_default(), role])
 
+    def test_raw_inner_core_cannot_be_declared_as_external_memory(self) -> None:
+        for forbidden in (
+            "heart_of_ray",
+            "heart_of_human",
+            "inner_core_raw",
+            "ray_self_health_authority_raw",
+        ):
+            with self.subTest(forbidden=forbidden):
+                revision = RaySettingsRevision(
+                    layer=SettingsLayer.ROLE,
+                    scope_id="research_colleague",
+                    created_by="research_lead",
+                    allowed_memory_classes=(forbidden,),
+                )
+                with self.assertRaises(PermissionError):
+                    revision.validate()
+
+    def test_unknown_memory_class_is_rejected(self) -> None:
+        revision = RaySettingsRevision(
+            layer=SettingsLayer.ROLE,
+            scope_id="research_colleague",
+            created_by="research_lead",
+            allowed_memory_classes=("one_big_universal_memory",),
+        )
+        with self.assertRaises(ValueError):
+            revision.validate()
+
 
 class SettingsRegistryLifecycleTests(unittest.TestCase):
     def setUp(self) -> None:
         self.temp_dir = tempfile.TemporaryDirectory()
-        self.registry = RaySettingsRegistry(
-            Path(self.temp_dir.name) / "settings.json"
-        )
+        self.registry = RaySettingsRegistry(Path(self.temp_dir.name) / "settings.json")
 
     def tearDown(self) -> None:
         self.temp_dir.cleanup()
@@ -199,10 +233,7 @@ class SettingsRegistryLifecycleTests(unittest.TestCase):
                 actor_id="research_lead",
             )
 
-        active = self.registry.active_for(
-            SettingsLayer.ROLE,
-            "research_colleague",
-        )
+        active = self.registry.active_for(SettingsLayer.ROLE, "research_colleague")
         self.assertEqual(second.settings_id, active.settings_id)
         current = [
             item
@@ -223,6 +254,23 @@ class SettingsRegistryLifecycleTests(unittest.TestCase):
         )
         with self.assertRaises(ValueError):
             revision.validate()
+
+    def test_old_registry_without_memory_classes_loads_conservatively(self) -> None:
+        draft = RaySettingsRevision(
+            layer=SettingsLayer.ROLE,
+            scope_id="research_colleague",
+            created_by="research_lead",
+        )
+        stored = self.registry.save_draft(draft)
+        state = self.registry._load()
+        del state["revisions"][stored["settings_id"]][0]["allowed_memory_classes"]
+        state["schema_version"] = "1.0.0"
+        self.registry._write(state)
+
+        loaded = self.registry._deserialize(
+            self.registry._load()["revisions"][stored["settings_id"]][0]
+        )
+        self.assertEqual(("working_operational",), loaded.allowed_memory_classes)
 
 
 if __name__ == "__main__":

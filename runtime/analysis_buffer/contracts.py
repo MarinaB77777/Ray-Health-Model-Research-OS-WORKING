@@ -27,6 +27,23 @@ class AnalysisBufferResultType(str, Enum):
     STANDARD_AI_RESULT = "standard_ai_result"
 
 
+class AnalysisEvidenceState(str, Enum):
+    """Evidence state is not a universal truth rank."""
+
+    UNVERIFIED = "unverified"
+    SOURCE_ATTESTED = "source_attested"
+    CORROBORATED = "corroborated"
+    VERIFIED_WITHIN_DECLARED_SCOPE = "verified_within_declared_scope"
+
+
+class AnalysisSubject(str, Enum):
+    HUMAN_HEALTH = "human_health"
+    RAY_SELF_HEALTH = "ray_self_health"
+    EXTERNAL_WORLD = "external_world"
+    ENVIRONMENT = "environment"
+    UNSPECIFIED = "unspecified"
+
+
 class AnalysisReadinessLevel(str, Enum):
     NOT_READY = "not_ready"
     PARTIAL_ORIENTATION_ONLY = "partial_orientation_only"
@@ -53,7 +70,8 @@ class AnalysisBufferOriginalRequest(BaseModel):
     task_table_ref: Optional[str] = None
 
     created_at: datetime = Field(default_factory=utc_now)
-    
+
+
 class AnalysisBufferSanitizedRequest(BaseModel):
     sanitized_request_id: str
 
@@ -68,6 +86,14 @@ class AnalysisBufferSanitizedRequest(BaseModel):
 
 
 class AnalysisBufferCleanedResult(BaseModel):
+    """Bounded evidence carried through the analytical waiting zone.
+
+    A cleaned result never becomes a universal truth merely because it is safe,
+    relevant, corroborated, or even verified within a declared source scope.
+    `result_is_verified_truth` is retained only for stored-data/API compatibility;
+    new code should use `evidence_state` plus `truth_authority_ref` and provenance.
+    """
+
     result_id: str
 
     result_type: AnalysisBufferResultType
@@ -78,15 +104,60 @@ class AnalysisBufferCleanedResult(BaseModel):
     cleaned_payload_ref: Optional[str] = None
     cleaned_payload: dict[str, Any] = Field(default_factory=dict)
 
+    subject: AnalysisSubject = AnalysisSubject.UNSPECIFIED
+    evidence_state: AnalysisEvidenceState = AnalysisEvidenceState.UNVERIFIED
+    truth_authority_ref: Optional[str] = None
+    provenance: dict[str, Any] = Field(default_factory=dict)
+    observed_at: Optional[datetime] = None
+    valid_until: Optional[datetime] = None
+
     source_reliability_note: Optional[str] = None
     scope_match_note: Optional[str] = None
 
+    # Legacy compatibility only. This flag may describe that an authoritative
+    # source verified the bounded claim; it never makes Analysis Buffer itself a
+    # truth authority.
     result_is_verified_truth: bool = False
     result_is_sufficient_for_analysis: bool = False
 
     uncertainty_notes: list[str] = Field(default_factory=list)
 
     received_at: datetime = Field(default_factory=utc_now)
+
+    @model_validator(mode="after")
+    def validate_truth_typing(self) -> "AnalysisBufferCleanedResult":
+        if self.result_is_verified_truth:
+            if (
+                self.evidence_state
+                != AnalysisEvidenceState.VERIFIED_WITHIN_DECLARED_SCOPE
+            ):
+                raise ValueError(
+                    "Legacy result_is_verified_truth=True requires "
+                    "evidence_state=VERIFIED_WITHIN_DECLARED_SCOPE"
+                )
+            if not self.truth_authority_ref or not self.truth_authority_ref.strip():
+                raise ValueError(
+                    "Verified bounded evidence requires truth_authority_ref"
+                )
+            if not self.provenance:
+                raise ValueError(
+                    "Verified bounded evidence requires provenance"
+                )
+
+        if (
+            self.evidence_state
+            == AnalysisEvidenceState.VERIFIED_WITHIN_DECLARED_SCOPE
+            and not self.truth_authority_ref
+        ):
+            raise ValueError(
+                "VERIFIED_WITHIN_DECLARED_SCOPE requires truth_authority_ref"
+            )
+
+        if self.valid_until is not None and self.observed_at is not None:
+            if self.valid_until < self.observed_at:
+                raise ValueError("valid_until cannot precede observed_at")
+
+        return self
 
 
 class MissingInformationRequest(BaseModel):
@@ -102,7 +173,7 @@ class MissingInformationRequest(BaseModel):
     payload_scope: Optional[str] = None
 
     created_at: datetime = Field(default_factory=utc_now)
-    
+
     @model_validator(mode="after")
     def validate_missing_information_request(
         self,
@@ -113,6 +184,7 @@ class MissingInformationRequest(BaseModel):
             )
 
         return self
+
 
 class AnalysisBufferEntry(BaseModel):
     buffer_id: str
@@ -228,6 +300,13 @@ ANALYSIS_BUFFER_INVARIANTS: list[AnalysisBufferInvariant] = [
         name="analysis_buffer_is_not_truth_authority",
         description=(
             "Buffered results do not become verified truth automatically."
+        ),
+    ),
+    AnalysisBufferInvariant(
+        name="verification_is_typed_and_bounded",
+        description=(
+            "Verification applies only within an explicit authority scope and "
+            "must preserve subject, provenance, and uncertainty."
         ),
     ),
     AnalysisBufferInvariant(

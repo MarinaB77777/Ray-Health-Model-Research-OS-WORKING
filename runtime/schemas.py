@@ -6,7 +6,7 @@ from __future__ import annotations
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 
 # ----------------------------
@@ -36,6 +36,7 @@ class RuntimeEventType(str, Enum):
     EXECUTION_STARTED = "execution_started"
     EXECUTION_COMPLETED = "execution_completed"
     EXECUTION_FAILED = "execution_failed"
+    EXECUTION_EFFECT_VERIFIED = "execution_effect_verified"
     HUMAN_RESPONSE_REQUIRED = "human_response_required"
     HUMAN_RESPONSE_RECEIVED = "human_response_received"
     EXTERNAL_RESPONSE_REQUIRED = "external_response_required"
@@ -44,6 +45,14 @@ class RuntimeEventType(str, Enum):
     DEADLINE_EXPIRED = "deadline_expired"
     REANALYSIS_REQUESTED = "reanalysis_requested"
     CLARIFICATION_REQUESTED = "clarification_requested"
+
+
+class RuntimeCompletionScope(str, Enum):
+    """What a COMPLETED runtime result actually proves."""
+
+    RUNTIME_STEP = "runtime_step"
+    DELIVERY_HANDOFF = "delivery_handoff"
+    EXTERNAL_EFFECT_VERIFIED = "external_effect_verified"
 
 
 # ----------------------------
@@ -125,7 +134,7 @@ class RuntimeRiskLevel(str, Enum):
 
 class RuntimeActionRecord(BaseModel):
     action_id: str
-    schema_version: str = "runtime_action_v0.2"
+    schema_version: str = "runtime_action_v0.3"
 
     action_class: RuntimeActionClass
     risk_level: RuntimeRiskLevel = RuntimeRiskLevel.LOW
@@ -177,6 +186,13 @@ class RuntimeEvent(BaseModel):
 
 
 class RuntimeExecutionResult(BaseModel):
+    """Runtime execution outcome with explicit completion semantics.
+
+    `status=COMPLETED` proves only the declared `completion_scope`. It must never
+    be interpreted as verified real-world completion unless
+    `completion_scope=EXTERNAL_EFFECT_VERIFIED` and verification evidence exists.
+    """
+
     action_id: str
     status: RuntimeStatus
 
@@ -188,7 +204,33 @@ class RuntimeExecutionResult(BaseModel):
 
     events: List[RuntimeEvent] = Field(default_factory=list)
 
+    completion_scope: Optional[RuntimeCompletionScope] = None
+    external_effect_verified: bool = False
+    verification_evidence: Dict[str, Any] = Field(default_factory=dict)
+
     reanalysis_requested: bool = False
     clarification_requested: bool = False
     awaiting_human: bool = False
     awaiting_external: bool = False
+
+    @model_validator(mode="after")
+    def validate_completion_semantics(self) -> "RuntimeExecutionResult":
+        if self.external_effect_verified:
+            if self.completion_scope != RuntimeCompletionScope.EXTERNAL_EFFECT_VERIFIED:
+                raise ValueError(
+                    "external_effect_verified=True requires "
+                    "completion_scope=EXTERNAL_EFFECT_VERIFIED"
+                )
+            if not self.verification_evidence:
+                raise ValueError(
+                    "Verified external effect requires verification_evidence"
+                )
+
+        if self.completion_scope == RuntimeCompletionScope.EXTERNAL_EFFECT_VERIFIED:
+            if not self.external_effect_verified:
+                raise ValueError(
+                    "EXTERNAL_EFFECT_VERIFIED completion scope requires "
+                    "external_effect_verified=True"
+                )
+
+        return self

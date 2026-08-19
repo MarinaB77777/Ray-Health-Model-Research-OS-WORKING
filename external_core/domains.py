@@ -18,6 +18,26 @@ def utc_now_iso() -> str:
 
 IDENTIFIER = re.compile(r"^[a-z][a-z0-9_.:-]{1,127}$")
 LANGUAGES = frozenset({"ru", "en", "es"})
+MEMORY_CLASSES = frozenset(
+    {
+        "working_operational",
+        "episodic",
+        "semantic",
+        "relational",
+        "calibration_evidence",
+        "decision_provenance",
+        "ray_self_health_memory",
+    }
+)
+SUBJECTS = frozenset({"human_health", "ray_self_health", "external_world", "environment"})
+FORBIDDEN_PROTECTED_IDENTIFIERS = frozenset(
+    {
+        "heart_of_ray",
+        "heart_of_human",
+        "inner_core_raw",
+        "ray_self_health_authority_raw",
+    }
+)
 
 
 class DomainLifecycle(str, Enum):
@@ -35,6 +55,7 @@ class DomainLifecycle(str, Enum):
 class DomainOperation(str, Enum):
     READ = "read"
     WRITE = "write"
+    COMPUTATION = "computation"
     EXECUTION = "execution"
     INTERRUPTION = "interruption"
     PREDICTION = "prediction"
@@ -64,6 +85,11 @@ class DomainCapability:
             raise ValueError("DOMAIN_CAPABILITY_OPERATIONS_REQUIRED_AND_UNIQUE")
         _identifiers(self.resource_scopes, required=True)
         _identifiers(self.data_classes, required=True)
+        _forbid_raw_inner_core(self.resource_scopes)
+        _forbid_raw_inner_core(self.data_classes)
+        # Internal computation/research is not an external action. High-risk
+        # mutation or true execution remains confirmation-bound unless another
+        # separately governed authority contract explicitly replaces this rule.
         if self.risk in {DomainRisk.HIGH, DomainRisk.CRITICAL} and (
             DomainOperation.WRITE in self.operations
             or DomainOperation.EXECUTION in self.operations
@@ -100,6 +126,7 @@ class DomainRayRegistration:
     capabilities: tuple[DomainCapability, ...]
     allowed_source_types: tuple[str, ...]
     allowed_data_classes: tuple[str, ...]
+    # Legacy purpose/context scopes retained for stored-registry compatibility.
     memory_scopes: tuple[str, ...]
     learning_scopes: tuple[str, ...]
     communication_channels: tuple[str, ...]
@@ -107,6 +134,10 @@ class DomainRayRegistration:
     governance_policy_version: str
     evidence_policy_id: str
     uncertainty_policy_id: str
+    # Canonical architecture axes.
+    memory_classes: tuple[str, ...] = ("working_operational",)
+    allowed_subjects: tuple[str, ...] = ("human_health",)
+    projection_scopes: tuple[str, ...] = ()
     registration_id: str = field(default_factory=lambda: str(uuid4()))
     registration_version: int = 1
     lifecycle: DomainLifecycle = DomainLifecycle.PROPOSED
@@ -143,8 +174,19 @@ class DomainRayRegistration:
         _identifiers(self.allowed_source_types, required=True)
         _identifiers(self.allowed_data_classes, required=True)
         _identifiers(self.memory_scopes, required=True)
+        _identifiers(self.memory_classes, required=True)
+        _identifiers(self.allowed_subjects, required=True)
+        _identifiers(self.projection_scopes, required=False)
         _identifiers(self.learning_scopes, required=False)
         _identifiers(self.communication_channels, required=True)
+        _forbid_raw_inner_core(self.allowed_data_classes)
+        _forbid_raw_inner_core(self.memory_scopes)
+        _forbid_raw_inner_core(self.memory_classes)
+        _forbid_raw_inner_core(self.projection_scopes)
+        if not set(self.memory_classes).issubset(MEMORY_CLASSES):
+            raise ValueError("UNKNOWN_DOMAIN_MEMORY_CLASS")
+        if not set(self.allowed_subjects).issubset(SUBJECTS):
+            raise ValueError("UNKNOWN_DOMAIN_SUBJECT")
         capability_ids = [item.capability_id for item in self.capabilities]
         if not capability_ids or len(capability_ids) != len(set(capability_ids)):
             raise ValueError("DOMAIN_CAPABILITIES_REQUIRED_AND_UNIQUE")
@@ -168,10 +210,7 @@ class DomainRayRegistration:
 
 TRANSITIONS = {
     DomainLifecycle.PROPOSED: {DomainLifecycle.SANDBOXED},
-    DomainLifecycle.SANDBOXED: {
-        DomainLifecycle.REGISTERED,
-        DomainLifecycle.REVOKED,
-    },
+    DomainLifecycle.SANDBOXED: {DomainLifecycle.REGISTERED, DomainLifecycle.REVOKED},
     DomainLifecycle.REGISTERED: {
         DomainLifecycle.ACTIVE,
         DomainLifecycle.RESTRICTED,
@@ -193,10 +232,7 @@ TRANSITIONS = {
         DomainLifecycle.SUSPENDED,
         DomainLifecycle.REVOKED,
     },
-    DomainLifecycle.DEPRECATED: {
-        DomainLifecycle.ARCHIVED,
-        DomainLifecycle.REVOKED,
-    },
+    DomainLifecycle.DEPRECATED: {DomainLifecycle.ARCHIVED, DomainLifecycle.REVOKED},
     DomainLifecycle.REVOKED: {DomainLifecycle.ARCHIVED},
     DomainLifecycle.ARCHIVED: set(),
 }
@@ -219,6 +255,7 @@ class DomainRayRegistry:
             raise ValueError("DOMAIN_REGISTRATION_ID_ALREADY_USED")
         serialized = self._serialize(domain)
         state["domains"][domain.domain_id] = serialized
+        state["schema_version"] = "2.0.0"
         self._event(state, serialized, "domain_proposed", domain.created_by)
         self._write(state)
         return serialized.copy()
@@ -247,6 +284,7 @@ class DomainRayRegistry:
             self._validate_dependencies_for_activation(state, item)
         item["lifecycle"] = target.value
         item["updated_at"] = utc_now_iso()
+        state["schema_version"] = "2.0.0"
         self._event(state, item, f"domain_{target.value}", actor_id)
         self._write(state)
         return item.copy()
@@ -260,16 +298,13 @@ class DomainRayRegistry:
 
     def list_all(self) -> list[dict[str, Any]]:
         state = self._load()
-        return [item.copy() for item in state["domains"].values()]
+        return [self._serialize(self._deserialize(item)) for item in state["domains"].values()]
 
     @staticmethod
     def _validate_dependencies_for_activation(
         state: dict[str, Any], item: dict[str, Any]
     ) -> None:
-        acceptable = {
-            DomainLifecycle.REGISTERED.value,
-            DomainLifecycle.ACTIVE.value,
-        }
+        acceptable = {DomainLifecycle.REGISTERED.value, DomainLifecycle.ACTIVE.value}
         for dependency in item.get("dependencies", []):
             target = state["domains"].get(dependency["domain_id"])
             if not target or target["lifecycle"] not in acceptable:
@@ -296,6 +331,9 @@ class DomainRayRegistry:
     @staticmethod
     def _deserialize(data: dict[str, Any]) -> DomainRayRegistration:
         converted = data.copy()
+        converted.setdefault("memory_classes", ["working_operational"])
+        converted.setdefault("allowed_subjects", ["human_health"])
+        converted.setdefault("projection_scopes", [])
         converted["lifecycle"] = DomainLifecycle(converted["lifecycle"])
         converted["capabilities"] = tuple(
             DomainCapability(
@@ -322,6 +360,9 @@ class DomainRayRegistry:
             "allowed_source_types",
             "allowed_data_classes",
             "memory_scopes",
+            "memory_classes",
+            "allowed_subjects",
+            "projection_scopes",
             "learning_scopes",
             "communication_channels",
         ):
@@ -349,11 +390,7 @@ class DomainRayRegistry:
 
     def _load(self) -> dict[str, Any]:
         if not self.path.exists():
-            return {
-                "schema_version": "1.0.0",
-                "domains": {},
-                "audit_events": [],
-            }
+            return {"schema_version": "2.0.0", "domains": {}, "audit_events": []}
         data = json.loads(self.path.read_text(encoding="utf-8"))
         if not isinstance(data, dict) or not {
             "schema_version",
@@ -403,11 +440,11 @@ def health_model_research_domain(*, owner_id: str, created_by: str) -> DomainRay
         ),
         DomainCapability(
             capability_id="research_data_analysis",
-            operations=(DomainOperation.READ, DomainOperation.EXECUTION),
+            operations=(DomainOperation.READ, DomainOperation.COMPUTATION),
             resource_scopes=("prepared_datasets", "statistical_methods", "analysis_results"),
             data_classes=common_data,
             risk=DomainRisk.HIGH,
-            requires_human_confirmation=True,
+            requires_human_confirmation=False,
         ),
         DomainCapability(
             capability_id="scientific_results",
@@ -444,6 +481,16 @@ def health_model_research_domain(*, owner_id: str, created_by: str) -> DomainRay
         ),
         allowed_data_classes=common_data,
         memory_scopes=("session", "project", "role_preference"),
+        memory_classes=(
+            "working_operational",
+            "semantic",
+            "calibration_evidence",
+            "decision_provenance",
+        ),
+        allowed_subjects=("human_health", "external_world"),
+        # Projection is not yet executable in the current implementation; an empty
+        # scope is honest and prevents pretending that raw/derived Inner Core access exists.
+        projection_scopes=(),
         learning_scopes=("confirmed_correction", "validated_domain_rule"),
         communication_channels=("chat", "notification"),
         governance_policy_id="health_model_governance",
@@ -468,3 +515,8 @@ def _identifiers(values: tuple[str, ...], *, required: bool) -> None:
         raise ValueError("DOMAIN_IDENTIFIERS_MUST_BE_UNIQUE")
     for value in values:
         _identifier(value)
+
+
+def _forbid_raw_inner_core(values: tuple[str, ...]) -> None:
+    if set(values) & FORBIDDEN_PROTECTED_IDENTIFIERS:
+        raise PermissionError("DOMAIN_RAW_INNER_CORE_ACCESS_FORBIDDEN")

@@ -1,586 +1,361 @@
-# Ray Personal AI Engine — Implementation Status
+# Ray Personal AI Engine — Implementation Status v2.0
+
+Status: ACTIVE IMPLEMENTATION STATUS
 
 ## Purpose
 
-This document tracks the actual implementation maturity of Ray Personal AI Engine.
+This document tracks what is executable, partially executable, architectural-only, or intentionally deferred.
 
-The goal is:
-- architectural honesty;
-- implementation clarity;
-- anti-self-deception;
-- roadmap stabilization;
-- realistic planning.
+Architectural agreement != executable implementation.
+Existing legacy implementation != canonical future architecture.
+GitHub draft != provisioned Inner Core.
 
-This document separates:
-- executable systems;
-- partially implemented systems;
-- architectural agreements;
-- future concepts.
+This document must remain conservative: when implementation status is uncertain, it must not be upgraded by assumption.
 
-This document is NOT:
-- a marketing document;
-- a capability inflation document;
-- a speculative AGI roadmap.
+## Status classes
 
----
+### EXECUTABLE FOUNDATION
+Implemented code exists and bounded behavior is present. Production readiness is not implied.
 
-# Status Categories
+### PARTIALLY EXECUTABLE
+Some code exists, but the intended architecture or lifecycle is incomplete.
 
-## Executable Foundational Components
+### ARCHITECTURAL / NOT IMPLEMENTED
+Normative architecture exists, but the corresponding production mechanism does not yet exist.
 
-Meaning:
-- implemented code exists;
-- tests exist or were executed;
-- bounded operational behavior exists.
+### LEGACY / TRANSITIONAL IMPLEMENTATION
+Executable code exists, but it does not represent the new canonical architecture and must not be mistaken for it.
 
-These components are:
-- foundational;
-- partial;
-- bounded;
-- not necessarily production-ready.
+### INTENTIONALLY DEFERRED
+Explicitly outside the current implementation target/pilot scope.
 
 ---
 
-## Partially Implemented
+# 1. Executable Foundations
 
-Meaning:
-- some executable foundation exists;
-- contracts and boundaries are stabilized;
-- operational flow is incomplete.
+## Core Psychophysical / Health Model Engine
 
----
+Status: EXECUTABLE FOUNDATION
 
-## Architectural / Conceptual
+Existing implementation includes bounded model execution, readiness/uncertainty handling, forecast blocking, consistency handling, reason normalization, next-question/data-acquisition outputs, and public/internal separation.
 
-Meaning:
-- architecture direction agreed;
-- boundaries stabilized;
-- implementation not completed.
+Stabilized principles include:
+- `NOT_ENOUGH_DATA` is valid;
+- Unknown != 0;
+- contradiction may require clarification;
+- insufficient coverage may block forecast.
 
----
-
-## Explicitly Excluded From Pilot v1
-
-Meaning:
-- intentionally NOT included in university pilot;
-- intentionally deferred;
-- intentionally restricted.
-
----
-
-# 1. Executable Foundational Components
-
-## Core Psychophysical Engine
-
-Status:
-- executable foundation exists.
-
-Implemented:
-- `/run`
-- S model
-- pressure model
-- Δ calculation
-- readiness gating
-- uncertainty profile
-- forecast blocking
-- consistency handling
-- reason normalization
-- next_questions
-- data_acquisition_requests
-- public/internal separation
-
-Core stabilized principles:
-- NOT_ENOUGH_DATA = valid state
-- Unknown ≠ 0
-- contradiction → clarification
-- insufficient coverage → blocked forecast
-
----
+The model is human-health computational logic. It is not Heart of Human and must not directly read raw Inner Core.
 
 ## Governance Foundation
 
-Status:
-- executable MVP foundation exists.
+Status: EXECUTABLE FOUNDATION
 
-Implemented:
-- governance schemas
-- reason codes
-- restriction layering
-- visibility filtering
-- permission boundaries
-- governance verdicts
-- external exposure restrictions
-- confirmation requirements
+Existing code includes Governance schemas, reason codes, rules, visibility filtering, service boundaries, permission/restriction handling, and confirmation/exposure controls.
 
-Implemented files include:
-- governance/schemas.py
-- governance/reason_codes.py
-- governance/rules.py
-- governance/visibility.py
-- governance/service.py
-
-Tests:
-- governance tests executed successfully.
-
----
+Governance remains permission authority within its scope, not the cross-domain reasoning engine.
 
 ## Shared Action Foundation
 
-Status:
-- executable schema/lifecycle foundation exists.
+Status: EXECUTABLE FOUNDATION
 
-Implemented:
-- SharedActionRecord schema
-- lifecycle validation
-- status update logic
-- ownership validation
-- blocked-state validation
-- forbidden_by_human protection
-
-Implemented files include:
-- runtime/shared_action/schemas.py
-- runtime/shared_action/statuses.py
-- runtime/shared_action/updates.py
+Existing code includes SharedAction schemas, lifecycle/status validation, updates, ownership validation, and blocked-state handling.
 
 Stabilized principles:
-- owner ≠ authority
-- assigned ≠ authorized
-- forbidden_by_human = hard boundary
-
----
+- owner != authority;
+- assigned != authorized;
+- execution != permission.
 
 ## Runtime Foundation
 
-Status:
-- executable bounded foundation exists.
+Status: EXECUTABLE FOUNDATION / BOUNDED
 
-Implemented pieces include:
-- queue foundation
-- dispatcher foundation
-- coordinator contracts/service/store
-- acquisition contracts/bridges
-- runtime acquisition orchestration skeleton
-- handoff boundaries
-- runtime service skeleton
-- visibility adapter
-- governance integration boundaries
+Existing code includes queue, dispatcher, coordinator, acquisition bridges, handoff, service skeleton, executor, communication routing, visibility integration, and Governance integration boundaries.
 
-Implemented files include:
-- runtime/service.py
-- runtime/executor.py
-- runtime/communication_router.py
-- runtime/coordinator/
-- runtime/acquisition/
-- runtime/handoff/
-- runtime/dispatcher/
-- runtime/queue/
-
-Runtime currently operates as a bounded orchestration skeleton,
-not as an autonomous operational agent.
-
-Stabilized principles:
-- execution ≠ permission
-- orchestration ≠ authority
-- WAITING ≠ answered
-- acquisition request ≠ acquisition result
+Runtime is currently bounded orchestration infrastructure, not a complete autonomous Ray runtime.
 
 ---
 
-## Runtime Constitutional Architecture
+# 2. Partially Executable Systems
 
-Status:
-- heavily stabilized.
+## Analyzer / Readiness
 
-Implemented as constitutional contracts:
-- Runtime truth reconciliation
-- uncertainty visibility
-- lifecycle mutation boundaries
-- lifecycle recovery
-- orchestration state
-- execution verification
-- execution boundaries
-- memory boundaries
-- relational boundaries
-- interruption governance
+Status: PARTIALLY EXECUTABLE
 
-Runtime architecture index exists:
-- runtime/architecture/README.md
+Existing foundations include readiness checks, source/freshness handling, contradiction handling, reliability downgrade, clarification generation, risk/recommendation gating, and sensor-readiness direction.
 
----
+Not established as complete:
+- full hypothesis-management engine;
+- full contradiction investigation engine;
+- complete scientific real-world calibration loop;
+- complete context/sensor consistency lifecycle.
 
-# 2. Partially Implemented Systems
+Analyzer != Governance and Analyzer != universal truth authority.
 
-## Analyzer / Readiness Layer
+## Acquisition / Orchestration
 
-Status:
-- partially executable.
+Status: PARTIALLY EXECUTABLE
 
-Implemented foundations:
-- readiness checks
-- source quality handling
-- freshness handling
-- contradiction handling
-- reliability downgrade
-- sensor readiness stubs
-- clarification generation
-- investigation lifecycle direction
-- risk routing
-- recommendation blocking
+Existing code includes acquisition requests, bridges, registry/service foundations, retry handling, unresolved/expiration handling, and orchestration skeletons.
 
-Analyzer evaluates operational consistency and readiness signals,
-not medical or psychiatric truth.
+Not established as complete:
+- full autonomous orchestration loop;
+- production external integrations;
+- generalized acquisition scheduling;
+- complete distributed dependency resolution.
 
-Contradictions ≠ deception detection
+## Runtime Lifecycle
 
-Partially implemented:
-- investigation continuation
-- sensor/context consistency
-- interruption-aware routing
-- profile-aware readiness interpretation
+Status: PARTIALLY EXECUTABLE
 
-Not fully implemented:
-- full hypothesis-management engine
-- full contradiction-analysis engine
-- real-world calibration governance loop
+Lifecycle/status foundations exist. A complete event-driven autonomous runtime is not established.
 
 ---
 
-## Acquisition / Orchestration Layer
+# 3. Legacy / Transitional Implementations
 
-Status:
-- partially executable.
+## `temporary_memory/`
 
-Implemented:
-- acquisition requests
-- acquisition bridges
-- orchestration state skeleton
-- retry visibility
-- unresolved tracking
-- expiration handling
+Status: LEGACY / TRANSITIONAL IMPLEMENTATION
 
-Not fully implemented:
-- full orchestration daemon
-- autonomous acquisition scheduling
-- async acquisition runtime
-- external integrations
+Executable code and tests exist for `temporary_memory/`, including an in-memory `TemporaryMemoryStore` with lifecycle/query/delete operations.
 
----
+This package must NOT be described as the implementation of the canonical Ray memory architecture.
 
-## Human Profiles Layer
+Canonical future architecture is `docs/architecture/ray_memory_architecture.md`, which separates at least:
+- Working / Operational Memory;
+- Episodic Memory;
+- Semantic Memory;
+- Relational Memory;
+- Calibration / Evidence Memory;
+- Decision & Provenance Ledger;
+- Ray Self-Health Memory;
+- Memory Governance / Index.
 
-Status:
-- partially implemented.
+The existing `temporary_memory/` package may later be assessed for reuse as part of Working/Operational Memory, migration, or retirement. No such code migration is claimed in this branch.
 
-Implemented direction:
-- activity-first routing
-- profile-aware next_questions
-- profile-aware interpretation
-- profile-aware readiness orientation
-
-Current baseline profiles:
-- Academic / Analytical
-- Field / Operational
-- Household / Coordination
-- Student / Learning
-
-Profiles are operational heuristics,
-not psychological identities.
-
-Profiles remain:
-- probabilistic;
-- revisable;
-- contextual;
-- uncertainty-aware;
-- non-authoritative.
-
-Not fully implemented:
-- dedicated profile engine
-- adaptive profile refinement lifecycle
-- profile confidence scoring
+Legacy code must not be deleted or repurposed without implementation-level review and tests.
 
 ---
 
-## Runtime Lifecycle Foundations
+# 4. Architectural / Not Yet Implemented Systems
 
-Status:
-- partially executable.
+## Heart of Ray
 
-Implemented:
-- lifecycle contracts
-- status transitions
-- blocked-state handling
-- confirmation states
-- unresolved tracking
+Status: ARCHITECTURAL DRAFT / NOT PROVISIONED
 
-Not fully implemented:
-- full event bus
-- full async lifecycle engine
-- autonomous runtime loop
-- dependency resolver
-- distributed orchestration
+Canonical draft:
+- `docs/inner_core/heart_of_ray_specification.md`
 
----
+The document defines constitutional identity principles. It is not a physical or cryptographically sealed Heart.
 
-# 3. Architectural / Conceptual Systems
+No current software update, model update, Runtime operation, memory operation, or adaptive-learning event should be described as modifying a provisioned Heart because such provisioning does not yet exist.
 
-## Analyst Layer
+## Heart of Human
 
-Status:
-- architectural only.
+Status: ARCHITECTURAL / NOT PROVISIONED
 
-Agreed direction:
-- cross-domain reasoning
-- harm comparison
-- option generation
-- tradeoff analysis
-- escalation recommendation
-- uncertainty-aware proposals
+The protected Human Heart concept and its boundaries exist architecturally.
 
-Not implemented:
-- AnalystInput
-- AnalystProposal
-- HarmComparison
-- OptionSet
-- Escalation logic
-- executable Analyst runtime
+Not implemented as a complete protected system:
+- physical-presence enrollment/revision protocol;
+- secure sealed storage;
+- subject-controlled export/revision/deletion pathway;
+- promotion pathway from validated evidence to confirmed practically invariant declaration;
+- production attestation/recovery mechanism.
 
-Core principle:
-Analyst ≠ Governance
-Analyst ≠ Runtime executor
+## Ray Self-Health Authority
 
----
+Status: ARCHITECTURAL / NOT FULLY IMPLEMENTED
+
+The subject-separated Self-Health architecture is defined, but the complete physical sensor/telemetry/diagnostic system is not implemented.
+
+Future implementation requires explicit `ray_self_health.*` separation from `human_health.*`.
 
 ## Projection Layer
 
-Status:
-- architectural only.
+Status: ARCHITECTURAL / NOT IMPLEMENTED
 
-Agreed direction:
-Inner Core
-→ Projection Layer
-→ bounded operational weights
+Canonical contracts now exist:
+- `runtime/architecture/projection_governance.md`;
+- `runtime/architecture/acceptable_harm_projection.md`;
+- `runtime/architecture/projection_review_lifecycle.md`;
+- `runtime/architecture/inner_core_boundary_contract.md`.
 
-Projection intended responsibilities:
-- acceptable harm projection
-- conflict weighting
-- bounded operational influence
-- forecasting modifiers
+Defined responsibilities include bounded operational derivatives, acceptable-harm/priority/boundary projections, reconstruction-risk protection, freshness/review, and no raw Inner Core exposure.
 
-Projection weights are bounded operational approximations,
-not authoritative representations of human values or identity.
+Not implemented as production mechanisms:
+- secure projection-generation engine;
+- protected projection storage/cache;
+- cryptographic/attested bridge;
+- production reconstruction-risk enforcement;
+- complete review/rollback machinery.
 
-Stabilized rules:
-- Projection ≠ Inner Core
-- Runtime must not access raw Inner Core
-- projection weights must not silently self-modify
-- mismatch requires human-aware review
+## Conflict-Resolution Kernel / Ray Verdict
 
-Not implemented:
-- projection storage
-- versioning
-- rollback
-- review lifecycle
-- mismatch registry
+Status: ARCHITECTURAL / NOT IMPLEMENTED AS DEDICATED ENGINE
 
----
+Canonical contract:
+- `docs/inner_core/conflict_resolution_kernel.md`.
 
-## Inner Core Bridge
+Defined behavior includes Maximum Feasible Verification, Research Depth Disclosure, authority determination, hard-boundary precedence, structured harm mapping, alternative search, `CONSTITUTIONAL_CONFLICT`, and Ray Verdict structure.
 
-Status:
-- architectural only.
+Existing system components may already implement fragments of these ideas, but a complete dedicated kernel must not be claimed until code and tests exist.
 
-Agreed direction:
-- Inner Core remains protected;
-- operational systems receive only bounded projections;
-- no raw psychological exposure.
+## Multi-Memory Architecture
 
-Not implemented:
-- secure operational bridge
-- projection-generation engine
-- governed update pipeline
+Status: ARCHITECTURAL / NOT IMPLEMENTED AS CANONICAL MULTI-STORE SYSTEM
 
----
+Canonical architecture:
+- `docs/architecture/ray_memory_architecture.md`.
+
+Not implemented as a complete system:
+- all independent memory stores;
+- Memory Governance/Index;
+- truth typing across all stores;
+- cryptographic domain separation;
+- full correction/deletion/backup lifecycle;
+- restore verification and identity-aware recovery.
+
+## Analyst Layer
+
+Status: ARCHITECTURAL / NOT IMPLEMENTED AS COMPLETE ENGINE
+
+Agreed role includes cross-domain reasoning, alternatives, consequences, constrained harm analysis, and Ray Verdict support.
+
+Analyst != Governance.
+Analyst proposal != permission.
 
 ## Domain Rays
 
-Status:
-- conceptual/future.
+Status: ARCHITECTURAL / NOT IMPLEMENTED AS COMPLETE DOMAIN-RAY SYSTEM
 
-Agreed direction:
-- domain-specialized bounded Rays;
-- shared coordination;
-- governed Runtime interaction.
+Canonical registry contract now defines Domain Rays as working domain-specialized Rays sharing one constitutional foundation.
 
-Not implemented.
+Domain Rays are not Inner Core compartments and not independent Hearts.
 
----
+## Long-Term Governed Adaptive Learning
 
-## Long-Term Governed Learning
+Status: ARCHITECTURAL / PARTIAL FOUNDATIONS ONLY
 
-Status:
-- conceptual/future.
+Canonical adaptive-learning and memory contracts prohibit silent Heart mutation, permission expansion, and identity promotion.
 
-Agreed direction:
-- confirmed-pattern learning;
-- governed calibration updates;
-- confidence decay;
-- pattern revalidation;
-- bounded adaptive memory.
+A complete validated pattern lifecycle, decay/revalidation system, multi-memory promotion routing, and protected Human Heart promotion workflow are not established as implemented.
 
-Learned patterns must not silently modify:
-- governance boundaries;
-- acceptable harm structures;
-- authorization rules.
+## Physical Ray Hardware Architecture
 
-Not implemented:
-- promotion/rejection pipeline
-- governed pattern lifecycle
-- adaptive confidence decay engine
+Status: REQUIRED FUTURE SPECIFICATION / NOT YET WRITTEN AS COMPLETE ASSEMBLY CONTRACT
 
----
+A dedicated hardware document is required to derive physical requirements from the architecture, including:
+- compute/RAM/VRAM;
+- protected storage and cryptographic domains;
+- hardware root of trust;
+- backup/recovery;
+- power/UPS;
+- cooling;
+- watchdog/safe shutdown;
+- sensor MCU/transport;
+- human sensors;
+- Ray Self-Health sensors;
+- repairability and identity continuity;
+- hardware migration/attestation;
+- assembly, burn-in, and validation sequence.
 
-## Communicator Runtime
-
-Status:
-- conceptual/future.
-
-Agreed direction:
-- interruption-aware dialogue;
-- adaptive communication;
-- multi-channel communication;
-- uncertainty-aware interaction.
-
-Not implemented:
-- production communication runtime
-- voice runtime
-- messaging integrations
-- communication scheduling
+Physical hardware selection must not simplify the constitutional architecture.
 
 ---
 
-# 4. Explicitly Excluded From Pilot v1
+# 5. Canonical Architecture Contracts Now Defined
 
-The university pilot intentionally excludes:
+The `inner-core-architecture` branch currently contains updated architecture for:
+- Heart of Ray;
+- protected Inner Core compartments;
+- Projection governance;
+- acceptable-harm Projection;
+- Projection review lifecycle;
+- conflict resolution;
+- multi-memory architecture;
+- truth authorities;
+- capability/authority separation;
+- clarification and intent boundaries;
+- Runtime memory boundary;
+- relational boundary;
+- scientific calibration and subject separation;
+- acquisition sources;
+- ownership;
+- Domain Rays;
+- predictive preparation;
+- interruption governance;
+- post-execution/error review.
 
-- Inner Core
-- Projection Layer
-- autonomous Runtime
-- hidden personalization
-- unrestricted memory
-- deep relational adaptation
-- Domain Rays
-- unrestricted learning
-- autonomous task delegation
-- unrestricted external integrations
-- psychological ownership patterns
-
-Pilot v1 includes only:
-
-bounded Base Ray
-+
-psychophysical/readiness subsystem
-+
-governed operational interaction
-
----
-
-# 5. Current Architectural Reality
-
-Current state:
-
-Ray Personal AI Engine is NOT:
-- AGI;
-- autonomous super-agent;
-- omniscient system;
-- unrestricted adaptive AI;
-- hidden psychological authority.
-
-Current state IS:
-
-bounded layered adaptive architecture foundation
-
-with:
-- uncertainty governance;
-- bounded Runtime;
-- explainable psychophysical engine;
-- layered truth handling;
-- anti-hidden-authority principles;
-- constitutional boundaries;
-- extensible topology direction.
+Architectural completeness of a document does not imply executable completeness.
 
 ---
 
-# 6. Current Major Risks
+# 6. Pilot Boundary
 
-## Architectural Drift Risk
+The existing university/pilot path must remain isolated from unfinished Inner Core/Projection mechanisms unless a separate reviewed implementation explicitly integrates them.
 
-Risk:
-- conceptual architecture exceeds implementation maturity.
+The pilot must not claim:
+- provisioned Heart of Ray;
+- provisioned Heart of Human;
+- production Projection;
+- production canonical multi-memory;
+- complete autonomous Domain Rays;
+- complete autonomous conflict-resolution engine.
 
-Mitigation:
-- explicit implementation tracking;
-- executable vs conceptual separation.
-
----
-
-## Runtime Omniscience Drift
-
-Risk:
-- Runtime gradually absorbs:
-  - authority;
-  - truth;
-  - orchestration;
-  - memory;
-  - prediction.
-
-Mitigation:
-- constitutional separation;
-- anti-hidden-authority invariants;
-- Runtime boundary contracts.
+Existing working pilot functionality must not be broken to simulate these future systems.
 
 ---
 
-## Projection / Inner Core Risk
+# 7. Current Major Risks
 
-Risk:
-- future personalization drifts toward:
-  - raw psychological exposure;
-  - hidden profiling;
-  - covert behavioral optimization.
+## Architecture / Implementation Drift
 
-Mitigation:
-- Projection Layer separation;
-- human-aware review;
-- no raw Inner Core exposure.
+Risk: normative architecture becomes much more advanced than executable code.
+
+Mitigation: this status document keeps architectural and executable claims separate.
+
+## Legacy Memory Confusion
+
+Risk: `temporary_memory/` is mistaken for canonical multi-memory implementation.
+
+Mitigation: explicitly classify it as transitional until reviewed/migrated.
+
+## Inner Core False-Implementation Claim
+
+Risk: GitHub documents are mistaken for a sealed/provisioned Inner Core.
+
+Mitigation: DRAFT/NOT PROVISIONED status and explicit provisioning boundary.
+
+## Projection Leakage
+
+Risk: future operational derivatives reconstruct protected Human Heart.
+
+Mitigation: non-reconstruction contracts plus future implementation tests/enforcement.
+
+## Runtime Authority Drift
+
+Risk: Runtime accumulates reasoning, memory, permissions, or intervention authority.
+
+Mitigation: explicit capability, truth, memory, execution, Governance, and ownership boundaries.
+
+## Research Expansion Drift
+
+Risk: research usefulness is used to justify privacy/authority expansion.
+
+Mitigation: research remains subject to constitutional, Projection, access, and Governance boundaries.
 
 ---
 
-## Research Expansion Risk
+# 8. Final Reality Statement
 
-Risk:
-- research usefulness overrides constitutional boundaries.
+Current Ray Personal AI Engine is a layered architecture with meaningful executable foundations and a substantially more complete constitutional design than its current implementation.
 
-Mitigation:
-- pilot boundaries;
-- governance-first architecture;
-- constitutional invariants remain active during research.
+It is not yet the fully provisioned physical personal Ray described by the new Inner Core architecture.
 
----
+The correct development path is:
 
-# 7. Strategic Direction
+architecture truth -> explicit implementation plan -> bounded implementation -> tests -> integration verification -> only then implementation-status upgrade.
 
-Near-term direction:
-- stabilize pilot-ready psychophysical system;
-- validate on university pilot;
-- improve Analyzer/readiness/acquisition quality;
-- collect edge cases;
-- validate uncertainty handling.
-
-Long-term direction:
-- bounded adaptive constitutional AI architecture
-
-WITHOUT:
-- hidden autonomy;
-- fake omniscience;
-- unrestricted psychological exposure;
-- fabricated certainty.
+No placeholders may masquerade as completed functionality, and missing physical sensors must remain honest missing-device states rather than fake measurements.

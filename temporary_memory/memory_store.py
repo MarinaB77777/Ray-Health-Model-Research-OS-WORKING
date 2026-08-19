@@ -12,27 +12,20 @@ from temporary_memory.schemas import (
 
 
 class TemporaryMemoryStore:
-    """
-    In-memory storage for TemporaryMemoryRecord.
+    """Backward-compatible in-memory Working / Operational Memory store.
 
-    Store responsibilities:
-    - create/read/update/delete records
-    - change lifecycle status
-    - query by session/task/status/scope/type/action
-    - list expired records
-
-    Store does NOT:
-    - reason
-    - decide importance
-    - promote to long-term memory
-    - perform cleanup policy
-    - perform governance checks
+    The historical package/class name is preserved for callers. This store is
+    not Ray's universal memory, does not own truth/authority, and cannot promote
+    records into long-term memory or Heart.
     """
 
     def __init__(self) -> None:
         self._records: dict[str, TemporaryMemoryRecord] = {}
 
     def add(self, record: TemporaryMemoryRecord) -> TemporaryMemoryRecord:
+        record.validate()
+        if record.id in self._records:
+            raise ValueError(f"Temporary memory record already exists: {record.id}")
         self._records[record.id] = record
         return record
 
@@ -42,84 +35,47 @@ class TemporaryMemoryStore:
     def update(self, record: TemporaryMemoryRecord) -> TemporaryMemoryRecord:
         if record.id not in self._records:
             raise KeyError(f"Temporary memory record not found: {record.id}")
-
+        record.validate()
         self._records[record.id] = record
         return record
 
     def list_all(self) -> list[TemporaryMemoryRecord]:
         return list(self._records.values())
 
-    def list_by_status(
-        self,
-        status: TemporaryMemoryStatus,
-    ) -> list[TemporaryMemoryRecord]:
-        return [
-            record
-            for record in self._records.values()
-            if record.status == status
-        ]
+    def list_by_status(self, status: TemporaryMemoryStatus) -> list[TemporaryMemoryRecord]:
+        return [record for record in self._records.values() if record.status == status]
 
     def list_active(self) -> list[TemporaryMemoryRecord]:
         return self.list_by_status(TemporaryMemoryStatus.ACTIVE)
+
+    def list_reusable(self) -> list[TemporaryMemoryRecord]:
+        return [record for record in self._records.values() if record.is_reusable()]
 
     def list_unresolved(self) -> list[TemporaryMemoryRecord]:
         return self.list_by_status(TemporaryMemoryStatus.UNRESOLVED)
 
     def list_by_session(self, session_id: str) -> list[TemporaryMemoryRecord]:
-        return [
-            record
-            for record in self._records.values()
-            if record.session_id == session_id
-        ]
+        return [record for record in self._records.values() if record.session_id == session_id]
 
     def list_by_task(self, task_id: str) -> list[TemporaryMemoryRecord]:
-        return [
-            record
-            for record in self._records.values()
-            if record.task_id == task_id
-        ]
+        return [record for record in self._records.values() if record.task_id == task_id]
 
-    def list_by_scope(
-        self,
-        scope: TemporaryMemoryScope,
-    ) -> list[TemporaryMemoryRecord]:
-        return [
-            record
-            for record in self._records.values()
-            if record.scope == scope
-        ]
+    def list_by_scope(self, scope: TemporaryMemoryScope) -> list[TemporaryMemoryRecord]:
+        return [record for record in self._records.values() if record.scope == scope]
 
-    def list_by_type(
-        self,
-        record_type: TemporaryMemoryType,
-    ) -> list[TemporaryMemoryRecord]:
-        return [
-            record
-            for record in self._records.values()
-            if record.record_type == record_type
-        ]
+    def list_by_type(self, record_type: TemporaryMemoryType) -> list[TemporaryMemoryRecord]:
+        return [record for record in self._records.values() if record.record_type == record_type]
 
-    def list_by_action(
-        self,
-        related_action_id: str,
-    ) -> list[TemporaryMemoryRecord]:
+    def list_by_action(self, related_action_id: str) -> list[TemporaryMemoryRecord]:
         return [
             record
             for record in self._records.values()
             if record.related_action_id == related_action_id
         ]
 
-    def list_expired(
-        self,
-        now: Optional[datetime] = None,
-    ) -> list[TemporaryMemoryRecord]:
+    def list_expired(self, now: Optional[datetime] = None) -> list[TemporaryMemoryRecord]:
         current_time = now or datetime.now(timezone.utc)
-
-        return [
-            record
-            for record in self._records.values()
-            if record.is_expired(current_time)
-        ]
+        return [record for record in self._records.values() if record.is_expired(current_time)]
 
     def mark_used(self, record_id: str) -> TemporaryMemoryRecord:
         record = self._require(record_id)
@@ -129,6 +85,16 @@ class TemporaryMemoryStore:
     def mark_unresolved(self, record_id: str) -> TemporaryMemoryRecord:
         record = self._require(record_id)
         record.mark_unresolved()
+        return record
+
+    def mark_do_not_use(self, record_id: str, reason: str) -> TemporaryMemoryRecord:
+        record = self._require(record_id)
+        record.mark_do_not_use(reason)
+        return record
+
+    def invalidate(self, record_id: str, reason: str) -> TemporaryMemoryRecord:
+        record = self._require(record_id)
+        record.invalidate(reason)
         return record
 
     def mark_expired(self, record_id: str) -> TemporaryMemoryRecord:
@@ -147,10 +113,8 @@ class TemporaryMemoryStore:
             for record_id, record in self._records.items()
             if record.status == TemporaryMemoryStatus.DELETED
         ]
-
         for record_id in deleted_ids:
             del self._records[record_id]
-
         return len(deleted_ids)
 
     def clear(self) -> None:
@@ -158,8 +122,6 @@ class TemporaryMemoryStore:
 
     def _require(self, record_id: str) -> TemporaryMemoryRecord:
         record = self.get(record_id)
-
         if record is None:
             raise KeyError(f"Temporary memory record not found: {record_id}")
-
         return record

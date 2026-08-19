@@ -43,9 +43,9 @@ class RuntimeExecutor:
             )
 
         verdict = action.governance_verdict
-        freshness_failure = self._governance_freshness_failure(verdict)
-        if freshness_failure is not None:
-            message, error_code = freshness_failure
+        authority_failure = self._governance_authority_failure(action)
+        if authority_failure is not None:
+            message, error_code = authority_failure
             return self._needs_reanalysis(action, message, error_code)
 
         if verdict.governance_decision_status == GovernanceDecisionStatus.BLOCKED:
@@ -64,8 +64,17 @@ class RuntimeExecutor:
         return self._execute_allowed_or_restricted(action)
 
     @staticmethod
-    def _governance_freshness_failure(verdict):
+    def _governance_authority_failure(action: RuntimeActionRecord):
+        verdict = action.governance_verdict
         now = datetime.now(timezone.utc)
+        if (
+            verdict.authority_scope_id is not None
+            and verdict.authority_scope_id != action.action_id
+        ):
+            return (
+                "Governance verdict is bound to a different action.",
+                "GOVERNANCE_VERDICT_SCOPE_MISMATCH",
+            )
         if verdict.revoked:
             return (
                 "Governance verdict was revoked and must be reevaluated.",

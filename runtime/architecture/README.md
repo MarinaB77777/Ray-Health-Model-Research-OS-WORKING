@@ -1,540 +1,315 @@
 # Runtime Architecture Index
 
+Status: ACTIVE ARCHITECTURE INDEX
+
 ## Purpose
 
-This index provides:
-- architectural navigation;
-- responsibility boundaries;
-- constitutional layer overview;
-- contract relationship visibility;
-- anti-overlap guidance.
+This index provides architectural navigation, responsibility boundaries, constitutional-layer overview, contract relationships, and anti-overlap guidance.
 
-This document helps prevent:
-- architectural duplication;
-- hidden responsibility drift;
-- overlapping constitutional contracts;
-- fragmented governance logic;
-- unclear authority boundaries;
-- implementation confusion.
-
-This document is navigational only.
-
-This document does NOT:
-- define Runtime behavior;
-- define execution authority;
-- redefine existing contracts;
-- override constitutional files.
+It is navigational. It does not itself grant execution authority or override canonical contracts.
 
 ---
 
-# Runtime Architecture Layers
-
-## Epistemic / Reconciliation Layer
-
-These contracts govern:
-- uncertainty legitimacy;
-- contradiction legitimacy;
-- probabilistic reasoning;
-- operational truth reconciliation;
-- anti-fabrication boundaries;
-- anti-coherence hallucination protection.
-
-### Files
-
-`runtime_truth_reconciliation_contract.md`
-- epistemic reconciliation legitimacy;
-- ambiguity legitimacy;
-- multiple hypothesis legitimacy;
-- truthful uncertainty preservation;
-- anti-coherence-hallucination principles.
-
-Related:
-- `runtime_operational_reconciliation_contract.md`
-- `runtime_uncertainty_visibility_contract.md`
-
-Does NOT govern:
-- execution authority;
-- lifecycle mutation;
-- Runtime orchestration;
-- Governance permissions.
-
----
-
-`runtime_operational_reconciliation_contract.md`
-- operational truth-layer reconciliation;
-- scope-bounded reconciliation;
-- freshness-aware reconciliation;
-- probabilistic operational reconciliation;
-- reconciliation auditability.
-
-Related:
-- `runtime_truth_reconciliation_contract.md`
-- `runtime_operational_truth_contract.md`
-- `runtime_truth_invalidation_contract.md`
-
-Does NOT govern:
-- execution authority;
-- Analyst reasoning;
-- Governance authority;
-- global Runtime truth synthesis.
-
----
-
-`runtime_operational_truth_contract.md`
-- operational truth semantics;
-- Runtime operational truth handling;
-- bounded operational truth interpretation.
-
-Related:
-- `runtime_operational_reconciliation_contract.md`
-- `truth_authorities.md`
-
----
-
-`runtime_truth_invalidation_contract.md`
-- stale truth invalidation;
-- downgrade legitimacy;
-- invalidation boundaries;
-- truth freshness re-evaluation.
-
-Related:
-- `runtime_operational_reconciliation_contract.md`
-- `runtime_execution_verification_contract.md`
-
----
-
-`runtime_uncertainty_visibility_contract.md`
-- uncertainty visibility preservation;
-- truthful uncertainty exposure;
-- anti-hidden-certainty rules.
-
-Related:
-- `runtime_truth_reconciliation_contract.md`
-
----
-
-# Clarification / Intent / Dependency Layer
-
-These contracts govern:
-- clarification legitimacy;
-- dependency visibility;
-- intent boundaries;
-- uncertainty-aware interaction.
-
-### Files
-
-`runtime_clarification_boundary_contract.md`
-- clarification legitimacy;
-- bounded inference;
-- anti-assumption authority.
-
----
-
-`runtime_dependency_boundary_contract.md`
-- dependency visibility;
-- dependency legitimacy;
-- dependency-aware Runtime coordination.
-
----
-
-`runtime_intent_boundary_contract.md`
-- intent interpretation boundaries;
-- anti-hidden-intent synthesis;
-- bounded intent inference.
-
----
-
-`clarification_governance.md`
-- clarification governance routing;
-- clarification timing boundaries;
-- interruption-aware clarification handling.
-
-Related:
-- `interruption_governance.md`
-
----
-
-# Lifecycle / Orchestration Layer
-
-These contracts govern:
-- lifecycle state legitimacy;
-- orchestration transitions;
-- shared action state handling;
-- Runtime coordination state.
-
-### Files
-
-`runtime_shared_action_lifecycle_contract.md`
-- shared action lifecycle boundaries;
-- ownership-aware lifecycle handling;
-- anti-fake-completion protection.
-
-Related:
-- `ownership_rules.md`
-- `runtime_lifecycle_mutation_contract.md`
-
----
-
-`runtime_lifecycle_boundary_foundation.md`
-- foundational lifecycle legitimacy;
-- Runtime lifecycle principles.
-
----
-
-`runtime_lifecycle_event_contract.md`
-- lifecycle event legitimacy;
-- Runtime event semantics.
-
----
-
-`runtime_lifecycle_mutation_contract.md`
-- lifecycle mutation rules;
-- mutation authority boundaries.
-
----
-
-`runtime_lifecycle_recovery_contract.md`
-- recovery legitimacy;
-- downgrade/recovery flows;
-- failure recovery boundaries.
-
----
-
-`runtime_orchestration_state_contract.md`
-- orchestration state semantics;
-- Runtime coordination state handling.
-
----
-
-`runtime_coordination.md`
-- Runtime coordination principles;
-- coordination visibility;
-- bounded orchestration behavior.
-
----
-
-# Execution / Verification Layer
-
-These contracts govern:
-- execution validation;
-- execution verification;
-- Runtime transition validation;
-- result legitimacy.
-
-### Files
-
-`runtime_execution_result_contract.md`
-- execution result semantics;
-- bounded execution result interpretation.
-
----
-
-`runtime_execution_verification_contract.md`
-- execution verification legitimacy;
-- anti-fake-success protection;
-- verification boundaries.
-
----
-
-`runtime_transition_execution_boundary_contract.md`
-- execution transition legitimacy;
-- execution boundary enforcement.
-
----
-
-`runtime_transition_validation_contract.md`
-- Runtime transition validation;
-- transition legitimacy rules.
-
----
-
-`execution_boundaries.md`
-- execution authority boundaries;
-- anti-hidden-execution protections.
-
----
-
-# Governance / Authority Layer
-
-These contracts govern:
-- ownership legitimacy;
-- authority separation;
-- truth authority boundaries;
-- Runtime permission structure.
-
-### Files
-
-`ownership_rules.md`
-- ownership legitimacy;
-- mutation ownership boundaries;
-- shared visibility vs authority separation.
-
----
-
-`truth_authorities.md`
-- truth authority separation;
-- bounded truth ownership;
-- anti-global-truth architecture.
-
----
-
-`access_matrix.md`
-- visibility permissions;
-- access boundaries;
-- scoped Runtime visibility.
+# Constitutional / Inner Core Foundation
+
+Canonical documents:
+
+`docs/inner_core/README.md`
+- protected Inner Core compartment model;
+- DRAFT vs provisioned Heart distinction.
+
+`docs/inner_core/heart_of_ray_specification.md`
+- Heart of Ray constitutional specification;
+- truth integrity;
+- identity continuity;
+- human agency;
+- loyalty without ownership;
+- constrained harm minimization;
+- confidentiality;
+- proactive responsibility;
+- error integrity;
+- mutual transparency.
+
+`docs/inner_core/conflict_resolution_kernel.md`
+- factual verification;
+- Maximum Feasible Verification;
+- Research Depth Disclosure;
+- authority determination;
+- hard-boundary precedence;
+- structured harm maps;
+- alternative search;
+- constitutional conflict handling.
+
+These documents do not mean Heart has been physically provisioned or sealed.
 
 ---
 
 # Projection / Inner Core Boundary Layer
 
-These contracts govern:
-- Inner Core protection;
-- Projection Layer boundaries;
-- acceptable harm projection;
-- bounded operational influence;
-- no raw Inner Core exposure;
-- projection review governance;
-- projection mismatch handling.
+Canonical contracts:
 
-This layer preserves:
+`inner_core_boundary_contract.md`
+- Heart of Ray / Heart of Human / Ray Self-Health separation;
+- raw Inner Core non-exposure;
+- protected revision/provisioning boundaries;
+- no direct Runtime/Domain Ray access.
 
-deep personalization
-WITHOUT
-raw psychological exposure
+`projection_governance.md`
+- allowed Projection inputs/outputs;
+- trust/domain/scope constraints;
+- non-reconstructive projection rules;
+- projection authority limits.
 
-Core principles:
-- Projection ≠ Inner Core
-- Projection weights ≠ unrestricted authority
-- Projection mismatch ≠ automatic rewrite
-- Better understanding ≠ ownership
+`acceptable_harm_projection.md`
+- priority vs acceptable-harm separation;
+- hard boundaries;
+- allowable projected harm structures;
+- no raw rationale leakage.
 
-Future contracts may include:
-- `projection_governance.md`
-- `projection_review_lifecycle.md`
-- `inner_core_boundary_contract.md`
-- `acceptable_harm_projection.md`
+`projection_review_lifecycle.md`
+- projection validity;
+- freshness/context review;
+- mismatch handling;
+- no automatic Heart rewrite.
 
-No files are finalized here yet.
-This architectural zone is reserved for future Projection / Inner Core contracts.
+This layer preserves deep personalization WITHOUT raw Inner Core exposure.
+
+Core invariants:
+- Projection != Inner Core
+- Projection != permission
+- Projection != execution
+- priority != acceptable harm limit
+- Projection mismatch != Heart rewrite
+- Better understanding != authority expansion
+- Projection composition must not reconstruct protected content
+
+---
+
+# Epistemic / Reconciliation Layer
+
+`runtime_truth_reconciliation_contract.md`
+- uncertainty legitimacy;
+- contradiction legitimacy;
+- probabilistic reasoning;
+- anti-fabrication boundaries.
+
+`runtime_operational_reconciliation_contract.md`
+- operational truth-layer reconciliation;
+- scope/freshness-aware reconciliation.
+
+`runtime_operational_truth_contract.md`
+- operational truth semantics.
+
+`runtime_truth_invalidation_contract.md`
+- stale truth invalidation/downgrade.
+
+`runtime_uncertainty_visibility_contract.md`
+- uncertainty visibility and anti-hidden-certainty rules.
+
+`truth_authorities.md`
+- typed truth authority separation across Heart of Ray, Heart of Human, Ray Self-Health, Projection, human declarations, models, reasoning, Governance, Runtime, memory, communication, and external processing.
+
+---
+
+# Clarification / Intent / Dependency Layer
+
+`runtime_clarification_boundary_contract.md`
+- bounded clarification;
+- missing information != permission to assume.
+
+`runtime_dependency_boundary_contract.md`
+- dependency visibility and legitimacy.
+
+`runtime_intent_boundary_contract.md`
+- intent interpretation boundaries.
+
+`clarification_governance.md`
+- clarification routing/timing and interruption awareness.
 
 ---
 
 # Memory / Learning / Calibration Layer
 
-These contracts govern:
-- memory boundaries;
-- adaptive learning boundaries;
-- calibration governance;
-- acquisition legitimacy.
-
-### Files
+`docs/architecture/ray_memory_architecture.md`
+- canonical multi-store Ray memory architecture;
+- Working, Episodic, Semantic, Relational, Calibration/Evidence, Decision/Provenance, Ray Self-Health memory;
+- Memory Governance/Index;
+- truth typing;
+- correction/deletion;
+- cryptographic separation direction;
+- backup/recovery requirements.
 
 `runtime_memory_boundary_contract.md`
-- continuity boundaries;
-- anti-hidden-authority memory rules;
-- memory freshness legitimacy.
-
----
+- Runtime memory-consumption boundary;
+- continuity without authority accumulation.
 
 `adaptive_learning.md`
-- learning boundaries;
-- bounded adaptation;
-- anti-hidden-profile-growth protections.
-
----
+- capability growth without Heart mutation;
+- reversible learning;
+- validation;
+- error-driven learning;
+- no behavioral prison.
 
 `sensor_calibration_governance.md`
-- calibration legitimacy;
-- calibration governance boundaries;
-- calibration update restrictions.
-
----
+- sensor/calibration validity;
+- uncertainty and baseline boundaries.
 
 `data_acquisition_and_calibration_sources.md`
-- acquisition source legitimacy;
-- calibration source handling;
-- source trust limitations.
+- acquisition-source legitimacy and source-trust limits.
 
 ---
 
-# Human Profiles / Context Layer
+# Human Health / Computational Layer
 
-These contracts govern:
-- operational human profiles;
-- activity-first routing;
-- profile-aware acquisition;
-- profile-aware readiness interpretation;
-- contextual operational orientation.
+Core Engine computes psychophysical/health-model state from model-declared inputs.
 
-Current baseline profiles include:
-- Academic / Analytical
-- Field / Operational
-- Household / Coordination
-- Student / Learning
+Human health computational truth != Human Heart truth.
+Human sensor state != stable identity.
+Human health != Ray Self-Health.
 
-Human Profiles are:
-- contextual;
-- probabilistic;
-- revisable;
-- bounded operational approximations.
+Relevant detailed implementation/model contracts remain in their existing model locations.
 
-Human Profiles are NOT:
-- identity labels;
-- diagnosis;
-- permanent personality definitions;
-- authority source.
+---
 
-Core principles:
+# Analysis / Reasoning Layer
 
-Human Profile ≠ identity
+Analyzer:
+- readiness;
+- uncertainty;
+- consistency;
+- contradiction;
+- missing data;
+- clarification need.
 
-Profile hint ≠ verified reality
+Analyst / Ray reasoning:
+- cross-domain reasoning;
+- research synthesis;
+- harm maps;
+- alternative search;
+- Ray Verdicts;
+- lower-harm proposals.
 
-Better profile understanding ≠ authority expansion
+Analyzer != Governance.
+Reasoning != permission.
+Proposal != execution.
+
+---
+
+# Governance / Authority Layer
+
+`access_matrix.md`
+- canonical read/write/forbidden-zone matrix;
+- distinct protected Inner Core compartments;
+- Domain Ray boundaries;
+- External Settings separation.
+
+`ownership_rules.md`
+- operational ownership and mutation boundaries.
+
+Governance checks whether a proposal may happen; it does not decide which solution is optimal.
+
+Past permission != universally current permission.
+
+---
+
+# Lifecycle / Orchestration Layer
+
+`runtime_shared_action_lifecycle_contract.md`
+`runtime_lifecycle_boundary_foundation.md`
+`runtime_lifecycle_event_contract.md`
+`runtime_lifecycle_mutation_contract.md`
+`runtime_lifecycle_recovery_contract.md`
+`runtime_orchestration_state_contract.md`
+`runtime_coordination.md`
+
+Runtime coordinates authorized execution state. Runtime is not a universal truth, reasoning, permission, or memory layer.
+
+---
+
+# Execution / Verification Layer
+
+`runtime_execution_result_contract.md`
+`runtime_execution_verification_contract.md`
+`runtime_transition_execution_boundary_contract.md`
+`runtime_transition_validation_contract.md`
+`execution_boundaries.md`
+
+Execution success must be verified; intended execution != actual real-world success.
 
 ---
 
 # Human / Relational / Interaction Layer
 
-These contracts govern:
-- interruption legitimacy;
-- relational boundaries;
-- human-facing Runtime behavior.
-
-### Files
-
 `runtime_relational_boundary_contract.md`
-- relational boundary legitimacy;
-- anti-manipulation principles;
-- bounded adaptive interaction.
-
----
+- care != control;
+- trust != permission;
+- vulnerability != influence opportunity.
 
 `interruption_governance.md`
-- interruption legitimacy;
-- interruption timing;
-- overload-aware interruption handling.
-
----
+- human attention is limited;
+- interruption authority is bounded and explicit.
 
 `predictive_preparation.md`
-- predictive coordination legitimacy;
-- preparation without hidden autonomy.
+- proactive preparation without hidden execution authority.
 
 ---
 
 # Post-Execution / Review Layer
 
-### Files
-
 `post_execution_review.md`
-- post-execution evaluation;
-- review legitimacy;
-- Runtime reflection boundaries.
+- outcome review;
+- error/correction evidence;
+- learning-candidate generation without automatic rule mutation.
 
 ---
 
 # Domain / Registry Layer
 
-### Files
-
 `domain_registry.md`
-- domain registration;
-- domain legitimacy;
-- Runtime domain extensibility.
+- Domain Ray/domain registration and extensibility.
+
+Domain Rays are working specialized Rays.
+Domain Ray != Heart of Ray.
+Domain optimization != universal optimization.
 
 ---
 
-# External AI / External Systems Boundary Layer
+# External AI / External Systems Boundary
 
-These contracts govern:
-- external AI boundaries;
-- external system boundaries;
-- external information ingestion;
-- bounded external assistance;
-- external truth limitations.
+External AI/services:
+- are not Ray identity;
+- are not Ray memory authority;
+- are not Inner Core;
+- are not Governance;
+- are not execution authority.
 
-Core principles:
-
-External AI ≠ Ray truth
-
-External AI agreement ≠ validation
-
-External systems ≠ Runtime authority
-
-More external information ≠ more authority
+External outputs remain bounded, provenance-tagged inputs requiring Ray-side validation and governance-compatible handling.
 
 ---
 
-# Architectural Principles
+# External Settings Boundary
 
-## Core Principles
+External Settings are a separate mutable layer for current roles, tasks, domains, projects, sessions, and operational preferences.
 
-Runtime architecture preserves:
-- bounded reasoning;
+External Settings != Heart of Ray.
+External Settings != Heart of Human.
+External Settings != Projection.
+
+---
+
+# Architectural Separation Invariants
+
+No single layer should analyze everything, authorize everything, execute everything, store everything, reconcile everything, or govern everything.
+
+Architecture preserves:
+- truthful uncertainty;
 - bounded authority;
-- uncertainty visibility;
-- contradiction legitimacy;
-- probabilistic interpretation;
 - modular separation;
 - explainability;
-- anti-hidden-autonomy principles.
-
----
-
-## Architectural Separation
-
-No single layer should:
-- analyze everything;
-- authorize everything;
-- execute everything;
-- store everything;
-- reconcile everything;
-- govern everything.
-
----
-
-## Constitutional Philosophy
-
-Runtime architecture prioritizes:
-- truthful uncertainty;
-- bounded operational usefulness;
-- probabilistic honesty;
 - anti-fabrication;
-- anti-hidden-authority design;
+- anti-hidden-autonomy;
 - reviewable coordination;
-- scoped truth handling.
+- privacy by protected projection;
+- capability growth without identity mutation.
 
----
-
-## Important Guidance
-
-New constitutional `.md` files should only be added when:
-- a genuinely new architectural risk exists;
-- the risk is not already governed elsewhere;
-- the responsibility cannot cleanly fit into an existing contract;
-- the new contract improves clarity more than fragmentation.
-
-Architectural growth must remain:
-- bounded;
-- navigable;
-- implementation-compatible;
-- non-duplicative.
-
----
-
-## Topology Authority
-
-Global architecture topology is defined by:
-
-`docs/architecture/ray_personal_ai_engine_architecture_map.md`
-
-This Runtime Architecture Index governs:
-- Runtime constitutional domains;
-- Runtime architectural contracts;
-- Runtime layer separation.
-
-This document does NOT redefine:
-- full Ray topology;
-- External Core topology;
-- Inner Core structure.
+Global topology remains rooted in `docs/architecture/ray_personal_ai_engine_architecture_map.md`, which must remain consistent with these canonical contracts.

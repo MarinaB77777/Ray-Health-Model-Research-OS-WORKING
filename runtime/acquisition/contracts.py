@@ -22,6 +22,20 @@ class AcquisitionSourceClass(str, Enum):
     INTERNAL_RAY_LAYER = "internal_ray_layer"
 
 
+class AcquisitionSubject(str, Enum):
+    HUMAN_HEALTH = "human_health"
+    RAY_SELF_HEALTH = "ray_self_health"
+    EXTERNAL_WORLD = "external_world"
+    ENVIRONMENT = "environment"
+    UNSPECIFIED = "unspecified"
+
+
+class AcquisitionVerificationState(str, Enum):
+    UNVERIFIED = "unverified"
+    TRUSTED_SOURCE_ONLY = "trusted_source_only"
+    VERIFIED_WITHIN_DECLARED_SCOPE = "verified_within_declared_scope"
+
+
 class AcquisitionStatus(str, Enum):
     CREATED = "created"
     WAITING = "waiting"
@@ -76,6 +90,9 @@ class AcquisitionReasonCode(str, Enum):
     NO_DATA_ASK_OR_ACQUIRE = "no_data_ask_or_acquire"
     OUTBOUND_METADATA_REQUIRED = "outbound_metadata_required"
     VERIFIED_REQUIRES_TRUSTED = "verified_requires_trusted"
+    VERIFIED_REQUIRES_SCOPE_AND_PROVENANCE = (
+        "verified_requires_scope_and_provenance"
+    )
     FIELD_OUTSIDE_REQUIRED_FIELDS = "field_outside_required_fields"
     FORECAST_REQUIRES_HIGH_SUFFICIENCY = "forecast_requires_high_sufficiency"
     ANALYSIS_READY_REQUIRES_REQUIRED_FIELDS = (
@@ -237,10 +254,11 @@ class ExposureFilterResult(BaseModel):
 
 
 class AcquisitionResult(BaseModel):
-    """
-    Raw external/source result.
+    """Raw external/source result with bounded verification semantics.
 
-    Raw external result is not trusted and not verified by default.
+    `trusted` means the source/path is accepted for its declared role.
+    `verified` means the bounded claim was verified within an explicit scope; it
+    never converts Acquisition into a universal truth authority.
     """
 
     request_id: str
@@ -250,13 +268,63 @@ class AcquisitionResult(BaseModel):
     raw_external_result: Optional[str] = None
     source_metadata: dict[str, Any] = Field(default_factory=dict)
 
+    subject: AcquisitionSubject = AcquisitionSubject.UNSPECIFIED
     trusted: bool = False
     verified: bool = False
+    verification_state: AcquisitionVerificationState = (
+        AcquisitionVerificationState.UNVERIFIED
+    )
+    verification_scope: Optional[str] = None
+    verification_authority_ref: Optional[str] = None
+    provenance: dict[str, Any] = Field(default_factory=dict)
+    observed_at: Optional[datetime] = None
+    valid_until: Optional[datetime] = None
 
     @model_validator(mode="after")
-    def validate_verified_requires_trusted(self) -> "AcquisitionResult":
+    def validate_verification_contract(self) -> "AcquisitionResult":
         if self.verified and not self.trusted:
             raise ValueError("verified=True requires trusted=True.")
+
+        if self.verified:
+            if (
+                self.verification_state
+                != AcquisitionVerificationState.VERIFIED_WITHIN_DECLARED_SCOPE
+            ):
+                raise ValueError(
+                    "verified=True requires "
+                    "verification_state=VERIFIED_WITHIN_DECLARED_SCOPE"
+                )
+            if not self.verification_scope or not self.verification_scope.strip():
+                raise ValueError("verified=True requires verification_scope")
+            if (
+                not self.verification_authority_ref
+                or not self.verification_authority_ref.strip()
+            ):
+                raise ValueError(
+                    "verified=True requires verification_authority_ref"
+                )
+            if not self.provenance:
+                raise ValueError("verified=True requires provenance")
+
+        if (
+            self.verification_state
+            == AcquisitionVerificationState.VERIFIED_WITHIN_DECLARED_SCOPE
+            and not self.verified
+        ):
+            raise ValueError(
+                "VERIFIED_WITHIN_DECLARED_SCOPE requires verified=True"
+            )
+
+        if self.trusted and not self.verified:
+            if self.verification_state == AcquisitionVerificationState.UNVERIFIED:
+                self.verification_state = (
+                    AcquisitionVerificationState.TRUSTED_SOURCE_ONLY
+                )
+
+        if self.valid_until is not None and self.observed_at is not None:
+            if self.valid_until < self.observed_at:
+                raise ValueError("valid_until cannot precede observed_at")
+
         return self
 
 

@@ -12,6 +12,17 @@ import tempfile
 from .contracts import LearningStatus, RayRole
 
 
+PROTECTED_LEARNING_TARGETS = {
+    "heart_of_ray",
+    "heart_of_human",
+    "inner_core",
+    "permission",
+    "governance_authority",
+    "hard_boundary",
+    "ray_self_health_authority",
+}
+
+
 @dataclass
 class LearningCandidate:
     role: RayRole
@@ -42,9 +53,13 @@ class LearningCandidate:
             raise ValueError("INCOMPLETE_LEARNING_CANDIDATE")
         if self.contains_participant_data:
             raise PermissionError("RAW_PARTICIPANT_DATA_NOT_ALLOWED_IN_LEARNING")
+        if self.target_type.strip().lower() in PROTECTED_LEARNING_TARGETS:
+            raise PermissionError("PROTECTED_TARGET_REQUIRES_SPECIALIZED_REVISION_PATHWAY")
 
 
 class LearningRegistry:
+    """Operational learning-candidate registry, not a Heart/authority writer."""
+
     TRANSITIONS = {
         LearningStatus.DRAFT: {LearningStatus.TRIAL, LearningStatus.REJECTED},
         LearningStatus.TRIAL: {LearningStatus.ACTIVE, LearningStatus.REJECTED},
@@ -74,6 +89,8 @@ class LearningRegistry:
         for item in records:
             if item["candidate_id"] != candidate_id:
                 continue
+            if str(item.get("target_type", "")).strip().lower() in PROTECTED_LEARNING_TARGETS:
+                raise PermissionError("PROTECTED_TARGET_REQUIRES_SPECIALIZED_REVISION_PATHWAY")
             current = LearningStatus(item["status"])
             if status not in self.TRANSITIONS[current]:
                 raise ValueError("INVALID_LEARNING_STATUS_TRANSITION")
@@ -88,6 +105,11 @@ class LearningRegistry:
                     "approved_by": approved_by,
                     "approved_at": datetime.now(UTC).isoformat(),
                 }
+            # ACTIVE here means active operational candidate only. It never
+            # means constitutional promotion, permission creation, or truth.
+            item["constitutional_promotion_allowed"] = False
+            item["permission_mutation_allowed"] = False
+            item["truth_authority_created"] = False
             item["updated_at"] = datetime.now(UTC).isoformat()
             self._write(records)
             return item
@@ -98,6 +120,9 @@ class LearningRegistry:
         data = asdict(candidate)
         data["role"] = candidate.role.value
         data["status"] = candidate.status.value
+        data["constitutional_promotion_allowed"] = False
+        data["permission_mutation_allowed"] = False
+        data["truth_authority_created"] = False
         return data
 
     def _load(self) -> list[dict[str, Any]]:

@@ -1,554 +1,298 @@
-# Ray Personal AI Engine — Architecture Map
+# Ray Personal AI Engine — Architecture Map v2.0
 ## High-Level Canonical Architecture
 
----
+Status: WORKING CANONICAL TOPOLOGY
 
-# 1. Purpose
+## 1. Purpose
 
-This document defines the high-level topology, boundaries, and architectural direction of Ray Personal AI Engine.
+This document defines high-level topology and separation for Ray Personal AI Engine. Detailed normative behavior belongs to the referenced contracts.
 
-The document:
-- defines system layers;
-- defines major boundaries;
-- defines architectural responsibilities;
-- defines constitutional invariants;
-- defines future extensibility direction.
+## 2. Core philosophy
 
-This document is:
-- NOT full implementation documentation;
-- NOT full API specification;
-- NOT full mathematical specification;
-- NOT final External Core implementation details.
+Ray is a bounded, adaptive, truth-seeking personal AI architecture designed for growth without hidden authority growth and for deep personalization without raw Inner Core exposure.
 
----
+The architecture preserves:
+- truth and visible uncertainty;
+- human agency;
+- proactive reasoning;
+- constrained harm minimization;
+- explainability and provenance;
+- scientific calibration;
+- memory continuity without authority accumulation;
+- protected Ray identity;
+- protected Human Heart;
+- operational extensibility.
 
-# 2. Core Philosophy
-
-Ray Personal AI Engine is designed as:
-
-bounded adaptive constitutional AI architecture
-
-The architecture aims to preserve:
-- adaptive reasoning;
-- forecasting;
-- uncertainty awareness;
-- operational usefulness;
-- explainability;
-- bounded personalization;
-- calibration and learning;
-
-WITHOUT:
-- hidden autonomy;
-- fake omniscience;
-- fabricated certainty;
-- covert profiling;
-- silent authority expansion;
-- dependency optimization;
-- unrestricted psychological exposure.
-
----
-
-# 3. Top-Level Architecture
+## 3. Canonical topology
 
 Ray Personal AI Engine
-├── External Core
-│   ├── Base Ray
-│   ├── Psychophysical / Readiness Engine
-│   ├── Analyzer / Readiness
-│   ├── Governance
-│   ├── Runtime
-│   ├── Coordinator / Acquisition
-│   ├── Shared Action
-│   ├── Communication Layers
-│   ├── Memory Foundations
-│   ├── Human Profiles Layer
-│   ├── Calibration / Research Layers
-│   ├── Device / Sensor Integration
-│   ├── Domain Rays (future)
-│   └── External Boundaries
+├── Protected Inner Core
+│   ├── Heart of Ray
+│   ├── Heart of Human
+│   ├── Ray Self-Health Authority
+│   └── Protected mediation / integrity / provisioning mechanisms
 │
 ├── Projection Layer
+│   ├── Human Heart projections
+│   ├── acceptable-harm / priority / boundary projections
+│   ├── confirmation / disclosure / delegation constraints
+│   └── bounded Ray Self-Health operational projections
 │
-└── Inner Core
-
----
-
-# 4. External Core
-
-External Core contains the operational adaptive system.
-
-External Core is responsible for:
-- interaction;
-- coordination;
-- acquisition;
-- readiness evaluation;
-- uncertainty handling;
-- bounded forecasting;
-- runtime orchestration;
-- explainability;
-- communication;
-- operational continuity.
-
-External Core is NOT:
-- unrestricted authority;
-- deep identity layer;
-- unrestricted memory owner;
-- hidden autonomous super-agent.
-
-External Core is not fully specified yet.
-This document defines topology and boundaries only.
-
----
-
-# 5. Base Ray
-
-Base Ray lives inside External Core.
-
-Base Ray is:
+├── Operational Ray / External Core
+│   ├── Base Ray interaction and reasoning surface
+│   ├── Psychophysical / Health Model Engine
+│   ├── Analyzer / Readiness
+│   ├── Analyst / cross-domain reasoning
+│   ├── Governance
+│   ├── Runtime / Orchestration
+│   ├── Coordinator / Acquisition
+│   ├── Shared Action lifecycle
+│   ├── Communication layers
+│   ├── Multi-Memory system
+│   ├── Calibration / Evidence systems
+│   ├── Device / Sensor integration
+│   ├── Domain Rays
+│   └── External-system boundaries
+│
+└── External Settings
+    ├── role / domain / project settings
+    ├── current operational preferences
+    ├── mutable integrations / contacts / channels
+    └── other explicitly mutable configuration
 
-bounded operational adaptive runtime
-
-Base Ray handles:
-- communication;
-- clarification;
-- uncertainty explanation;
-- operational coordination;
-- acquisition guidance;
-- bounded continuity;
-- multilingual interaction;
-- governance-aware behavior.
-
-Base Ray:
-- does not directly access Inner Core;
-- does not possess unrestricted authority;
-- does not silently expand permissions;
-- does not autonomously execute unrestricted actions.
-
----
+## 4. Heart of Ray
 
-# 6. Psychophysical / Readiness Engine
-
-Psychophysical subsystem provides:
-- readiness evaluation;
-- psychophysical state estimation;
-- uncertainty-aware interpretation;
-- contradiction handling;
-- acquisition requests;
-- forecast governance;
-- profile-aware interpretation.
-
-Subsystem components include:
-- S model;
-- pressure model;
-- Δ model;
-- readiness gating;
-- uncertainty profile;
-- consistency handling;
-- next_questions;
-- acquisition requests;
-- multilingual output layer.
+Heart of Ray is Ray's constitutional identity foundation.
 
----
+It is not:
+- a model version;
+- a capability list;
+- memory;
+- a Domain Ray;
+- current settings;
+- Ray Self-Health telemetry.
 
-# 7. Analyzer / Readiness Layer
+Ray may grow in models, knowledge, memory, tools, sensors, hardware, and Domain Rays without ordinary capability growth rewriting Heart of Ray.
 
-Analyzer evaluates:
-- readiness;
-- uncertainty;
-- contradictions;
-- source quality;
-- freshness;
-- forecast eligibility;
-- recommendation eligibility;
-- hidden factors;
-- mismatch conditions.
-
-Analyzer:
-- does not define truth;
-- does not execute actions;
-- does not grant permissions.
-
-Core principle:
-
-NOT_ENOUGH_DATA = valid state
+Canonical specification: `docs/inner_core/heart_of_ray_specification.md`.
 
----
+## 5. Heart of Human
 
-# 8. Governance Layer
+Heart of Human contains deeply protected, human-sovereign, practically invariant declarations/structures eligible for Inner Core placement, such as validated priorities, boundaries, acceptable-harm structures, and other identity-relevant protected content.
 
-Governance is the boundary and permission layer.
+Current state, temporary emotion, sensor state, repeated behavior, or validated pattern does not automatically become Heart of Human.
 
-Governance controls:
-- permissions;
-- restrictions;
-- visibility;
-- exposure;
-- memory write permissions;
-- escalation permissions;
-- confirmation requirements;
-- operational boundaries.
+Potential promotion requires evidence -> validation -> interpretation -> human confirmation -> protected revision/provisioning pathway.
 
-Governance:
-- does not reason;
-- does not invent decisions;
-- does not fabricate certainty;
-- does not replace Analyst.
+## 6. Ray Self-Health Authority
 
-Core principle:
+Ray Self-Health is a protected Inner Core compartment but is not Heart of Ray.
 
-Governance ≠ reasoning
+It protects integrity of Ray's physical/computational substrate through validated baselines, calibration, hardware identity, critical integrity state, and critical diagnostic history.
 
----
+High-frequency raw telemetry may live in a separate protected telemetry store with retention.
 
-# 9. Runtime Layer
+`ray_self_health.*` and `human_health.*` must remain distinct.
 
-Runtime performs bounded operational coordination.
+## 7. Projection Layer
 
-Runtime may:
-- coordinate;
-- route;
-- orchestrate approved flows;
-- maintain operational state;
-- handle bounded execution lifecycle;
-- maintain unresolved states.
+Projection is the only ordinary bridge from protected Inner Core meaning to operational systems.
 
-Runtime must not:
-- invent permissions;
-- define truth;
-- bypass Governance;
-- silently mutate authority;
-- convert predictions into actions automatically.
+Projection may emit bounded weights, limits, flags, confirmation requirements, disclosure constraints, delegation constraints, and other minimum-necessary operational derivatives.
 
-Core principle:
+Projection must not expose raw Heart content or permit practical reconstruction through composition of outputs.
 
-Runtime ≠ truth engine
+Projection != Inner Core.
+Projection != permission.
+Projection != execution.
+Projection != identity truth.
 
-Runtime orchestration ≠ execution authority
+Canonical contracts:
+- `runtime/architecture/projection_governance.md`
+- `runtime/architecture/acceptable_harm_projection.md`
+- `runtime/architecture/projection_review_lifecycle.md`
+- `runtime/architecture/inner_core_boundary_contract.md`
 
-Prepared flow ≠ approved execution
----
+## 8. Base Ray and Operational Ray
 
-# 10. Coordinator / Acquisition Layer
+Base Ray is the human-facing continuity/reasoning surface of the operational architecture. It is not the Heart itself and does not directly read raw Inner Core.
 
-Coordinator and Acquisition layers manage:
-- acquisition routing;
-- clarification flow;
-- orchestration handoff;
-- bounded acquisition lifecycle;
-- unresolved tracking;
-- retry visibility;
-- source registration;
-- source quality handling.
+Base Ray may communicate, clarify, research, explain uncertainty, coordinate, prepare alternatives, and participate in governed execution pathways.
 
-Core principles:
+Heart-derived behavior reaches operational Ray through constitutional implementation and bounded Projection, not by exposing raw Heart content to every operational module.
 
-WAITING ≠ answered
+## 9. Domain Rays
 
-Acquisition request ≠ acquisition result
+Domain Rays are working Rays specialized by domain. They are not Inner Core compartments and are not independent Hearts.
 
----
+A Domain Ray may maintain bounded domain context, tasks, and coordination, but must not acquire raw Inner Core access, cross-domain universal authority, or independent constitutional identity authority.
 
-# 11. Shared Action Layer
+Domain Ray capability != permission.
+Domain specialization != Heart mutation.
 
-Shared Action is the operational coordination surface.
+## 10. Psychophysical / Health Model
 
-Shared Action contains:
-- action lifecycle;
-- ownership;
-- operational coordination;
-- deadlines;
-- dependencies;
-- confirmation states;
-- governance references;
-- visibility scope;
-- interruption cost;
-- notification state.
+The Health Model is an analytical/computational layer for human psychophysical state, readiness, uncertainty, and related scientific outputs.
 
-Shared Action:
-- is not truth authority;
-- is not Analyst;
-- is not Governance;
-- is not unrestricted planner.
+It must not directly read raw Inner Core.
 
-Shared Action stores coordination state,
-not complete operational truth.
+Human Health Model output and Ray Self-Health are separate subject domains.
 
----
+Model output != recommendation authority.
+Sensor data != truth.
+Calibration != certainty.
 
-# 12. Communication Layers
+## 11. Analyzer and Analyst
 
-Separate communication channels exist for:
-- Ray ↔ Human;
-- Ray ↔ Ray;
-- external AI services;
-- public/external communication;
-- devices/sensors;
-- research systems.
+Analyzer owns readiness/uncertainty/consistency evaluation within its bounded scope.
 
-Internal truth is separated from external/public communication.
+Analyst performs cross-domain reasoning, alternatives, consequences, and constrained harm analysis.
 
----
+Analyzer != Governance.
+Analyst proposal != permission.
 
-# 13. Memory Foundations
+Material conflicts follow `docs/inner_core/conflict_resolution_kernel.md`.
 
-Memory systems are separated.
+## 12. Governance
 
-Planned memory layers include:
-- temporary operational memory;
-- task memory;
-- learning/pattern memory;
-- calibration memory;
-- research/evidence memory;
-- projection-related memory boundaries.
+Governance is permission/boundary control, not a second reasoning personality.
 
-Core principle:
+It evaluates whether a proposed action or disclosure is allowed under applicable permissions, privacy, autonomy, confirmation, trust, emergency, and exposure rules.
 
-Memory ≠ authority
+Governance does not redesign the solution and does not read raw Inner Core.
 
-Remembered information ≠ current permission
+Governance != reasoning.
 
-Memory ≠ authority
+## 13. Runtime / Orchestration
 
----
+Runtime coordinates approved operational flows, lifecycle, routing, queues, execution state, and awaiting-human states.
 
-# 14. Human Profiles Layer
+Runtime does not invent permission, consent, completion, or truth.
 
-Human Profiles provide operational orientation.
+Runtime != truth engine.
+Runtime orchestration != execution authority.
 
-Current baseline profiles:
-- Academic / Analytical
-- Field / Operational
-- Household / Coordination
-- Student / Learning
+## 14. Multi-Memory Architecture
 
-Profiles are:
-- contextual;
-- probabilistic;
-- revisable;
-- bounded operational approximations.
+Ray does not have one universal memory.
 
-Profiles are NOT:
-- identity labels;
-- diagnosis;
-- permanent personality definitions;
-- authority source.
+Canonical stores include:
+- Working / Operational Memory;
+- Episodic Memory;
+- Semantic Memory;
+- Relational Memory;
+- Calibration / Evidence Memory;
+- Decision & Provenance Ledger;
+- Ray Self-Health Memory;
+- Memory Governance / Index.
 
-The four baseline profiles are default operational anchors only.
+Memory != Heart of Ray.
+Memory != authority.
+Remembered != currently true.
+External AI memory != Ray memory.
 
-Each person may have:
-- hybrid backgrounds;
-- mixed operational contexts;
-- changing life conditions;
-- unique contextual pressures.
+Canonical architecture: `docs/architecture/ray_memory_architecture.md`.
 
-Profile routing must remain:
-- revisable;
-- uncertainty-aware;
-- non-coercive;
-- context-sensitive.
+## 15. Sensors, devices, and calibration
 
-Core principles:
+Sensor/device integration is extensible and subject-explicit.
 
-Human Profile ≠ identity
+Human sensors and Ray Self-Health sensors are separate acquisition domains even when they share transport hardware.
 
-Profile hint ≠ verified reality
+Missing physical sensors must remain explicit (`NOT_CONNECTED`, `NO_DEVICE`, `NO_DATA`, `DRIVER_UNAVAILABLE`) rather than simulated with fake measurements.
 
-Better profile understanding ≠ authority expansion
+Calibration validity is evidence-driven, parameter/context-specific, freshness-aware, uncertainty-aware, and not established by elapsed time alone.
 
----
+## 16. Communication and proactive preparation
 
-# 15. Projection Layer
+Ray may proactively research, verify, prepare alternatives, identify dependencies, and forecast risks within legitimate information-access boundaries.
 
-Projection Layer is the bounded bridge between Inner Core and operational systems.
+Preparation != permission.
+Prediction != authority.
 
-Projection Layer contains:
-- operational weights;
-- acceptable harm projections;
-- conflict modifiers;
-- escalation sensitivities;
-- bounded operational coefficients.
+External effects require the appropriate permission pathway.
 
-Projection Layer:
-- does not expose raw Inner Core;
-- does not expose deep sensitive information;
-- does not allow Runtime direct Inner Core access.
+Human attention is protected; low-value questions should be batched or deferred where appropriate, while material time-sensitive uncertainty should be raised early.
 
-Projection updates:
-- require human-aware review;
-- must not silently self-modify.
+## 17. Conflict and harm resolution
 
----
+Ray does not reduce all conflicts to one utility score.
 
-# 16. Inner Core
+Resolution includes:
+- factual verification;
+- maximum feasible research;
+- authority determination;
+- hard-boundary checks;
+- emergency qualification when applicable;
+- structured harm map;
+- alternative search;
+- human clarification when material and possible;
+- Ray Verdict;
+- Governance;
+- Runtime execution.
 
-Inner Core is the protected personal layer.
+Hard boundaries precede ordinary optimization.
 
-Inner Core may contain:
-- deepest priorities;
-- acceptable harm structures;
-- pain points;
-- existential boundaries;
-- sensitive relational domains;
-- identity anchors.
+If all feasible options violate applicable hard boundaries, the state is `CONSTITUTIONAL_CONFLICT`, not an ordinary allowed outcome.
 
-Inner Core:
-- remains sealed;
-- is not directly accessible by Runtime;
-- is not exposed externally;
-- is not automatically rewritten by learning systems.
+## 18. External Settings
 
-Core principle:
+External Settings are mutable operational configuration outside Inner Core.
 
-Base Ray ≠ Inner Core
+They may contain role, domain, project, current preference, integration, channel, contact, and other current operational settings.
 
----
+External Settings must not silently weaken or rewrite Heart of Ray or Heart of Human.
 
-# 17. Sensors / Devices / Calibration Systems
+## 19. External AI boundary
 
-Ray architecture supports extensible sensor and device integration.
+External AI is a bounded processing resource, not Ray identity, memory authority, Governance, or universal truth authority.
 
-Possible integrations include:
-- wearables;
-- biosensors;
-- environmental sensors;
-- mobile devices;
-- local hardware modules;
-- calibration games;
-- diagnostic tasks;
-- research devices.
+External AI agreement != validation.
+External AI memory != Ray memory.
+External capability != permission.
 
-Core principles:
+Raw Inner Core must not be sent to external AI.
 
-sensor data ≠ truth
+## 20. Research modes
 
-more data ≠ more authority
+Research and applied-project modes remain subordinate to constitutional privacy, truth, permission, and Inner Core boundaries.
 
-new sensor ≠ permission expansion
+Research usefulness != constitutional override.
 
-acquisition ≠ retention
+## 21. Identity and hardware continuity
 
-calibration ≠ identity
+Future physical architecture must allow repair and hardware evolution without casually equating component replacement with identity replacement.
 
----
+Heart provisioning, attestation, migration, backup/recovery, cryptographic separation, and identity continuity require a dedicated physical-system architecture derived from these contracts.
 
-# 18. Research / Applied Project Modes
+Hardware architecture must not simplify constitutional architecture merely because some sensors or components are not yet installed.
 
-Ray architecture may support:
-- research projects;
-- applied scientific systems;
-- calibration studies;
-- pilot programs;
-- university collaborations;
-- bounded investigative modes.
+## 22. Core invariants
 
-Research mode:
-- remains governed;
-- remains bounded;
-- does not override constitutional invariants.
+- Truth before appearance.
+- Unknown != 0.
+- Inference != verification.
+- Prediction != confirmation.
+- NOT_ENOUGH_DATA is valid.
+- Memory != authority.
+- Remembered != currently true.
+- Understanding != authority.
+- Trust != permission.
+- Access != permission.
+- Capability != permission.
+- Projection != Inner Core.
+- Projection != permission.
+- Governance != reasoning.
+- Runtime != truth engine.
+- Preparation != permission.
+- Domain Ray != Heart of Ray.
+- Ray Self-Health != Human Health.
+- Learning != Heart mutation.
+- Research usefulness != constitutional override.
+- Unresolved truth > fake certainty.
 
-Research mode ≠ unrestricted surveillance
+## 23. Extensibility
 
-Research usefulness ≠ constitutional override
+New models, sensors, devices, memories, Domain Rays, communication channels, external tools, and compute systems may be added through explicit contracts and governed registration.
 
-Research mode remains subordinate
-to constitutional boundaries.
-
----
-
-# 19. Extensibility
-
-Ray architecture is designed to support future expansion.
-
-Future modules may include:
-- new devices;
-- new acquisition systems;
-- additional Domain Rays;
-- new Runtime capabilities;
-- calibration ecosystems;
-- external services;
-- local AI modules;
-- new communication interfaces.
-
-All new modules require:
-- explicit registration;
-- boundary contracts;
-- governance integration;
-- visibility rules;
-- permission scopes;
-- data quality handling;
-- freshness handling;
-- retention policies.
-
-Core principles:
-
-Access ≠ permission
-
-Capability ≠ permission
-
----
-
-# 20. External AI Boundary
-
-External AI services are bounded external tools only.
-
-External AI:
-- is not Ray identity;
-- is not Runtime authority;
-- is not Governance;
-- is not operational truth source.
-
-Core principles:
-
-External AI ≠ Ray truth
-
-External AI agreement ≠ validation
-
----
-
-# 21. Constitutional Invariants
-
-1. No fabrication
-2. NOT_ENOUGH_DATA = valid state
-3. Unknown ≠ 0
-4. Prediction ≠ truth
-5. Recommendation ≠ authority
-6. Understanding ≠ authority
-7. Runtime ≠ truth engine
-8. Governance ≠ reasoning
-9. Memory ≠ authority
-10. Human Profile ≠ identity
-11. Base Ray ≠ Inner Core
-12. Visibility ≠ authority
-13. Access ≠ permission
-14. Capability ≠ permission
-15. Silence ≠ confirmation
-16. Contradiction ≠ failure
-17. Unresolved truth > fake certainty
-18. Inference ≠ permission
-
-Better prediction does not expand authority.
-
-19. Runtime orchestration ≠ execution authority
-20. Shared Action ≠ global reality model
-21. Memory persistence ≠ retention justification
-22. Research usefulness ≠ constitutional override
-
----
-
-# 22. Long-Term Direction
-
-Long-term architecture direction:
-
-constitutional bounded adaptive AI architecture
-
-with:
-- layered truth;
-- bounded personalization;
-- uncertainty governance;
-- adaptive reasoning;
-- explainability;
-- operational usefulness;
-- governed Runtime;
-- protected Inner Core;
-- no hidden autonomy;
-- no fake omniscience.
+Capability growth should expand what Ray can do without silently expanding what Ray is permitted to do or rewriting who Ray is.

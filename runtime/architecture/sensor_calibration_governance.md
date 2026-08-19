@@ -1,665 +1,187 @@
-# Sensor Calibration Governance — v1.0
+# Sensor Calibration Governance — v2.0
 
-## Core Principle
+Status: ACTIVE ARCHITECTURE CONTRACT
 
-Sensor calibration exists to:
-- improve contextual interpretation;
-- improve uncertainty handling;
-- improve readiness evaluation;
-- improve interruption safety;
-- improve adaptive coordination quality;
-- reduce false interpretation risk.
+## Core principle
 
-Calibration exists for:
-- bounded interpretation;
-- uncertainty-aware adaptation;
-- safer operational coordination.
+Calibration exists to make interpretation scientifically more valid, not to manufacture certainty or authority.
 
-Calibration must not become:
-- hidden personality inference;
-- unrestricted psychological interpretation;
-- deterministic human modeling;
-- silent authority escalation;
-- fake certainty generation;
-- unrestricted behavioral profiling.
+Calibration validity is evidence-driven, parameter-specific, context-specific, freshness-aware, and uncertainty-aware.
 
-The system must remain:
-- calibration-aware;
-- uncertainty-aware;
-- context-aware;
-- bounded;
-- explainable;
-- governance-compatible.
+Elapsed time alone != valid calibration.
+Calibration != certainty.
+Calibration != permission.
+Calibration != identity truth.
 
----
+## 1. Subject separation
 
-# 1. Calibration Definition
+Calibration records must identify their subject.
 
-## Calibration Purpose
+At minimum:
+- `human_health.*` — human psychophysical/health calibration;
+- `ray_self_health.*` — Ray hardware/software self-health calibration.
 
-Calibration exists to:
-- contextualize sensor interpretation;
-- improve baseline comparison;
-- reduce false overload interpretation;
-- improve contextual readiness understanding;
-- improve bounded adaptive coordination.
+These domains must not be merged merely because they use similar statistical methods or share transport hardware.
 
-Calibration:
-≠ unrestricted psychological understanding.
+## 2. Human calibration purpose
 
-Calibration:
-≠ personality interpretation.
+Human calibration may support:
+- sensor interpretation;
+- baseline comparison;
+- readiness/uncertainty evaluation;
+- false-alarm reduction;
+- context-aware coordination;
+- Health Model inputs where contractually appropriate.
 
-Calibration:
-≠ deterministic behavioral prediction.
+Human sensor/calibration data must not silently become:
+- personality truth;
+- stable values;
+- motivation certainty;
+- Human Heart content;
+- permission to act.
 
----
+## 3. Ray Self-Health calibration purpose
 
-## Sensor Interpretation Requires Calibration Awareness
+Ray Self-Health calibration may support:
+- thermal baselines;
+- power/battery/UPS baselines;
+- memory/storage health interpretation;
+- compute-load baselines;
+- sensor/driver reliability;
+- cooling behavior;
+- component aging/degradation detection;
+- integrity monitoring.
 
-Sensor interpretation must remain:
-- calibration-aware;
-- context-aware;
-- uncertainty-aware;
-- bounded.
+Ray Self-Health calibration is technical integrity evidence, not Human Health data and not Heart of Ray identity content.
 
-Sensor values alone must not silently become:
-- stress certainty;
-- emotional certainty;
-- overload certainty;
-- personality interpretation;
-- motivational interpretation.
-
----
-
-# 2. Calibration Boundaries
-
-## Calibration Is Contextual
+## 4. Scientific calibration validity
 
 Calibration validity may depend on:
-- environment;
-- activity type;
-- social context;
-- physical load;
-- cognitive load;
-- emotional conditions;
-- sleep quality;
-- illness;
-- fatigue;
-- recovery state.
-
-Stable calibration in one context
-≠ universal interpretation truth.
-
----
-
-## Calibration Is Decay-Aware
-
-Calibration may become:
-- stale;
-- partially invalid;
-- contextually obsolete;
-- reliability-reduced.
-
-Old calibration
-≠ current calibration truth.
-
-Calibration freshness must remain visible.
-
----
-
-## Calibration Is Probabilistic
-
-Calibration interpretation must remain:
-- probabilistic;
-- uncertainty-scored;
-- bounded;
-- explainable.
-
-Calibration:
-≠ certainty.
-
----
-
-# 3. Baseline Architecture
-
-## Baseline Purpose
-
-Baselines exist to:
-- contextualize interpretation;
-- reduce false inference;
-- improve uncertainty estimation;
-- improve contextual comparison quality.
-
----
-
-## Baseline Types
-
-Baselines may include:
-- resting baseline;
-- workload baseline;
-- physical-load baseline;
-- social-load baseline;
-- cognitive-load baseline;
-- recovery baseline;
-- illness-context baseline;
-- sleep-deprivation baseline.
-
----
-
-## Baselines Must Remain Contextual
-
-A valid baseline in one context
-may become invalid in another context.
-
-Example:
-- gaming stress baseline;
-- public-speaking baseline;
-- physical exercise baseline;
-- exam baseline
-
-may differ significantly.
-
----
-
-## Missing Baseline Principle
-
-Missing baseline must preserve uncertainty.
-
-No baseline:
-≠ valid confident interpretation.
-
-Missing baseline may require:
-- clarification;
-- uncertainty increase;
-- interpretation limitation;
-- forecast restriction.
-
----
-
-# 4. Calibration Confidence Architecture
-
-## Calibration Confidence May Depend On
-
+- sufficient observations;
+- independence/repetition where relevant;
 - baseline strength;
 - baseline stability;
-- calibration freshness;
+- context diversity;
 - context match;
+- calibration freshness;
 - sensor reliability;
 - signal quality;
 - artifact level;
-- environmental stability.
+- environmental stability;
+- cross-source consistency/contradiction;
+- reference measurement quality;
+- subject self-report where scientifically relevant for human calibration.
 
----
+No fixed number of days is sufficient by itself.
 
-## Weak Calibration Confidence Preserves Uncertainty
+Different parameters may reach adequate validity at different times.
 
-Weak calibration confidence must:
-- preserve uncertainty visibility;
-- reduce interpretation certainty;
-- reduce escalation confidence;
-- reduce predictive confidence.
+## 5. Baselines
 
-Weak calibration must not silently produce:
-- strong overload assumptions;
-- interruption escalation;
-- motivational conclusions;
-- stable personality interpretation.
+Baselines are parameter/context-specific.
 
----
+Human examples may include resting, physical-load, cognitive-load, recovery, illness, sleep-deprivation, social-load, or other scientifically justified baselines.
 
-## Future Calibration Metrics
+Ray examples may include idle/load thermal, normal power draw, cooling response, memory pressure, storage health, sensor noise, or other component-specific baselines.
 
-Future calibration structures may include:
-- calibration_confidence;
-- baseline_strength;
-- baseline_stability;
-- context_match;
-- calibration_freshness;
-- sensor_reliability;
-- signal_quality;
-- artifact_score.
+A baseline valid in one context != universal baseline truth.
 
-These metrics must remain:
-- explainable;
-- bounded;
-- uncertainty-aware;
-- governance-compatible.
+## 6. Missing or weak calibration
 
----
+Missing/weak calibration must preserve uncertainty.
 
-# 5. Sensor Reliability Rules
+No baseline != normal.
+No baseline != zero.
+Weak calibration != confident interpretation.
 
-## Sensor Reliability Must Remain Explicit
+Weak calibration may require:
+- additional observation;
+- reference measurement;
+- clarification;
+- uncertainty increase;
+- interpretation limitation;
+- forecast/escalation limitation.
 
-Sensor reliability may depend on:
-- hardware quality;
-- sensor placement;
-- battery condition;
-- signal integrity;
-- environmental interference;
-- movement artifacts;
-- synchronization quality.
+## 7. Sensor reliability and artifacts
 
----
+Reliability assessment may include hardware quality, placement, battery/power state, signal integrity, environmental interference, motion, synchronization, driver state, calibration drift, and measurement corruption.
 
-## Reliability Problems Preserve Uncertainty
+Artifacts must remain visible to interpretation and uncertainty handling.
 
-Low reliability must:
-- preserve uncertainty;
-- reduce interpretation confidence;
-- reduce escalation confidence;
-- reduce prediction confidence.
+For human sensors, physical activation must not automatically be interpreted as emotional activation.
 
-Low reliability:
-≠ hidden certainty.
+For Ray Self-Health sensors, a single anomalous measurement must not automatically become component-failure certainty unless the hardware protection contract requires immediate protective action.
 
----
+## 8. Freshness and decay
 
-## Artifact Handling Principle
+Calibration may become stale through time, context change, hardware replacement, firmware/driver change, illness/recovery, environmental change, or other relevant state changes.
 
-Artifacts may include:
-- motion artifacts;
-- environmental noise;
-- synchronization errors;
-- temporary signal loss;
-- sensor displacement;
-- corrupted measurements.
+Old calibration != current calibration truth.
 
-Artifacts must remain:
-- visible;
-- uncertainty-relevant;
-- interpretation-relevant.
+Component replacement may invalidate Ray Self-Health baselines for the replaced component without changing Heart of Ray identity.
 
----
+## 9. Calibration memory
 
-# 6. Physical vs Emotional Load Separation
+Calibration/evidence records belong to the governed multi-memory architecture.
 
-## Physical Load and Emotional Load Must Remain Separated
+Calibration Memory != Heart of Human.
+Calibration Memory != Heart of Ray.
 
-Physical activation:
-≠ emotional overload automatically.
+Records should preserve provenance, context, uncertainty, validity, freshness, correction lineage, and subject identity.
 
-Examples:
-- exercise;
-- manual labor;
-- running;
-- heat exposure;
-- illness;
-- caffeine;
-- physical recovery
+## 10. Promotion boundary
 
-may affect signals significantly.
+A repeatedly validated human pattern may become a candidate for deeper interpretation, but:
 
----
+validated pattern != Human Heart truth.
 
-## Emotional Interpretation Requires Context
+Potential promotion toward a practically invariant Human Heart declaration requires the separately protected evidence -> validation -> interpretation -> human confirmation pathway.
 
-Emotional interpretation requires:
-- contextual consistency;
-- calibration support;
-- uncertainty awareness;
-- bounded interpretation rules.
+Ray Self-Health calibration never promotes into Heart of Human.
 
-High pulse alone:
-≠ emotional certainty.
+Technical self-health state does not silently rewrite Heart of Ray.
 
----
+## 11. Calibration and escalation
 
-## Mixed-State Principle
+Sensor interpretation does not automatically grant interruption, emergency, disclosure, or execution authority.
 
-Real states may contain:
-- physical load;
-- emotional load;
-- cognitive load;
-- environmental stress;
-- illness effects;
-- fatigue effects.
+Weak calibration should reduce confidence in escalation where additional evidence is required.
 
-Mixed states must preserve:
-- ambiguity;
-- uncertainty;
-- bounded interpretation.
+Emergency hardware safety mechanisms for Ray may still perform narrowly defined protective actions based on validated device-safety contracts; those mechanisms do not create general authority.
 
----
+## 12. External processing
 
-# 7. Sensor-to-Identity Separation
+External AI/services may assist bounded signal processing or anomaly analysis only with permitted data.
 
-## Sensor Patterns Are Not Identity Truth
+External processing is not calibration authority and must not receive raw Inner Core.
 
-Sensor patterns:
-≠ identity truth.
+External output requires provenance and appropriate validation before becoming internal calibration evidence.
 
-Psychophysical states:
-≠ personality truth.
+## 13. Hardware adapter boundary
 
-Temporary overload:
-≠ stable motivation truth.
+Until physical sensors are installed, adapter stubs must report honest availability states such as:
+- `NOT_CONNECTED`;
+- `NO_DEVICE`;
+- `NO_DATA`;
+- `DRIVER_UNAVAILABLE`.
 
-Burnout:
-≠ stable values.
+Stubs must not manufacture plausible measurements.
 
-Fatigue:
-≠ stable intent.
-
----
-
-## Temporary States Must Remain Temporary
-
-Temporary psychophysical conditions must not silently become:
-- personality labels;
-- identity categories;
-- stable behavioral assumptions;
-- emotional character judgments.
-
----
-
-## Health-Aware Coordination Is Not Psychological Determinism
-
-Health-aware adaptation may support:
-- interruption reduction;
-- overload-aware timing;
-- recovery-aware coordination;
-- clarification pacing.
-
-Health-aware coordination:
-≠ unrestricted personality inference.
-
----
-
-# 8. Clarification Governance for Sensor Interpretation
-
-## Clarification May Be Justified When
-
-Clarification may be requested when:
-- baseline is missing;
-- calibration confidence is weak;
-- context mismatch exists;
-- sensor interpretation uncertainty is high;
-- contradictory signals exist;
-- escalation confidence is insufficient.
-
----
-
-## Clarification Must Remain Bounded
-
-Clarification must remain:
-- operationally justified;
-- uncertainty-aware;
-- minimally invasive;
-- governance-compatible.
-
-Clarification must not emerge from:
-- curiosity;
-- profiling expansion;
-- unnecessary emotional probing.
-
----
-
-## Clarification Does Not Create Certainty Automatically
-
-Human clarification:
-≠ guaranteed truth automatically.
-
-Clarification may still remain:
-- incomplete;
-- uncertain;
-- contextual;
-- contradictory.
-
----
-
-# 9. Calibration and Interruption Governance
-
-## Sensor Interpretation Does Not Automatically Grant Interruption Authority
-
-Sensor interpretation:
-≠ interruption permission.
-
-High activation:
-≠ automatic escalation.
-
-Prediction confidence:
-≠ interruption authority.
-
----
-
-## Interruption Escalation Requires Additional Conditions
-
-Interruption escalation may additionally require:
-- governance compatibility;
-- operational urgency;
-- clarification insufficiency;
-- repeated contextual consistency;
-- bounded escalation rules.
-
----
-
-## Weak Calibration Limits Escalation
-
-Weak calibration confidence must reduce:
-- interruption escalation confidence;
-- overload certainty;
-- emergency confidence.
-
-Weak calibration must preserve:
-- uncertainty visibility;
-- bounded interpretation;
-- escalation humility.
-
----
-
-# 10. Calibration and Predictive Preparation
-
-## Calibration May Support Predictive Preparation
-
-Calibration-aware interpretation may support:
-- overload-aware scheduling;
-- interruption reduction;
-- bounded prediction refinement;
-- dependency planning;
-- recovery-aware coordination.
-
----
-
-## Calibration Does Not Create Predictive Certainty
-
-Calibration:
-≠ future certainty.
-
-Prediction must remain:
-- probabilistic;
-- uncertainty-aware;
-- bounded;
-- context-sensitive.
-
----
-
-## Historical Calibration Does Not Guarantee Future Prediction
-
-Past calibration success:
-≠ guaranteed future prediction quality.
-
-Changing conditions may invalidate:
-- previous baselines;
-- prediction assumptions;
-- readiness expectations.
-
----
-
-# 11. Calibration and Adaptive Learning
-
-## Calibration May Support Adaptive Refinement
-
-Calibration-aware adaptation may improve:
-- interruption timing;
-- clarification timing;
-- overload-aware coordination;
-- bounded prediction quality;
-- readiness interpretation.
-
----
-
-## Calibration Must Not Become Hidden Profiling
-
-Calibration must not silently evolve into:
-- unrestricted personality modeling;
-- emotional profiling;
-- behavioral scoring systems;
-- hidden manipulation architecture.
-
----
-
-## Calibration Learning Must Remain Reversible
-
-Calibration-aware adaptation must remain:
-- reversible;
-- decay-aware;
-- uncertainty-aware;
-- revalidation-capable.
-
----
-
-# 12. Calibration and Memory Boundaries
-
-## Calibration Does Not Automatically Modify Inner Core
-
-Calibration must not directly modify:
-- Inner Core truth;
-- stable values;
-- acceptable harm structures;
-- identity structures.
-
-Calibration interpretation:
-≠ identity authority.
-
----
-
-## Calibration Records Must Remain Bounded
-
-Calibration records must remain:
-- operationally relevant;
-- uncertainty-aware;
-- bounded;
-- governance-compatible.
-
-Calibration history must not silently become:
-- personality archive;
-- emotional identity map;
-- unrestricted behavioral profile.
-
----
-
-# 13. External Processing and Calibration
-
-## External Processing Services May Assist
-
-External AI processing services may assist:
-- anomaly analysis;
-- pattern comparison;
-- signal summarization;
-- artifact detection.
-
----
-
-## External Processing Services Are Not Calibration Authorities
-
-External AI processing services:
-- are not calibration authority;
-- are not identity authority;
-- are not readiness authority;
-- are not governance authority.
-
-External outputs require:
-- Ray interpretation;
-- uncertainty evaluation;
-- governance-compatible filtering;
-- bounded operational interpretation.
-
----
-
-## External Outputs Must Not Create Hidden Interpretation Authority
-
-External outputs must not silently become:
-- stable psychophysical truth;
-- personality interpretation;
-- unrestricted adaptation rules;
-- interruption authority.
-
----
-
-# 14. Trust Preservation Principle
-
-## Honest Uncertainty Must Be Preserved
-
-The system must prefer:
-- explicit uncertainty;
-- bounded interpretation;
-- contextual ambiguity;
-- calibration humility
-
-over:
-- fake certainty;
-- deterministic interpretation;
-- simulated psychological omniscience.
-
----
-
-## Sensor Interpretation Must Remain Honest
-
-The system must not:
-- pretend calibration quality is stronger than it is;
-- hide missing baselines;
-- hide context mismatch;
-- fabricate interpretation certainty;
-- simulate complete psychophysical understanding.
-
----
-
-# Sensor Calibration Governance Invariants
-
-## Calibration is not certainty
-
-Calibration improves interpretation but does not eliminate uncertainty.
-
----
-
-## Missing baseline preserves uncertainty
-
-No baseline must not silently become confident interpretation.
-
----
-
-## Sensor patterns are not identity truth
-
-Temporary psychophysical states must not silently become stable personality interpretation.
-
----
-
-## Physical activation is not emotional certainty
-
-Physical load and emotional interpretation must remain separated.
-
----
-
-## Weak calibration limits escalation
-
-Low confidence must reduce interpretation certainty and escalation authority.
-
----
-
-## Health-aware coordination is not psychological determinism
-
-Health-aware support must remain bounded and uncertainty-aware.
-
----
-
-## Calibration does not grant authority
-
-Sensor interpretation must not silently expand execution or interruption authority.
-
----
-
-## No hidden psychophysical profiling
-
-Calibration architecture must not evolve into unrestricted personality inference.
+The full calibration architecture remains present even when the physical sensor is absent.
+
+## 14. Research and validation transparency
+
+For calibration-derived material decisions, Ray should be able to explain the relevant calibration quality, evidence limitations, context match, and whether additional calibration could materially change the interpretation.
+
+## Final invariants
+
+- calibration validity is evidence-driven
+- time alone != calibration validity
+- calibration != certainty
+- calibration != authority
+- sensor data != identity truth
+- missing baseline preserves uncertainty
+- human health calibration != Ray Self-Health calibration
+- validated pattern != Human Heart truth
+- hardware replacement != automatic Ray identity replacement
+- absent sensor != fake measurement

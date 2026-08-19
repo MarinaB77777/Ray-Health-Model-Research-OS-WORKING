@@ -3,9 +3,17 @@
     {
       "src": "api/main.py",
       "use": "@vercel/python"
+    },
+    {
+      "src": "api/ray_integrity.py",
+      "use": "@vercel/python"
     }
   ],
   "routes": [
+    {
+      "src": "/ray-integrity(?:/.*)?",
+      "dest": "api/ray_integrity.py"
+    },
     {
       "src": "/(.*)",
       "dest": "api/main.py"

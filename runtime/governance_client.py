@@ -14,9 +14,11 @@ from runtime.schemas import (
 
 def snapshot_from_governance_verdict(verdict: Any) -> GovernanceVerdictSnapshot:
     """
-    Converts Governance MVP v4.1 verdict object/dict into Runtime read-only snapshot.
+    Converts Governance verdict object/dict into Runtime read-only snapshot.
 
-    Runtime MUST NOT mutate or reinterpret this snapshot.
+    Runtime MUST NOT mutate or reinterpret this snapshot. Action binding,
+    issuance/expiry, and revocation metadata are preserved when Governance
+    provides them.
     """
 
     if hasattr(verdict, "model_dump"):
@@ -69,6 +71,11 @@ def snapshot_from_governance_verdict(verdict: Any) -> GovernanceVerdictSnapshot:
         policy_versions={
             "versions": data.get("governance_policy_versions", [])
         },
+        authority_scope_id=data.get("action_id"),
+        issued_at=data.get("governance_issued_at"),
+        valid_until=data.get("governance_valid_until"),
+        revoked=bool(data.get("governance_revoked", False)),
+        revocation_reason=data.get("governance_revocation_reason"),
     )
 
 

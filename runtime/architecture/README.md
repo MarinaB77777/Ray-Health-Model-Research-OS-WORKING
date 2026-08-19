@@ -111,6 +111,19 @@ Core invariants:
 
 ---
 
+# Capability / Authority Boundary
+
+`runtime_capability_boundary_contract.md`
+- capability != permission;
+- technical feasibility != operational legitimacy;
+- research/investigation capability remains available without synthesizing intervention authority;
+- more tools/models/data != more rights;
+- bounded authority must not force epistemic blindness.
+
+This is the canonical Runtime capability/authority contract. The historical filename `runtime_truth_scope_contract.md` was incorrect and is retired.
+
+---
+
 # Clarification / Intent / Dependency Layer
 
 `runtime_clarification_boundary_contract.md`

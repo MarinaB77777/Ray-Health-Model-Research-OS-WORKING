@@ -9,7 +9,21 @@ import json
 import os
 import tempfile
 
-from .contracts import MemoryScope, RayRole
+from .contracts import (
+    MemoryClass,
+    MemoryScope,
+    MemoryTruthType,
+    RayRole,
+)
+
+
+PROTECTED_MEMORY_CLASSES = {
+    "heart_of_ray",
+    "heart_of_human",
+    "inner_core",
+    "ray_self_health_authority",
+    "ray_self_health_raw",
+}
 
 
 @dataclass
@@ -23,6 +37,11 @@ class MemoryRecord:
     project_id: str | None = None
     session_id: str | None = None
     expires_at: str | None = None
+    memory_class: MemoryClass = MemoryClass.WORKING_OPERATIONAL
+    truth_type: MemoryTruthType = MemoryTruthType.OPERATIONAL_STATE
+    subject: str = "human"
+    purpose: str = "ray_colleague_continuity"
+    freshness_status: str = "current"
     record_id: str = field(default_factory=lambda: str(uuid4()))
     status: str = "active"
     created_at: str = field(default_factory=lambda: datetime.now(UTC).isoformat())
@@ -33,6 +52,10 @@ class MemoryRecord:
             raise ValueError("MEMORY_OWNER_AND_SUMMARY_REQUIRED")
         if not self.provenance or not self.retention_reason.strip():
             raise ValueError("MEMORY_PROVENANCE_AND_RETENTION_REQUIRED")
+        if not self.subject.strip() or not self.purpose.strip():
+            raise ValueError("MEMORY_SUBJECT_AND_PURPOSE_REQUIRED")
+        if self.memory_class.value in PROTECTED_MEMORY_CLASSES:
+            raise PermissionError("PROTECTED_MEMORY_REQUIRES_SPECIALIZED_PATHWAY")
         if self.scope == MemoryScope.PROJECT and not self.project_id:
             raise ValueError("PROJECT_MEMORY_REQUIRES_PROJECT_ID")
         if self.scope == MemoryScope.SESSION and not self.session_id:
@@ -55,6 +78,8 @@ class MemoryRecord:
 
 
 class RayMemoryStore:
+    """Compatibility store governed as bounded Ray memory, never Inner Core."""
+
     def __init__(self, path: str | Path) -> None:
         self.path = Path(path)
 
@@ -77,21 +102,37 @@ class RayMemoryStore:
         return [
             item
             for item in self._load()
-            if item["status"] == "active"
+            if item.get("status", "active") == "active"
+            and item.get("freshness_status", "current") == "current"
             and item["role"] == role.value
             and item["owner_id"] == owner_id
             and (project_id is None or item.get("project_id") == project_id)
             and (session_id is None or item.get("session_id") == session_id)
         ]
 
+    def do_not_use(self, role: RayRole, owner_id: str, record_id: str) -> dict[str, Any]:
+        return self._set_status(role, owner_id, record_id, "do_not_use")
+
+    def invalidate(self, role: RayRole, owner_id: str, record_id: str) -> dict[str, Any]:
+        return self._set_status(role, owner_id, record_id, "invalidated")
+
     def delete(self, role: RayRole, owner_id: str, record_id: str) -> dict[str, Any]:
+        return self._set_status(role, owner_id, record_id, "deleted")
+
+    def _set_status(
+        self,
+        role: RayRole,
+        owner_id: str,
+        record_id: str,
+        status: str,
+    ) -> dict[str, Any]:
         records = self._load()
         for item in records:
             if item["record_id"] != record_id:
                 continue
             if item["role"] != role.value or item["owner_id"] != owner_id:
                 raise PermissionError("MEMORY_RECORD_OWNERSHIP_MISMATCH")
-            item["status"] = "deleted"
+            item["status"] = status
             item["updated_at"] = datetime.now(UTC).isoformat()
             self._write(records)
             return item
@@ -103,11 +144,12 @@ class RayMemoryStore:
         changed = 0
         for item in records:
             expires_at = item.get("expires_at")
-            if item["status"] != "active" or not expires_at:
+            if item.get("status", "active") != "active" or not expires_at:
                 continue
             expiry = datetime.fromisoformat(expires_at.replace("Z", "+00:00"))
             if expiry <= now:
                 item["status"] = "expired"
+                item["freshness_status"] = "expired"
                 item["updated_at"] = now.isoformat()
                 changed += 1
         if changed:
@@ -119,6 +161,8 @@ class RayMemoryStore:
         data = asdict(record)
         data["role"] = record.role.value
         data["scope"] = record.scope.value
+        data["memory_class"] = record.memory_class.value
+        data["truth_type"] = record.truth_type.value
         return data
 
     def _load(self) -> list[dict[str, Any]]:
@@ -127,6 +171,16 @@ class RayMemoryStore:
         data = json.loads(self.path.read_text(encoding="utf-8"))
         if not isinstance(data, list):
             raise ValueError("INVALID_RAY_MEMORY_STORE")
+        # Conservative migration for pre-v2 records. Existing content is not
+        # promoted; it remains bounded operational memory with unknown/current
+        # compatibility metadata until explicitly corrected.
+        for item in data:
+            item.setdefault("memory_class", MemoryClass.WORKING_OPERATIONAL.value)
+            item.setdefault("truth_type", MemoryTruthType.OPERATIONAL_STATE.value)
+            item.setdefault("subject", "human")
+            item.setdefault("purpose", "ray_colleague_continuity")
+            item.setdefault("freshness_status", "current")
+            item.setdefault("status", "active")
         return data
 
     def _write(self, records: list[dict[str, Any]]) -> None:
